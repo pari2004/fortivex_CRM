@@ -74,8 +74,37 @@ const navMenus: Record<Role, NavGroup[]> = {
           ]
         },
         { name: 'Follow-ups', href: '/follow-ups', icon: PhoneCall },
-        { name: 'Students', href: '/students', icon: GraduationCap },
-        { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+        {
+          name: 'Students',
+          href: '/students',
+          icon: GraduationCap,
+          subItems: [
+            { name: 'All Students', href: '/students' },
+            { name: 'Student Admissions', href: '/students/admissions' },
+            { name: 'Batch Allocation', href: '/students/batch-allocation' },
+            { name: 'Attendance', href: '/students/attendance' },
+            { name: 'Assignments (Inactive)', href: '/students/assignments' },
+            { name: 'Assessments (Inactive)', href: '/students/assessments' },
+            { name: 'Internship', href: '/students/internship' },
+            { name: 'Certificates', href: '/students/certificates' },
+            { name: 'Placement Tracking', href: '/students/placement' },
+            { name: 'Alumni', href: '/students/alumni' }
+          ]
+        },
+        {
+          name: 'Tasks',
+          href: '/tasks',
+          icon: CheckSquare,
+          subItems: [
+            { name: 'My Reminders', href: '/tasks/my-tasks' },
+            { name: 'Assigned Tasks', href: '/tasks/assigned' },
+            { name: 'Pending Tasks', href: '/tasks/pending' },
+            { name: 'Completed Tasks', href: '/tasks/completed' },
+            { name: 'Overdue Tasks', href: '/tasks/overdue' },
+            { name: 'Team Tasks', href: '/tasks/team' },
+            { name: 'Calendar View', href: '/tasks/calendar' }
+          ]
+        },
         { name: 'Calendar', href: 'https://calendar.google.com/', icon: Calendar, external: true },
         { name: 'Calls', href: '/calls', icon: Phone },
         { name: 'Join Fortivex.AI CRM WhatsApp Community', href: 'https://chat.whatsapp.com/GS1U8RoMpvn6XzVwgPZzgr?s=cl&p=i&ilr=0', icon: MessageCircle, external: true },

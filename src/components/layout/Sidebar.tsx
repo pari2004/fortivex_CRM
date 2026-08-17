@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LayoutDashboard, Users, UserPlus, Phone, PhoneCall, Calendar, 
-  MessageSquare, FileText, Settings, BarChart2, Briefcase, 
+  LayoutDashboard, Users, UserPlus, Phone, PhoneCall, Calendar,
+  MessageSquare, FileText, Settings, BarChart2, Briefcase,
   Target, GraduationCap, CheckCircle, PieChart, ShieldCheck, User, FolderOpen, Megaphone, Share2, MailWarning, MessageCircle, CheckSquare,
-  Search, ChevronDown, ChevronRight, LogOut, Bell
+  Search, ChevronDown, ChevronRight, LogOut, Bell, Mail, Video
 } from 'lucide-react';
 import { Logo } from '@/components/common/Logo';
 import { useAuth, Role } from '@/contexts/AuthContext';
@@ -81,6 +81,34 @@ const navMenus: Record<Role, NavGroup[]> = {
         { name: 'Join Fortivex.AI CRM WhatsApp Community', href: 'https://chat.whatsapp.com/GS1U8RoMpvn6XzVwgPZzgr?s=cl&p=i&ilr=0', icon: MessageCircle, external: true },
         { name: 'Email', href: 'https://mail.google.com/', icon: MailWarning, external: true },
         { name: 'Documents', href: '/documents', icon: FolderOpen },
+        {
+          name: 'Conversations',
+          href: '/conversations',
+          icon: MessageSquare,
+          subItems: [
+            { name: 'Team Inbox', href: '/conversations/team-inbox' },
+            { name: 'Lead Inbox', href: '/conversations/lead-inbox' },
+            { name: 'AI Chatbot', href: '/conversations/ai-chatbot' },
+            { name: 'Auto Messaging', href: '/conversations/auto-messaging' },
+            { name: 'Broadcasts', href: '/conversations/broadcasts' },
+            { name: 'Tickets', href: '/conversations/tickets' },
+            { name: 'Stats', href: '/conversations/stats' }
+          ]
+        },
+        {
+          name: 'Engagements',
+          href: '/engagements',
+          icon: Video,
+          subItems: [
+            { name: 'Overview', href: '/engagements' },
+            { name: 'Messages', href: '/engagements/messages' },
+            { name: 'Video Calls', href: '/engagements/video-calls' },
+            { name: 'Call Recordings', href: '/engagements/call-recordings' },
+            { name: 'Visits', href: '/engagements/visits' }
+          ]
+        },
+        { name: 'Email Hub', href: '/email-hub', icon: Mail },
+        { name: 'WhatsApp Hub', href: '/whatsapp-hub', icon: MessageCircle },
         {
           name: 'Opportunities',
           href: '/opportunities',

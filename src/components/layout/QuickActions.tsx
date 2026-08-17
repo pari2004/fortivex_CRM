@@ -7,6 +7,7 @@ import styles from './layout.module.css';
 import { PremiumModal } from '@/components/common/PremiumModal';
 
 import { useCRM } from '@/contexts/CRMContext';
+import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 export function QuickActions() {
   const [isOpen, setIsOpen] = useState(false);
@@ -211,7 +212,9 @@ export function QuickActions() {
                     textAlign: 'left' as const
                   };
 
-                  return (
+                
+  useGlobalEscape(!!isOpen, () => { setIsOpen(false) });
+  return (
                     <motion.button
                       key={idx}
                       whileHover={{ backgroundColor: 'var(--bg-tertiary)', x: 4 }}

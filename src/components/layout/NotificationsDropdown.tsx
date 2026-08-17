@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, FileText, CheckSquare, MessageCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import styles from './layout.module.css';
+import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 const NOTIFICATIONS = [
   { id: 1, title: 'New Application', desc: 'Sarah Jenkins applied for B.Tech CS', time: '5m ago', icon: <FileText size={16} />, color: '#10b981', unread: true },
@@ -29,6 +30,8 @@ export function NotificationsDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+
+  useGlobalEscape(!!isOpen, () => { setIsOpen(false) });
   return (
     <div style={{ position: 'relative' }} ref={dropdownRef}>
       <motion.button 

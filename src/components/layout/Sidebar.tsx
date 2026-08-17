@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LayoutDashboard, Users, UserPlus, Phone, Calendar, 
+  LayoutDashboard, Users, UserPlus, Phone, PhoneCall, Calendar, 
   MessageSquare, FileText, Settings, BarChart2, Briefcase, 
   Target, GraduationCap, CheckCircle, PieChart, ShieldCheck, User, FolderOpen, Megaphone, Share2, MailWarning, MessageCircle, CheckSquare,
   Search, ChevronDown, ChevronRight, LogOut, Bell
@@ -19,6 +19,7 @@ type NavItem = {
   icon: any;
   external?: boolean;
   badge?: string | number;
+  subItems?: { name: string; href: string }[];
 };
 
 type NavGroup = {
@@ -31,10 +32,48 @@ const navMenus: Record<Role, NavGroup[]> = {
     {
       name: '',
       items: [
-        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'Leads', href: '/leads', icon: Users },
-        { name: 'Pipeline', href: '/pipeline', icon: BarChart2 },
-        { name: 'Applications', href: '/applications', icon: Briefcase },
+        { 
+          name: 'Dashboard', 
+          href: '/dashboard', 
+          icon: LayoutDashboard,
+          subItems: [
+            { name: 'Default', href: '/dashboard?tab=Default' },
+            { name: 'Activity Metrics', href: '/dashboard?tab=Activity Metrics' },
+            { name: 'Source Report', href: '/dashboard?tab=Source Report' },
+            { name: 'Users', href: '/dashboard?tab=Users' },
+            { name: 'Custom', href: '/dashboard?tab=Custom' },
+          ]
+        },
+        { 
+          name: 'Leads', 
+          href: '/leads', 
+          icon: Users,
+          subItems: [
+            { name: 'Active Leads', href: '/leads?tab=Active Leads' },
+            { name: 'Business', href: '/leads?tab=Business' },
+            { name: 'Documents', href: '/leads?tab=Documents' },
+            { name: 'Segments / Lists', href: '/leads?tab=Segments / Lists' },
+            { name: 'Uploads', href: '/leads?tab=Uploads' },
+            { name: 'Distribution', href: '/leads?tab=Distribution' },
+            { name: 'Follow-ups', href: '/follow-ups' }
+          ]
+        },
+        { 
+          name: 'Applications', 
+          href: '/applications', 
+          icon: FileText,
+          subItems: [
+            { name: 'All Applications', href: '/applications?status=All Applications' },
+            { name: 'Draft', href: '/applications?status=Draft' },
+            { name: 'Submitted', href: '/applications?status=Submitted' },
+            { name: 'Under Review', href: '/applications?status=Under Review' },
+            { name: 'Documents Pending', href: '/applications?status=Documents Pending' },
+            { name: 'Approved', href: '/applications?status=Approved' },
+            { name: 'Rejected', href: '/applications?status=Rejected' },
+            { name: 'Admission Completed', href: '/applications?status=Admission Completed' }
+          ]
+        },
+        { name: 'Follow-ups', href: '/follow-ups', icon: PhoneCall },
         { name: 'Students', href: '/students', icon: GraduationCap },
         { name: 'Tasks', href: '/tasks', icon: CheckSquare },
         { name: 'Calendar', href: 'https://calendar.google.com/', icon: Calendar, external: true },
@@ -42,10 +81,20 @@ const navMenus: Record<Role, NavGroup[]> = {
         { name: 'Join Fortivex.AI CRM WhatsApp Community', href: 'https://chat.whatsapp.com/GS1U8RoMpvn6XzVwgPZzgr?s=cl&p=i&ilr=0', icon: MessageCircle, external: true },
         { name: 'Email', href: 'https://mail.google.com/', icon: MailWarning, external: true },
         { name: 'Documents', href: '/documents', icon: FolderOpen },
-        { name: 'Payments', href: '/payments', icon: PieChart },
+        { 
+          name: 'Opportunities', 
+          href: '/opportunities', 
+          icon: Target,
+          subItems: [
+            { name: 'Deals', href: '/opportunities?tab=Deals' },
+            { name: 'Deals Tabular', href: '/opportunities?tab=Deals Tabular' },
+            { name: 'Payments', href: '/opportunities?tab=Payments' },
+            { name: 'Payments Tabular', href: '/opportunities?tab=Payments Tabular' },
+            { name: 'Quotes', href: '/opportunities?tab=Quotes' }
+          ]
+        },
         { name: 'Reports', href: '/reports', icon: FileText },
         { name: 'Analytics', href: '/analytics', icon: PieChart },
-        { name: 'Users', href: '/users', icon: UserPlus },
         { name: 'Roles & Permissions', href: '/roles', icon: ShieldCheck },
         { name: 'Automation', href: '/automation', icon: Settings },
         { name: 'Settings', href: '/settings', icon: Settings },
@@ -149,15 +198,32 @@ const navMenus: Record<Role, NavGroup[]> = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab');
   const { role, user, logout } = useAuth();
   const activeGroups = navMenus[role] || [];
   
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [expandedNavItems, setExpandedNavItems] = useState<Record<string, boolean>>({
+    'Dashboard': pathname === '/dashboard',
+    'Leads': pathname === '/leads',
+    'Opportunities': pathname === '/opportunities',
+    'Applications': pathname === '/applications'
+  });
 
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups(prev => ({
       ...prev,
       [groupName]: !prev[groupName]
+    }));
+  };
+
+  const toggleNavItem = (itemName: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandedNavItems(prev => ({
+      ...prev,
+      [itemName]: !prev[itemName]
     }));
   };
 
@@ -260,7 +326,11 @@ export function Sidebar() {
                   style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px' }}
                 >
                   {group.items.map((item, index) => {
-                    const isActive = pathname === item.href;
+                    const isExactMatch = pathname === item.href && !item.subItems;
+                    const isParentMatch = pathname === item.href && item.subItems;
+                    const isActive = isExactMatch || (isParentMatch && !currentTab);
+                    const isExpanded = expandedNavItems[item.name];
+
                     const Icon = item.icon;
 
                     const activeStyle = isActive ? {
@@ -291,6 +361,11 @@ export function Sidebar() {
                           gap: '14px',
                           ...activeStyle
                         }}
+                        onClick={(e) => {
+                          if (item.subItems) {
+                            toggleNavItem(item.name, e);
+                          }
+                        }}
                       >
                         {activeIndicator}
                         <Icon size={20} style={{ ...activeIconStyle, transition: 'all 0.25s' }} />
@@ -307,13 +382,20 @@ export function Sidebar() {
                             {item.badge}
                           </span>
                         )}
+                        {item.subItems && (
+                          <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} style={{ color: '#64748b' }}>
+                            <ChevronDown size={16} />
+                          </motion.div>
+                        )}
                       </motion.div>
                     );
 
+                    let linkWrapper = null;
+
                     if (item.external) {
                       if (item.href.includes('chat.whatsapp.com')) {
-                        return (
-                          <div key={index} onClick={() => {
+                        linkWrapper = (
+                          <div key={`ext-${index}`} onClick={() => {
                             if (window.confirm('Join WhatsApp Community\n\nYou will be redirected to the official Fortivex.AI CRM WhatsApp community group.')) {
                               window.open(item.href, '_blank', 'noopener,noreferrer');
                             }
@@ -321,18 +403,70 @@ export function Sidebar() {
                             {itemContent}
                           </div>
                         );
+                      } else {
+                        linkWrapper = (
+                          <a key={`link-${index}`} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                            {itemContent}
+                          </a>
+                        );
                       }
-                      return (
-                        <a key={index} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                    } else if (item.subItems) {
+                      linkWrapper = <div key={`sub-${index}`}>{itemContent}</div>;
+                    } else {
+                      linkWrapper = (
+                        <Link key={`link-${index}`} href={item.href} style={{ textDecoration: 'none' }}>
                           {itemContent}
-                        </a>
+                        </Link>
                       );
                     }
 
                     return (
-                      <Link key={index} href={item.href} style={{ textDecoration: 'none' }}>
-                        {itemContent}
-                      </Link>
+                      <React.Fragment key={index}>
+                        {linkWrapper}
+                        
+                        {/* Render SubItems if expanded */}
+                        <AnimatePresence>
+                          {item.subItems && isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '46px' }}
+                            >
+                              {item.subItems.map((subItem, sIdx) => {
+                                // For active state, we check if the currentTab from URL matches this subItem name
+                                // e.g. subItem.name is "Source Report", currentTab is "Source Report"
+                                // or if currentTab is empty and subItem.name is "Default"
+                                const isSubActive = currentTab === subItem.name || (!currentTab && subItem.name === 'Default');
+                                
+                                return (
+                                  <Link key={sIdx} href={subItem.href} style={{ textDecoration: 'none' }}>
+                                    <motion.div
+                                      whileHover={{ scale: 1.02, backgroundColor: 'rgba(37, 99, 235, 0.05)' }}
+                                      style={{
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        height: '40px',
+                                        padding: '0 16px',
+                                        borderRadius: '10px',
+                                        color: isSubActive ? '#2563eb' : '#64748b',
+                                        fontWeight: isSubActive ? 600 : 500,
+                                        fontSize: '14px',
+                                        transition: 'all 0.25s ease',
+                                        background: isSubActive ? 'rgba(37, 99, 235, 0.05)' : 'transparent',
+                                      }}
+                                    >
+                                      {isSubActive && <div style={{ position: 'absolute', left: '-10px', width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }} />}
+                                      {subItem.name}
+                                    </motion.div>
+                                  </Link>
+                                );
+                              })}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </React.Fragment>
                     );
                   })}
                 </motion.div>

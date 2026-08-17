@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useChat } from '@ai-sdk/react';
 import styles from './layout.module.css';
+import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 function NeuralLines() {
   const points = [];
@@ -187,6 +188,8 @@ export function AiAssistantOrb() {
     setInput(e.target.value);
   };
 
+
+  useGlobalEscape(!!isOpen, () => { setIsOpen(false) });
   return (
     <div style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px', pointerEvents: 'none' }}>
       <AnimatePresence>

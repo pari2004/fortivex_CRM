@@ -6,6 +6,7 @@ import { Search, Users, FileText, GraduationCap, Calendar, CheckSquare, X, Histo
 import { motion, AnimatePresence } from 'framer-motion';
 import { performGlobalSearch, SearchResult } from '@/lib/search';
 import styles from './layout.module.css';
+import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 export function GlobalSearch() {
   const [query, setQuery] = useState('');
@@ -110,6 +111,8 @@ export function GlobalSearch() {
     );
   };
 
+
+  useGlobalEscape(!!isOpen, () => { setIsOpen(false) });
   return (
     <div className={styles.headerSearch} style={{ position: 'relative', backgroundColor: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', flex: 1, maxWidth: '600px' }} ref={searchRef}>
       <Search size={18} className="text-text-tertiary" />

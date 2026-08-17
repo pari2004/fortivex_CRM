@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
+import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 export interface ActionMenuItem {
   label: string;
@@ -52,23 +53,16 @@ export function ActionMenu({ items, isOpen: isOpenProp, onToggle, onClose }: Act
       }
     };
     
-    // Close on Escape key
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        handleClose();
-      }
-    };
-
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscKey);
     }
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscKey);
     };
   }, [isOpen]);
+
+  useGlobalEscape(isOpen, handleClose);
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }} ref={menuRef}>

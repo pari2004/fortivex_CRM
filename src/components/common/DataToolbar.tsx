@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, Download, X } from 'lucide-react';
+import { Search, Filter, Download, X, Columns } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 export interface FilterOption {
   key: string;
@@ -23,6 +24,10 @@ interface DataToolbarProps<T> {
   exportFilename?: string;
   selectedItems?: T[];
   exportMapping?: { key: keyof T, label: string }[];
+  extraActions?: React.ReactNode;
+  visibleColumns?: string[];
+  onToggleColumn?: (col: string) => void;
+  allColumns?: {key: string, label: string}[];
 }
 
 export function DataToolbar<T extends Record<string, any>>({ 
@@ -33,12 +38,17 @@ export function DataToolbar<T extends Record<string, any>>({
   filterOptions = [],
   exportFilename = 'export',
   selectedItems = [],
-  exportMapping
+  exportMapping,
+  extraActions,
+  visibleColumns,
+  onToggleColumn,
+  allColumns
 }: DataToolbarProps<T>) {
   
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showColumns, setShowColumns] = useState(false);
   
   // State for active filters: Record<key, value>
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
@@ -57,6 +67,7 @@ export function DataToolbar<T extends Record<string, any>>({
 
   const clearAllFilters = () => {
     setActiveFilters({});
+    setSearch('');
   };
 
   // The actual filtering logic
@@ -185,22 +196,24 @@ export function DataToolbar<T extends Record<string, any>>({
     setShowExport(false);
   };
 
+
   return (
     <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '8px 16px', borderRadius: '8px', flex: 1, minWidth: '250px' }}>
-          <Search size={18} color="var(--text-tertiary)" />
+        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-primary, #ffffff)', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '12px', flex: 1, minWidth: '300px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+          <Search size={20} color="var(--text-tertiary)" />
           <input 
             type="text" 
             placeholder={searchPlaceholder} 
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ background: 'transparent', border: 'none', outline: 'none', marginLeft: '8px', width: '100%', fontSize: '0.9rem' }} 
+            style={{ background: 'transparent', border: 'none', outline: 'none', marginLeft: '12px', width: '100%', fontSize: '1rem', color: 'var(--text-primary)' }} 
           />
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
+          {extraActions}
           {filterOptions.length > 0 && (
             <button 
               onClick={() => { setShowFilters(true); setShowExport(false); }}
@@ -210,9 +223,40 @@ export function DataToolbar<T extends Record<string, any>>({
             </button>
           )}
 
+          {allColumns && onToggleColumn && (
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => { setShowColumns(!showColumns); setShowExport(false); setShowFilters(false); }}
+                style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '8px', display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 600, cursor: 'pointer' }}
+              >
+                <Columns size={18} /> Columns
+              </button>
+              <AnimatePresence>
+                {showColumns && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                    style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '250px', maxHeight: '350px', overflowY: 'auto', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: 'var(--shadow-md)', zIndex: 50, padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}
+                  >
+                    <div style={{ fontSize: '0.9rem', fontWeight: 'bold', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '4px' }}>Customize Columns</div>
+                    {allColumns.map(col => (
+                      <label key={col.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={visibleColumns?.includes(col.key)} 
+                          onChange={() => onToggleColumn(col.key)}
+                        />
+                        {col.label}
+                      </label>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
           <div style={{ position: 'relative' }}>
             <button 
-              onClick={() => { setShowExport(!showExport); setShowFilters(false); }}
+              onClick={() => { setShowExport(!showExport); setShowColumns(false); setShowFilters(false); }}
               style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '8px', display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 600, cursor: 'pointer' }}
             >
               <Download size={18} /> Export

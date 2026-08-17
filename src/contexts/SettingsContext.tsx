@@ -143,9 +143,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const savedLogo = localStorage.getItem('fortivex_logo');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (savedLogo) setCompanyLogo(savedLogo);
 
       const savedHours = localStorage.getItem('fortivex_hours');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (savedHours) setBusinessHours(JSON.parse(savedHours));
 
       const savedNotifs = localStorage.getItem('fortivex_notifs');

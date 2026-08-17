@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -23,7 +23,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <CRMProvider>
           <div className={styles.appLayout}>
           <DynamicBackground />
-          {!isAuthPage && <Sidebar />}
+          {!isAuthPage && <Suspense fallback={<div>Loading Sidebar...</div>}><Sidebar /></Suspense>}
           <div className={styles.mainContent}>
             {!isAuthPage && <Header />}
             <main className={styles.pageContainer} style={isAuthPage ? { padding: 0 } : {}}>

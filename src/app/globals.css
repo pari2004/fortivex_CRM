@@ -240,3 +240,167 @@ body.no-glass .glass-button {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
 }
+
+/* --- Global Sticky Table Header Fix --- */
+table thead th {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  position: sticky !important;
+  top: 0;
+  z-index: 50 !important;
+  box-shadow: inset 0 -1px 0 var(--border-color);
+}
+
+table thead tr {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* --- Global Z-Index Hierarchy --- */
+.modal-overlay, .modal, [role="dialog"], dialog {
+  z-index: 9999 !important;
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+}
+
+.dropdown-menu, [role="menu"], .context-menu {
+  z-index: 8000 !important;
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.tooltip, [role="tooltip"], .popover {
+  z-index: 7000 !important;
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+}
+
+/* Table Wrappers and Overflows */
+table {
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+/* Fix Dropdown Clipping in Tables */
+td, th, tr, tbody, table {
+  overflow: visible !important;
+}
+
+/* Only the panel wrapper itself should scroll if needed */
+.glass-panel {
+  overflow: visible; /* Prevents dropdowns from clipping inside cards */
+}
+.glass-panel[style*="overflow: auto"],
+.glass-panel[style*="overflow: hidden"] {
+  /* Some panels legitimately need scroll */
+  overflow: visible !important; /* Force dropdowns to escape */
+}
+
+/* Enforce solid backgrounds on anything absolute inside table cells */
+td [style*="position: absolute"] {
+  z-index: 8000 !important;
+  background-color: var(--bg-primary) !important;
+  backdrop-filter: none !important;
+}
+
+/* Flexbox and Grid blowouts */
+.flex, .grid, [style*="display: flex"], [style*="display: grid"] {
+  min-width: 0;
+}
+
+/* Sidebar overlaps */
+.sidebar, [style*="width: 250px"], [style*="width: 64px"] {
+  z-index: 5000 !important;
+  flex-shrink: 0 !important;
+}
+
+/* --- Aggressive Global Dropdown Fix --- */
+:root {
+  --bg-card: var(--bg-primary); /* Ensure --bg-card resolves to a solid color */
+}
+
+/* ---------------------------------------------------
+   COMPLETE TRANSPARENCY REMOVAL ON SCROLLING ELEMENTS
+------------------------------------------------------ */
+/* Force Navbars, Top Headers, and Sidebars to be completely solid */
+header, nav, aside, .navbar, .sidebar, 
+[style*="position: sticky"], [style*="position: fixed"] {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure sticky table headers are strictly solid */
+table thead, table thead tr, table thead th, th {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Force all tables, rows, and cells to be solid */
+table, tbody, tr, td {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Completely remove glassmorphism transparency from all content cards and panels */
+.glass-panel,
+.glass-panel-heavy,
+.card,
+[class*="card"],
+[class*="panel"] {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Modals should be completely opaque */
+.modal, dialog, [role="dialog"], [class*="modal"] {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+}
+
+/* Force specific containers like simulated maps to hide overflow */
+.map-container {
+  overflow: hidden !important;
+}
+
+/* Responsive grid for the 3-panel Location hero layout */
+@media (max-width: 1024px) {
+  .location-hero-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+}
+
+/* Target any absolutely positioned element that resembles a dropdown or popup menu */
+div[style*="position: absolute"][style*="z-index: 50"],
+div[style*="position: absolute"][style*="z-index: 100"],
+div[style*="position: absolute"][style*="z-index: 50;"],
+div[style*="position: absolute"][style*="z-index: 100;"],
+.glass-panel[style*="position: absolute"],
+[class*="dropdown"], [class*="menu"], [class*="popover"], [class*="select"] {
+  background-color: var(--bg-primary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 8000 !important; /* Force dropdowns above everything */
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+}
+
+/* Reset buttons inside these solid dropdowns so they don't look weird */
+div[style*="position: absolute"] > button {
+  background-color: transparent !important;
+}

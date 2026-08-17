@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Settings, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import styles from './layout.module.css';
+import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 export function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,6 +38,8 @@ export function ProfileDropdown() {
     }
   };
 
+
+  useGlobalEscape(!!isOpen, () => { setIsOpen(false) });
   return (
     <div style={{ position: 'relative' }} ref={dropdownRef}>
       <motion.div 

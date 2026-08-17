@@ -345,7 +345,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setReports(loadData('reports', []));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setReminders(loadData('reminders', INITIAL_REMINDERS));
-    
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoaded(true);
   }, []);
@@ -480,4 +480,3 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     </CRMContext.Provider>
   );
 };
-

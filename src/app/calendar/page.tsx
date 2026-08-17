@@ -51,10 +51,30 @@ const initialEvents: MyEvent[] = [
   },
 ];
 
+import { useCRM } from '@/contexts/CRMContext';
+
 export default function CalendarPage() {
+  const { reminders } = useCRM();
   const [events, setEvents] = useState<MyEvent[]>(initialEvents);
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
+
+  const reminderEvents = useMemo(() => {
+    return reminders.map(r => {
+      const d = r.dueDate || new Date().toISOString().split('T')[0];
+      return {
+        id: r.id,
+        title: `🔔 ${r.title}`,
+        start: new Date(`${d}T09:00:00`),
+        end: new Date(`${d}T10:00:00`),
+        type: (r.priority === 'High' ? 'Deadline' : 'Meeting') as any,
+        description: `${r.type}: ${r.description || ''} (${r.relatedEntityName || ''})`,
+        location: 'CRM Reminder'
+      };
+    });
+  }, [reminders]);
+
+  const allCalendarEvents = useMemo(() => [...events, ...reminderEvents], [events, reminderEvents]);
   
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<MyEvent | null>(null);
@@ -255,7 +275,7 @@ export default function CalendarPage() {
         
         <Calendar
           localizer={localizer}
-          events={events}
+          events={allCalendarEvents}
           view={view}
           onView={setView}
           date={date}

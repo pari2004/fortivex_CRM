@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { leadsData, studentsData, generatedBusinessLeads, BusinessLead, generatedDeals, generatedQuotes, generatedPayments, Quote, generatedApplications, Application } from '@/lib/data/mockData';
+import { Reminder } from '@/lib/types/reminder';
 export type { Application, Quote, BusinessLead };
 
 export interface Task {
@@ -123,6 +124,124 @@ export interface Payment {
   [key: string]: any;
 }
 
+const INITIAL_REMINDERS: Reminder[] = [
+  {
+    id: 'REM-101',
+    title: 'Call Priya Sharma',
+    description: 'Follow up regarding FSD admission details and fee structure',
+    type: 'Call',
+    priority: 'High',
+    dueDate: '2026-08-12',
+    dueTime: '10:00 AM',
+    status: 'PENDING',
+    isCompleted: false,
+    relatedEntityType: 'Lead',
+    relatedEntityId: '1',
+    relatedEntityName: 'Priya Sharma',
+    assignedTo: 'Current User',
+    createdBy: 'Current User',
+    repeatRule: 'Does not repeat',
+    createdAt: '2026-08-11T09:00:00Z',
+    updatedAt: '2026-08-11T09:00:00Z'
+  },
+  {
+    id: 'REM-102',
+    title: 'Call Rahul Singh',
+    description: 'Payment discussion for Data Science cohort enrollment',
+    type: 'Call',
+    priority: 'High',
+    dueDate: '2026-08-13',
+    dueTime: '10:30 AM',
+    status: 'PENDING',
+    isCompleted: false,
+    relatedEntityType: 'Lead',
+    relatedEntityId: '2',
+    relatedEntityName: 'Rahul Singh',
+    assignedTo: 'Current User',
+    createdBy: 'Current User',
+    repeatRule: 'Does not repeat',
+    createdAt: '2026-08-12T10:00:00Z',
+    updatedAt: '2026-08-12T10:00:00Z'
+  },
+  {
+    id: 'REM-103',
+    title: 'Follow up with Anjali Singh',
+    description: 'Course enquiry and scholarship opportunity details',
+    type: 'Follow-up',
+    priority: 'Medium',
+    dueDate: '2026-08-13',
+    dueTime: '02:00 PM',
+    status: 'PENDING',
+    isCompleted: false,
+    relatedEntityType: 'Lead',
+    relatedEntityId: '3',
+    relatedEntityName: 'Anjali Singh',
+    assignedTo: 'Current User',
+    createdBy: 'Current User',
+    repeatRule: 'Does not repeat',
+    createdAt: '2026-08-12T11:00:00Z',
+    updatedAt: '2026-08-12T11:00:00Z'
+  },
+  {
+    id: 'REM-104',
+    title: 'Follow up with Vijay Johar',
+    description: 'Course enquiry for Cyber Security advanced batch',
+    type: 'Follow-up',
+    priority: 'Medium',
+    dueDate: '2026-08-14',
+    dueTime: '11:00 AM',
+    status: 'PENDING',
+    isCompleted: false,
+    relatedEntityType: 'Lead',
+    relatedEntityId: '4',
+    relatedEntityName: 'Vijay Johar',
+    assignedTo: 'Current User',
+    createdBy: 'Current User',
+    repeatRule: 'Does not repeat',
+    createdAt: '2026-08-12T14:00:00Z',
+    updatedAt: '2026-08-12T14:00:00Z'
+  },
+  {
+    id: 'REM-105',
+    title: 'Check pending documents',
+    description: 'Verify 10th and 12th certificates for student Aarav Patel',
+    type: 'Document',
+    priority: 'Low',
+    dueDate: '2026-08-15',
+    dueTime: '03:00 PM',
+    status: 'PENDING',
+    isCompleted: false,
+    relatedEntityType: 'Student',
+    relatedEntityId: 'STU-001',
+    relatedEntityName: 'Aarav Patel',
+    assignedTo: 'Current User',
+    createdBy: 'Current User',
+    repeatRule: 'Does not repeat',
+    createdAt: '2026-08-10T16:00:00Z',
+    updatedAt: '2026-08-10T16:00:00Z'
+  },
+  {
+    id: 'REM-106',
+    title: 'Collect pending semester fee',
+    description: 'Follow up with David Chen regarding pending balance payment',
+    type: 'Payment',
+    priority: 'High',
+    dueDate: '2026-08-10',
+    dueTime: '05:00 PM',
+    status: 'COMPLETED',
+    isCompleted: true,
+    completedAt: '2026-08-10T17:15:00Z',
+    relatedEntityType: 'Student',
+    relatedEntityId: 'STU-002',
+    relatedEntityName: 'David Chen',
+    assignedTo: 'Current User',
+    createdBy: 'Current User',
+    repeatRule: 'Does not repeat',
+    createdAt: '2026-08-08T09:00:00Z',
+    updatedAt: '2026-08-10T17:15:00Z'
+  }
+];
+
 interface CRMContextType {
   leads: Lead[];
   applications: Application[];
@@ -137,6 +256,7 @@ interface CRMContextType {
   tasks: Task[];
   users: User[];
   reports: Report[];
+  reminders: Reminder[];
   addTask: (task: Omit<Task, 'id'>) => void;
   addUser: (user: Omit<User, 'id'>) => void;
   addReport: (report: Omit<Report, 'id'>) => void;
@@ -155,6 +275,11 @@ interface CRMContextType {
   updateQuote: (quote: Quote) => void;
   addPayment: (payment: Omit<Payment, 'id'>) => void;
   updatePayment: (payment: Payment) => void;
+  addReminder: (reminder: Omit<Reminder, 'id' | 'createdAt' | 'updatedAt' | 'isCompleted' | 'status'> & { status?: Reminder['status']; isCompleted?: boolean }) => void;
+  updateReminder: (id: string, updates: Partial<Reminder>) => void;
+  deleteReminder: (id: string) => void;
+  toggleCompleteReminder: (id: string) => void;
+  snoozeReminder: (id: string, newDueDate: string, newDueTime: string) => void;
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
@@ -181,6 +306,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from local storage
@@ -217,6 +343,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUsers(loadData('users', []));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setReports(loadData('reports', []));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setReminders(loadData('reminders', INITIAL_REMINDERS));
     
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoaded(true);
@@ -238,8 +366,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('crm_tasks', JSON.stringify(tasks));
       localStorage.setItem('crm_users', JSON.stringify(users));
       localStorage.setItem('crm_reports', JSON.stringify(reports));
+      localStorage.setItem('crm_reminders', JSON.stringify(reminders));
     }
-  }, [leads, applications, students, calls, demos, documents, businessLeads, deals, quotes, payments, tasks, users, reports, isLoaded]);
+  }, [leads, applications, students, calls, demos, documents, businessLeads, deals, quotes, payments, tasks, users, reports, reminders, isLoaded]);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -276,14 +405,79 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addPayment = (payment: Omit<Payment, 'id'>) => setPayments(prev => [{ ...payment, id: `PAY-${generateId().toUpperCase()}` } as Payment, ...prev]);
   const updatePayment = (payment: Payment) => setPayments(prev => prev.map(p => p.id === payment.id ? payment : p));
 
+  const addReminder = (data: Omit<Reminder, 'id' | 'createdAt' | 'updatedAt' | 'isCompleted' | 'status'> & { status?: Reminder['status']; isCompleted?: boolean }) => {
+    const now = new Date().toISOString();
+    const newReminder: Reminder = {
+      ...data,
+      id: `REM-${Math.floor(100 + Math.random() * 900)}`,
+      status: data.status || 'PENDING',
+      isCompleted: data.isCompleted || false,
+      createdAt: now,
+      updatedAt: now
+    };
+    setReminders(prev => [newReminder, ...prev]);
+  };
+
+  const updateReminder = (id: string, updates: Partial<Reminder>) => {
+    setReminders(prev => prev.map(r => {
+      if (r.id === id) {
+        const updated = { ...r, ...updates, updatedAt: new Date().toISOString() };
+        if (updates.isCompleted !== undefined) {
+          updated.status = updates.isCompleted ? 'COMPLETED' : 'PENDING';
+          updated.completedAt = updates.isCompleted ? new Date().toISOString() : undefined;
+        }
+        return updated;
+      }
+      return r;
+    }));
+  };
+
+  const deleteReminder = (id: string) => {
+    setReminders(prev => prev.filter(r => r.id !== id));
+  };
+
+  const toggleCompleteReminder = (id: string) => {
+    setReminders(prev => prev.map(r => {
+      if (r.id === id) {
+        const isCompleted = !r.isCompleted;
+        return {
+          ...r,
+          isCompleted,
+          status: isCompleted ? 'COMPLETED' : 'PENDING',
+          completedAt: isCompleted ? new Date().toISOString() : undefined,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return r;
+    }));
+  };
+
+  const snoozeReminder = (id: string, newDueDate: string, newDueTime: string) => {
+    setReminders(prev => prev.map(r => {
+      if (r.id === id) {
+        return {
+          ...r,
+          dueDate: newDueDate,
+          dueTime: newDueTime,
+          status: 'SNOOZED',
+          snoozedUntil: `${newDueDate} ${newDueTime}`,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return r;
+    }));
+  };
+
   return (
-    <CRMContext.Provider value={{ 
-      leads, applications, students, calls, demos, documents, businessLeads, 
-      deals, quotes, payments, tasks, users, reports,
+    <CRMContext.Provider value={{
+      leads, applications, students, calls, demos, documents, businessLeads,
+      deals, quotes, payments, tasks, users, reports, reminders,
       addLead, updateLead, addApplication, updateApplication, addStudent, logCall, scheduleDemo, uploadDocument, addBusinessLead,
-      addDeal, updateDeal, addQuote, updateQuote, addPayment, updatePayment, addTask, addUser, addReport
+      addDeal, updateDeal, addQuote, updateQuote, addPayment, updatePayment, addTask, addUser, addReport,
+      addReminder, updateReminder, deleteReminder, toggleCompleteReminder, snoozeReminder
     }}>
       {children}
     </CRMContext.Provider>
   );
 };
+

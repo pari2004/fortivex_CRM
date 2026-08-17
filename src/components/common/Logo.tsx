@@ -25,12 +25,13 @@ export function Logo({ size = 40, className = '' }: LogoProps) {
       <Image 
         src={companyLogo || "/logo.png"} 
         alt="FORTIVEX.AI CRM" 
-        width={size * 2} // safe width, actual will be constrained by height
+        width={size * 2.5} 
         height={size}
         style={{ 
           objectFit: 'contain', 
           width: 'auto', 
-          height: '100%' 
+          height: `${size}px`,
+          maxHeight: '100%'
         }}
         priority
       />

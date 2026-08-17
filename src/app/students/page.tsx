@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Edit, RefreshCw, UserPlus, Calendar, BookOpen, Briefcase, 
   CreditCard, UploadCloud, FileText, PhoneCall, MessageCircle, Mail, 
-  DownloadCloud, Printer, Trash2, XCircle
+  DownloadCloud, Printer, Trash2, XCircle, Users, Award, TrendingUp
 } from 'lucide-react';
 
 import { PremiumModal, SlidePanel } from '@/components/common/PremiumModal';
@@ -346,14 +346,99 @@ const PaymentBadge = ({ status }: { status: string }) => {
   return <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, background: bg, color: color }}>{status}</span>;
 };
 
+function AddStudentModal({ isOpen, onClose, onAdd }: { isOpen: boolean; onClose: () => void; onAdd: (student: Student) => void }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    program: 'Full Stack Development',
+    batch: 'FSD-2026-A',
+    mentor: 'Arjun Kumar',
+    totalFee: 75000,
+    paidAmount: 25000,
+    paymentStatus: 'Partial',
+    status: 'Active',
+    qualification: 'B.Tech CS',
+    city: 'Bangalore',
+  });
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newStudent: Student = {
+      id: `STU-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: formData.name || 'New Student',
+      email: formData.email || 'student@example.com',
+      phone: formData.phone || '+91 98765 43210',
+      program: formData.program,
+      batch: formData.batch,
+      mentor: formData.mentor,
+      enrollmentDate: new Date().toISOString().split('T')[0],
+      status: formData.status as any,
+      qualification: formData.qualification,
+      city: formData.city,
+      totalFee: Number(formData.totalFee),
+      paidAmount: Number(formData.paidAmount),
+      paymentStatus: formData.paymentStatus as any,
+      progress: 0,
+      attendance: 100,
+      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      dob: '2001-05-15',
+      gender: 'Male',
+      placementStatus: 'In Training',
+      notes: '',
+      documents: [],
+    };
+
+    onAdd(newStudent);
+    showToast(`🎉 Student ${newStudent.name} added successfully!`);
+    onClose();
+  };
+
+  return (
+    <PremiumModal isOpen={isOpen} onClose={onClose} title="Add New Student" icon={<UserPlus />}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <PremiumInput label="Full Name *" name="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <PremiumInput label="Email *" name="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} required />
+          <PremiumInput label="Phone *" name="phone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} required />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <PremiumSelect label="Program" name="program" value={formData.program} onChange={e => setFormData({ ...formData, program: e.target.value })} options={['Full Stack Development', 'Data Science', 'UI/UX Design']} />
+          <PremiumInput label="Batch" name="batch" value={formData.batch} onChange={e => setFormData({ ...formData, batch: e.target.value })} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <PremiumInput label="Total Fee (₹)" name="totalFee" type="number" value={formData.totalFee} onChange={e => setFormData({ ...formData, totalFee: Number(e.target.value) })} />
+          <PremiumInput label="Paid Amount (₹)" name="paidAmount" type="number" value={formData.paidAmount} onChange={e => setFormData({ ...formData, paidAmount: Number(e.target.value) })} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+          <button type="button" className="secondary-btn" onClick={onClose}>Cancel</button>
+          <button type="submit" className="primary-btn">Save Student</button>
+        </div>
+      </form>
+    </PremiumModal>
+  );
+}
+
 // --- Main Page ---
 export default function StudentsPage() {
   const { students: crmStudents } = useCRM();
   const allStudents = [...crmStudents, ...studentsData]; // Merge context and static mock data for demo
   const [isMounted, setIsMounted] = useState(false);
-  const [localData, setLocalData] = useState<Student[]>([]);
-  const [filteredData, setFilteredData] = useState<Student[]>([]);
+  const [localData, setLocalData] = useState<Student[]>(studentsData);
+  const [filteredData, setFilteredData] = useState<Student[]>(studentsData);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredData]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Modals state
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -453,6 +538,12 @@ export default function StudentsPage() {
 
   if (!isMounted) return null;
 
+  const handleAddStudent = (newStudent: Student) => {
+    setLocalData(prev => [newStudent, ...prev]);
+    setFilteredData(prev => [newStudent, ...prev]);
+    setCurrentPage(1);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
@@ -471,10 +562,78 @@ export default function StudentsPage() {
         <p>Are you sure you want to permanently delete student <strong>{selectedStudent?.name}</strong>? This action cannot be undone.</p>
       </PremiumModal>
 
+      <AddStudentModal isOpen={activeModal === 'add'} onClose={closeModal} onAdd={handleAddStudent} />
+      <ViewStudentModal isOpen={activeModal === 'view'} onClose={closeModal} student={selectedStudent} />
 
-      <div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px' }}>Students</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Manage all enrolled students, track attendance, assignments, and placement progress.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px' }}>Students</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Manage all enrolled students, track attendance, assignments, and placement progress.</p>
+        </div>
+        <button
+          onClick={() => openModal('add')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px',
+            borderRadius: '10px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+            color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
+          }}
+        >
+          <UserPlus size={18} /> + Add New Student
+        </button>
+      </div>
+
+      {/* KPI Overview Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <motion.div whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }} className="glass-panel" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Users size={24} />
+          </div>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 500 }}>Total Enrolled</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '2px 0' }}>{localData.length}</div>
+            <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 500 }}>+12% vs last month</div>
+          </div>
+        </motion.div>
+
+        <motion.div whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }} className="glass-panel" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Award size={24} />
+          </div>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 500 }}>Avg Course Progress</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '2px 0' }}>
+              {localData.length ? Math.round(localData.reduce((acc, s) => acc + (s.progress || 0), 0) / localData.length) : 0}%
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>Across all programs</div>
+          </div>
+        </motion.div>
+
+        <motion.div whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }} className="glass-panel" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Briefcase size={24} />
+          </div>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 500 }}>Placed & Ready</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '2px 0' }}>
+              {localData.filter(s => s.status === 'Placed' || (s.progress && s.progress >= 80)).length}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#8b5cf6', fontWeight: 500 }}>Career track eligible</div>
+          </div>
+        </motion.div>
+
+        <motion.div whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }} className="glass-panel" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CreditCard size={24} />
+          </div>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 500 }}>Total Fees Collected</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '2px 0' }}>
+              ₹{(localData.reduce((acc, s) => acc + (s.paidAmount || 0), 0) / 100000).toFixed(1)}L
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 500 }}>92% collection rate</div>
+          </div>
+        </motion.div>
       </div>
 
       <DataToolbar 
@@ -511,7 +670,7 @@ export default function StudentsPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map(student => (
+            {paginatedData.map(student => (
               <tr key={student.id} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.5)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 <td style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -576,6 +735,40 @@ export default function StudentsPage() {
             ))}
           </tbody>
         </table>
+
+        {/* 10 Items / Page Pagination Controls */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid var(--glass-border)', fontSize: '0.85rem' }}>
+          <div style={{ color: 'var(--text-secondary)' }}>
+            Showing {filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              style={{
+                padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--glass-border)',
+                background: 'rgba(255,255,255,0.05)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                opacity: currentPage === 1 ? 0.5 : 1, color: 'var(--text-primary)', fontWeight: 500
+              }}
+            >
+              Previous
+            </button>
+            <span style={{ padding: '0 8px', fontWeight: 600 }}>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage >= totalPages}
+              style={{
+                padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--glass-border)',
+                background: 'rgba(255,255,255,0.05)', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+                opacity: currentPage >= totalPages ? 0.5 : 1, color: 'var(--text-primary)', fontWeight: 500
+              }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>

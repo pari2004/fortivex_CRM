@@ -15,7 +15,7 @@ import { useAuth, Role } from '@/contexts/AuthContext';
 
 type NavItem = {
   name: string;
-  href: string;
+  href?: string;
   icon: any;
   external?: boolean;
   badge?: string | number;
@@ -32,9 +32,9 @@ const navMenus: Record<Role, NavGroup[]> = {
     {
       name: '',
       items: [
-        { 
-          name: 'Dashboard', 
-          href: '/dashboard', 
+        {
+          name: 'Dashboard',
+          href: '/dashboard',
           icon: LayoutDashboard,
           subItems: [
             { name: 'Default', href: '/dashboard?tab=Default' },
@@ -44,9 +44,9 @@ const navMenus: Record<Role, NavGroup[]> = {
             { name: 'Custom', href: '/dashboard?tab=Custom' },
           ]
         },
-        { 
-          name: 'Leads', 
-          href: '/leads', 
+        {
+          name: 'Leads',
+          href: '/leads',
           icon: Users,
           subItems: [
             { name: 'Active Leads', href: '/leads?tab=Active Leads' },
@@ -58,9 +58,9 @@ const navMenus: Record<Role, NavGroup[]> = {
             { name: 'Follow-ups', href: '/follow-ups' }
           ]
         },
-        { 
-          name: 'Applications', 
-          href: '/applications', 
+        {
+          name: 'Applications',
+          href: '/applications',
           icon: FileText,
           subItems: [
             { name: 'All Applications', href: '/applications?status=All Applications' },
@@ -81,9 +81,9 @@ const navMenus: Record<Role, NavGroup[]> = {
         { name: 'Join Fortivex.AI CRM WhatsApp Community', href: 'https://chat.whatsapp.com/GS1U8RoMpvn6XzVwgPZzgr?s=cl&p=i&ilr=0', icon: MessageCircle, external: true },
         { name: 'Email', href: 'https://mail.google.com/', icon: MailWarning, external: true },
         { name: 'Documents', href: '/documents', icon: FolderOpen },
-        { 
-          name: 'Opportunities', 
-          href: '/opportunities', 
+        {
+          name: 'Opportunities',
+          href: '/opportunities',
           icon: Target,
           subItems: [
             { name: 'Deals', href: '/opportunities?tab=Deals' },
@@ -93,8 +93,19 @@ const navMenus: Record<Role, NavGroup[]> = {
             { name: 'Quotes', href: '/opportunities?tab=Quotes' }
           ]
         },
-        { name: 'Reports', href: '/reports', icon: FileText },
-        { name: 'Analytics', href: '/analytics', icon: PieChart },
+        { name: 'Reports & Analytics', icon: FileText, subItems: [
+          { name: 'Dashboard Analytics', href: '/analytics' },
+          { name: 'Lead Reports', href: '/reports/lead' },
+          { name: 'Admission Reports', href: '/reports/admission' },
+          { name: 'Student Reports', href: '/reports/student' },
+          { name: 'Payment Reports', href: '/reports/payment' },
+          { name: 'Attendance Reports', href: '/reports/attendance' },
+          { name: 'Trainer Reports', href: '/reports/trainer' },
+          { name: 'Placement Reports', href: '/reports/placement' },
+          { name: 'Revenue Reports', href: '/reports/revenue' },
+          { name: 'Custom Reports', href: '/reports/custom' }
+        ] },
+        { name: 'Users', href: '/users', icon: UserPlus },
         { name: 'Roles & Permissions', href: '/roles', icon: ShieldCheck },
         { name: 'Automation', href: '/automation', icon: Settings },
         { name: 'Settings', href: '/settings', icon: Settings },
@@ -124,7 +135,18 @@ const navMenus: Record<Role, NavGroup[]> = {
       name: 'OVERVIEW',
       items: [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'Reports', href: '/reports', icon: FileText },
+        { name: 'Reports & Analytics', icon: FileText, subItems: [
+          { name: 'Dashboard Analytics', href: '/analytics' },
+          { name: 'Lead Reports', href: '/reports/lead' },
+          { name: 'Admission Reports', href: '/reports/admission' },
+          { name: 'Student Reports', href: '/reports/student' },
+          { name: 'Payment Reports', href: '/reports/payment' },
+          { name: 'Attendance Reports', href: '/reports/attendance' },
+          { name: 'Trainer Reports', href: '/reports/trainer' },
+          { name: 'Placement Reports', href: '/reports/placement' },
+          { name: 'Revenue Reports', href: '/reports/revenue' },
+          { name: 'Custom Reports', href: '/reports/custom' }
+        ] },
       ]
     },
     {
@@ -141,8 +163,18 @@ const navMenus: Record<Role, NavGroup[]> = {
       name: 'OVERVIEW',
       items: [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'Analytics', href: '/analytics', icon: BarChart2 },
-        { name: 'Reports', href: '/reports', icon: FileText },
+        { name: 'Reports & Analytics', icon: FileText, subItems: [
+          { name: 'Dashboard Analytics', href: '/analytics' },
+          { name: 'Lead Reports', href: '/reports/lead' },
+          { name: 'Admission Reports', href: '/reports/admission' },
+          { name: 'Student Reports', href: '/reports/student' },
+          { name: 'Payment Reports', href: '/reports/payment' },
+          { name: 'Attendance Reports', href: '/reports/attendance' },
+          { name: 'Trainer Reports', href: '/reports/trainer' },
+          { name: 'Placement Reports', href: '/reports/placement' },
+          { name: 'Revenue Reports', href: '/reports/revenue' },
+          { name: 'Custom Reports', href: '/reports/custom' }
+        ] },
       ]
     },
     {
@@ -179,7 +211,15 @@ const navMenus: Record<Role, NavGroup[]> = {
       name: 'CRM',
       items: [
         { name: 'Leads', href: '/member-leads', icon: Target },
-        { name: 'My Tasks', href: '/tasks', icon: CheckSquare, badge: 8 },
+        { name: 'Tasks', icon: CheckSquare, badge: 8, subItems: [
+          { name: 'My Reminders', href: '/tasks/my-tasks' },
+          { name: 'Assigned Tasks', href: '/tasks/assigned' },
+          { name: 'Pending Tasks', href: '/tasks/pending' },
+          { name: 'Completed Tasks', href: '/tasks/completed' },
+          { name: 'Overdue Tasks', href: '/tasks/overdue' },
+          { name: 'Team Tasks', href: '/tasks/team' },
+          { name: 'Calendar View', href: '/tasks/calendar' }
+        ] },
         { name: 'My Schedule', href: '/schedule', icon: Calendar },
         { name: 'Calendar', href: 'https://calendar.google.com/', icon: Calendar, external: true },
         { name: 'Documents', href: '/documents', icon: FolderOpen },
@@ -251,13 +291,10 @@ export function Sidebar() {
     >
       {/* Header / Logo */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-        <Logo />
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginTop: '12px', letterSpacing: '-0.5px' }}>
+        <Logo size={68} />
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '10px', letterSpacing: '-0.5px' }}>
           FORTIVEX.<span style={{ background: 'linear-gradient(135deg, #2563eb, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span> CRM
         </h2>
-        <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', marginTop: '4px' }}>
-          Enterprise Admissions CRM
-        </p>
       </div>
 
       {/* Search */}
@@ -371,13 +408,13 @@ export function Sidebar() {
                         <Icon size={20} style={{ ...activeIconStyle, transition: 'all 0.25s' }} />
                         <span style={{ flex: 1 }}>{item.name}</span>
                         {item.badge && (
-                          <span style={{ 
-                            background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(37,99,235,0.1)', 
-                            color: isActive ? 'white' : '#2563eb', 
-                            padding: '2px 8px', 
-                            borderRadius: '99px', 
-                            fontSize: '0.75rem', 
-                            fontWeight: 700 
+                          <span style={{
+                            background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(37,99,235,0.1)',
+                            color: isActive ? 'white' : '#2563eb',
+                            padding: '2px 8px',
+                            borderRadius: '99px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700
                           }}>
                             {item.badge}
                           </span>
@@ -393,7 +430,7 @@ export function Sidebar() {
                     let linkWrapper = null;
 
                     if (item.external) {
-                      if (item.href.includes('chat.whatsapp.com')) {
+                      if (item.href?.includes('chat.whatsapp.com')) {
                         linkWrapper = (
                           <div key={`ext-${index}`} onClick={() => {
                             if (window.confirm('Join WhatsApp Community\n\nYou will be redirected to the official Fortivex.AI CRM WhatsApp community group.')) {
@@ -414,7 +451,7 @@ export function Sidebar() {
                       linkWrapper = <div key={`sub-${index}`}>{itemContent}</div>;
                     } else {
                       linkWrapper = (
-                        <Link key={`link-${index}`} href={item.href} style={{ textDecoration: 'none' }}>
+                        <Link key={`link-${index}`} href={item.href || '#'} style={{ textDecoration: 'none' }}>
                           {itemContent}
                         </Link>
                       );
@@ -423,7 +460,7 @@ export function Sidebar() {
                     return (
                       <React.Fragment key={index}>
                         {linkWrapper}
-                        
+
                         {/* Render SubItems if expanded */}
                         <AnimatePresence>
                           {item.subItems && isExpanded && (
@@ -437,8 +474,8 @@ export function Sidebar() {
                                 // For active state, we check if the currentTab from URL matches this subItem name
                                 // e.g. subItem.name is "Source Report", currentTab is "Source Report"
                                 // or if currentTab is empty and subItem.name is "Default"
-                                const isSubActive = currentTab === subItem.name || (!currentTab && subItem.name === 'Default');
-                                
+                                const isSubActive = currentTab === subItem.name || (!currentTab && subItem.name === 'Default') || pathname === subItem.href;
+
                                 return (
                                   <Link key={sIdx} href={subItem.href} style={{ textDecoration: 'none' }}>
                                     <motion.div

@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, UserPlus, FileText, PhoneCall, CalendarPlus, UploadCloud, X, Calendar as CalendarIcon, Clock, Video, Monitor, Building } from 'lucide-react';
 import styles from './layout.module.css';
 import { PremiumModal } from '@/components/common/PremiumModal';
-
+import { CreateReminderModal } from '@/components/reminders/CreateReminderModal';
+import { Bell } from 'lucide-react';
 import { useCRM } from '@/contexts/CRMContext';
 
 export function QuickActions() {
@@ -145,6 +146,7 @@ export function QuickActions() {
   };
 
   const actions = [
+    { name: 'Create Reminder', icon: <Bell size={16} />, color: '#ef4444', action: () => handleActionClick('CreateReminder') },
     { name: 'Add Lead', icon: <UserPlus size={16} />, color: 'var(--primary-color)', action: () => handleActionClick('AddLead') },
     { name: 'Create Application', icon: <FileText size={16} />, color: '#10b981', action: () => handleActionClick('CreateApplication') },
     { name: 'Add Student', icon: <UserPlus size={16} />, color: '#3b82f6', action: () => handleActionClick('AddStudent') },
@@ -367,6 +369,9 @@ export function QuickActions() {
         </PremiumModal>
       )}
 
+      {activeModal === 'CreateReminder' && (
+        <CreateReminderModal isOpen={true} onClose={closeModal} />
+      )}
       {activeModal === 'UploadDocument' && (
         <PremiumModal isOpen={true} title="Upload Document" icon={<UploadCloud size={24} />} onClose={closeModal}>
           <form onSubmit={handleUploadDocument}><div style={{ padding: "20px 0" }}>

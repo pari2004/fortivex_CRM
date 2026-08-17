@@ -32,7 +32,7 @@ function LoadingScreen({ companyLogo }: { companyLogo: string | null }) {
         alt="FORTIVEX.AI"
         width={100}
         height={100}
-        style={{ objectFit: 'contain', marginBottom: '20px', animation: 'logoPulse 1.5s ease-in-out infinite' }}
+        style={{ objectFit: 'contain', width: 'auto', height: 'auto', marginBottom: '20px', animation: 'logoPulse 1.5s ease-in-out infinite' }}
         priority
       />
       <div className={styles.brandName} style={{ marginBottom: '20px' }}>FORTIVEX.AI CRM</div>
@@ -169,7 +169,7 @@ export default function AuthScreen({ initialMode = 'login' }: { initialMode?: 'l
               alt="FORTIVEX.AI"
               width={140}
               height={140}
-              style={{ objectFit: 'contain' }}
+              style={{ objectFit: 'contain', width: 'auto', height: 'auto' }}
               priority
             />
           </div>

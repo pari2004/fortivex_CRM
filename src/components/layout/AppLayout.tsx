@@ -13,6 +13,8 @@ import styles from './layout.module.css';
 import { AuthGuard } from './AuthGuard';
 import { Breadcrumbs } from './Breadcrumbs';
 
+import { ReminderPopupManager } from '@/components/reminders/ReminderPopupManager';
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthPage = pathname === '/login' || pathname === '/signup';
@@ -32,6 +34,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </main>
           </div>
           {!isAuthPage && <AiAssistantOrb />}
+          {!isAuthPage && <ReminderPopupManager />}
           </div>
         </CRMProvider>
       </AuthProvider>

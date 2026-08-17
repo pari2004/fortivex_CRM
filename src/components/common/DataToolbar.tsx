@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
+import { exportToExcel, exportToPDF } from '@/lib/utils/exportUtils';
 
 export interface FilterOption {
   key: string;
@@ -102,42 +103,25 @@ export function DataToolbar<T extends Record<string, any>>({
       alert('No data to export.');
       return;
     }
-    
-    // Create a generic notification element
-    const toast = document.createElement('div');
-    toast.innerText = `Download Started: ${exportFilename}_${exportScope}.${format}`;
-    toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
-    toast.style.right = '20px';
-    toast.style.background = 'var(--primary-color)';
-    toast.style.color = 'white';
-    toast.style.padding = '12px 24px';
-    toast.style.borderRadius = '8px';
-    toast.style.zIndex = '9999';
-    toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.innerText = `Download Complete: ${exportFilename}_${exportScope}.${format}`;
-      toast.style.background = '#10b981'; // green
-      setTimeout(() => {
-        if (document.body.contains(toast)) document.body.removeChild(toast);
-      }, 3000);
-    }, 1500);
 
-    // Format data according to exportMapping if provided
-    const formattedData = dataToExport.map(item => {
-      if (!exportMapping) return item;
-      const formatted: Record<string, any> = {};
-      exportMapping.forEach(mapping => {
-        formatted[mapping.label] = item[mapping.key];
+    const filename = `${exportFilename}_${exportScope}`;
+
+    if (format === 'xlsx' || format === 'csv') {
+      exportToExcel(dataToExport, filename, exportFilename);
+    } else if (format === 'pdf') {
+      exportToPDF(dataToExport, filename, exportFilename);
+    } else if ((format as any) === 'print') {
+      const formattedData = dataToExport.map(item => {
+        const clean: Record<string, any> = {};
+        Object.keys(item).forEach(k => {
+          if (typeof item[k] !== 'object' && typeof item[k] !== 'function') {
+            clean[k] = item[k];
+          }
+        });
+        return clean;
       });
-      return formatted;
-    });
-
-    if ((format as any) === 'print') {
       const printWindow = window.open('', '', 'height=600,width=800');
-      if (printWindow) {
+      if (printWindow && formattedData.length > 0) {
         printWindow.document.write('<html><head><title>Print Export</title>');
         printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; font-family: sans-serif; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } th { background-color: #f4f4f4; }</style>');
         printWindow.document.write('</head><body>');
@@ -157,30 +141,6 @@ export function DataToolbar<T extends Record<string, any>>({
         printWindow.focus();
         printWindow.print();
       }
-    }
-    else if (format === 'csv') {
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const csv = XLSX.utils.sheet_to_csv(worksheet);
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${exportFilename}_${exportScope}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } 
-    else if (format === 'xlsx') {
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-      XLSX.writeFile(workbook, `${exportFilename}_${exportScope}.xlsx`);
-    }
-    else if (format === 'pdf') {
-      const doc = new jsPDF();
-      const keys = Object.keys(formattedData[0]);
-      const tableData = formattedData.map(row => keys.map(k => String(row[k])));
-      autoTable(doc, { head: [keys], body: tableData });
-      doc.save(`${exportFilename}_${exportScope}.pdf`);
     }
     setShowExport(false);
   };

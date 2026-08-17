@@ -15,10 +15,11 @@ import { useAuth, Role } from '@/contexts/AuthContext';
 
 type NavItem = {
   name: string;
-  href: string;
+  href?: string;
   icon: any;
   external?: boolean;
   badge?: string | number;
+  subItems?: { name: string; href: string }[];
 };
 
 type NavGroup = {
@@ -35,16 +36,45 @@ const navMenus: Record<Role, NavGroup[]> = {
         { name: 'Leads', href: '/leads', icon: Users },
         { name: 'Pipeline', href: '/pipeline', icon: BarChart2 },
         { name: 'Applications', href: '/applications', icon: Briefcase },
-        { name: 'Students', href: '/students', icon: GraduationCap },
-        { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+        { name: 'Students', icon: GraduationCap, subItems: [
+          { name: 'All Students', href: '/students' },
+          { name: 'Student Admissions', href: '/students/admissions' },
+          { name: 'Batch Allocation', href: '/students/batch-allocation' },
+          { name: 'Attendance', href: '/students/attendance' },
+          { name: 'Assignments (Inactive)', href: '/students/assignments' },
+          { name: 'Assessments (Inactive)', href: '/students/assessments' },
+          { name: 'Internship', href: '/students/internship' },
+          { name: 'Certificates', href: '/students/certificates' },
+          { name: 'Placement Tracking', href: '/students/placement' },
+          { name: 'Alumni', href: '/students/alumni' }
+        ] },
+        { name: 'Tasks', icon: CheckSquare, subItems: [
+          { name: 'My Reminders', href: '/tasks/my-tasks' },
+          { name: 'Assigned Tasks', href: '/tasks/assigned' },
+          { name: 'Pending Tasks', href: '/tasks/pending' },
+          { name: 'Completed Tasks', href: '/tasks/completed' },
+          { name: 'Overdue Tasks', href: '/tasks/overdue' },
+          { name: 'Team Tasks', href: '/tasks/team' },
+          { name: 'Calendar View', href: '/tasks/calendar' }
+        ] },
         { name: 'Calendar', href: 'https://calendar.google.com/', icon: Calendar, external: true },
         { name: 'Calls', href: '/calls', icon: Phone },
         { name: 'Join Fortivex.AI CRM WhatsApp Community', href: 'https://chat.whatsapp.com/GS1U8RoMpvn6XzVwgPZzgr?s=cl&p=i&ilr=0', icon: MessageCircle, external: true },
         { name: 'Email', href: 'https://mail.google.com/', icon: MailWarning, external: true },
         { name: 'Documents', href: '/documents', icon: FolderOpen },
         { name: 'Payments', href: '/payments', icon: PieChart },
-        { name: 'Reports', href: '/reports', icon: FileText },
-        { name: 'Analytics', href: '/analytics', icon: PieChart },
+        { name: 'Reports & Analytics', icon: FileText, subItems: [
+          { name: 'Dashboard Analytics', href: '/analytics' },
+          { name: 'Lead Reports', href: '/reports/lead' },
+          { name: 'Admission Reports', href: '/reports/admission' },
+          { name: 'Student Reports', href: '/reports/student' },
+          { name: 'Payment Reports', href: '/reports/payment' },
+          { name: 'Attendance Reports', href: '/reports/attendance' },
+          { name: 'Trainer Reports', href: '/reports/trainer' },
+          { name: 'Placement Reports', href: '/reports/placement' },
+          { name: 'Revenue Reports', href: '/reports/revenue' },
+          { name: 'Custom Reports', href: '/reports/custom' }
+        ] },
         { name: 'Users', href: '/users', icon: UserPlus },
         { name: 'Roles & Permissions', href: '/roles', icon: ShieldCheck },
         { name: 'Automation', href: '/automation', icon: Settings },
@@ -75,7 +105,18 @@ const navMenus: Record<Role, NavGroup[]> = {
       name: 'OVERVIEW',
       items: [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'Reports', href: '/reports', icon: FileText },
+        { name: 'Reports & Analytics', icon: FileText, subItems: [
+          { name: 'Dashboard Analytics', href: '/analytics' },
+          { name: 'Lead Reports', href: '/reports/lead' },
+          { name: 'Admission Reports', href: '/reports/admission' },
+          { name: 'Student Reports', href: '/reports/student' },
+          { name: 'Payment Reports', href: '/reports/payment' },
+          { name: 'Attendance Reports', href: '/reports/attendance' },
+          { name: 'Trainer Reports', href: '/reports/trainer' },
+          { name: 'Placement Reports', href: '/reports/placement' },
+          { name: 'Revenue Reports', href: '/reports/revenue' },
+          { name: 'Custom Reports', href: '/reports/custom' }
+        ] },
       ]
     },
     {
@@ -92,8 +133,18 @@ const navMenus: Record<Role, NavGroup[]> = {
       name: 'OVERVIEW',
       items: [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'Analytics', href: '/analytics', icon: BarChart2 },
-        { name: 'Reports', href: '/reports', icon: FileText },
+        { name: 'Reports & Analytics', icon: FileText, subItems: [
+          { name: 'Dashboard Analytics', href: '/analytics' },
+          { name: 'Lead Reports', href: '/reports/lead' },
+          { name: 'Admission Reports', href: '/reports/admission' },
+          { name: 'Student Reports', href: '/reports/student' },
+          { name: 'Payment Reports', href: '/reports/payment' },
+          { name: 'Attendance Reports', href: '/reports/attendance' },
+          { name: 'Trainer Reports', href: '/reports/trainer' },
+          { name: 'Placement Reports', href: '/reports/placement' },
+          { name: 'Revenue Reports', href: '/reports/revenue' },
+          { name: 'Custom Reports', href: '/reports/custom' }
+        ] },
       ]
     },
     {
@@ -130,7 +181,15 @@ const navMenus: Record<Role, NavGroup[]> = {
       name: 'CRM',
       items: [
         { name: 'Leads', href: '/member-leads', icon: Target },
-        { name: 'My Tasks', href: '/tasks', icon: CheckSquare, badge: 8 },
+        { name: 'Tasks', icon: CheckSquare, badge: 8, subItems: [
+          { name: 'My Reminders', href: '/tasks/my-tasks' },
+          { name: 'Assigned Tasks', href: '/tasks/assigned' },
+          { name: 'Pending Tasks', href: '/tasks/pending' },
+          { name: 'Completed Tasks', href: '/tasks/completed' },
+          { name: 'Overdue Tasks', href: '/tasks/overdue' },
+          { name: 'Team Tasks', href: '/tasks/team' },
+          { name: 'Calendar View', href: '/tasks/calendar' }
+        ] },
         { name: 'My Schedule', href: '/schedule', icon: Calendar },
         { name: 'Calendar', href: 'https://calendar.google.com/', icon: Calendar, external: true },
         { name: 'Documents', href: '/documents', icon: FolderOpen },
@@ -153,11 +212,20 @@ export function Sidebar() {
   const activeGroups = navMenus[role] || [];
   
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups(prev => ({
       ...prev,
       [groupName]: !prev[groupName]
+    }));
+  };
+
+  const toggleMenu = (e: React.MouseEvent, menuName: string) => {
+    e.preventDefault();
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuName]: !prev[menuName]
     }));
   };
 
@@ -185,13 +253,10 @@ export function Sidebar() {
     >
       {/* Header / Logo */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-        <Logo />
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginTop: '12px', letterSpacing: '-0.5px' }}>
+        <Logo size={68} />
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '10px', letterSpacing: '-0.5px' }}>
           FORTIVEX.<span style={{ background: 'linear-gradient(135deg, #2563eb, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span> CRM
         </h2>
-        <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', marginTop: '4px' }}>
-          Enterprise Admissions CRM
-        </p>
       </div>
 
       {/* Search */}
@@ -260,7 +325,10 @@ export function Sidebar() {
                   style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px' }}
                 >
                   {group.items.map((item, index) => {
-                    const isActive = pathname === item.href;
+                    const hasSubItems = item.subItems && item.subItems.length > 0;
+                    const isSubMenuActive = hasSubItems && item.subItems!.some(sub => pathname === sub.href || pathname.startsWith(sub.href + '/'));
+                    const isActive = (!hasSubItems && item.href && pathname === item.href) || isSubMenuActive;
+                    const isExpanded = expandedMenus[item.name] || isSubMenuActive;
                     const Icon = item.icon;
 
                     const activeStyle = isActive ? {
@@ -276,6 +344,7 @@ export function Sidebar() {
                     const itemContent = (
                       <motion.div
                         whileHover={isActive ? {} : { scale: 1.02, backgroundColor: 'rgba(37, 99, 235, 0.05)' }}
+                        onClick={hasSubItems ? (e) => toggleMenu(e, item.name) : undefined}
                         style={{
                           position: 'relative',
                           display: 'flex',
@@ -307,33 +376,91 @@ export function Sidebar() {
                             {item.badge}
                           </span>
                         )}
+                        {hasSubItems && (
+                          <motion.div animate={{ rotate: isExpanded ? 90 : 0 }}>
+                            <ChevronRight size={16} style={{ color: isActive ? '#2563eb' : '#94a3b8' }} />
+                          </motion.div>
+                        )}
                       </motion.div>
                     );
 
-                    if (item.external) {
-                      if (item.href.includes('chat.whatsapp.com')) {
+                    const renderContent = () => {
+                      if (item.external && item.href) {
+                        if (item.href.includes('chat.whatsapp.com')) {
+                          return (
+                            <div key={index} onClick={() => {
+                              if (window.confirm('Join WhatsApp Community\n\nYou will be redirected to the official Fortivex.AI CRM WhatsApp community group.')) {
+                                window.open(item.href, '_blank', 'noopener,noreferrer');
+                              }
+                            }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+                              {itemContent}
+                            </div>
+                          );
+                        }
                         return (
-                          <div key={index} onClick={() => {
-                            if (window.confirm('Join WhatsApp Community\n\nYou will be redirected to the official Fortivex.AI CRM WhatsApp community group.')) {
-                              window.open(item.href, '_blank', 'noopener,noreferrer');
-                            }
-                          }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+                          <a key={index} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                             {itemContent}
+                          </a>
+                        );
+                      }
+
+                      if (hasSubItems) {
+                        return (
+                          <div key={index}>
+                            {itemContent}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}
+                                >
+                                  {item.subItems!.map((sub, sIndex) => {
+                                    const isSubActive = pathname === sub.href;
+                                    return (
+                                      <Link key={sIndex} href={sub.href} style={{ textDecoration: 'none' }}>
+                                        <motion.div
+                                          whileHover={{ backgroundColor: 'rgba(37, 99, 235, 0.05)' }}
+                                          style={{
+                                            padding: '8px 16px 8px 48px',
+                                            borderRadius: '10px',
+                                            color: isSubActive ? '#2563eb' : '#64748b',
+                                            fontSize: '0.85rem',
+                                            fontWeight: isSubActive ? 600 : 500,
+                                            background: isSubActive ? 'rgba(37, 99, 235, 0.05)' : 'transparent',
+                                            transition: 'all 0.2s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            position: 'relative'
+                                          }}
+                                        >
+                                          {isSubActive && (
+                                            <div style={{ position: 'absolute', left: '22px', width: '4px', height: '4px', borderRadius: '50%', background: '#2563eb' }} />
+                                          )}
+                                          {!isSubActive && (
+                                            <div style={{ position: 'absolute', left: '22px', width: '4px', height: '4px', borderRadius: '50%', background: '#cbd5e1' }} />
+                                          )}
+                                          {sub.name}
+                                        </motion.div>
+                                      </Link>
+                                    );
+                                  })}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         );
                       }
-                      return (
-                        <a key={index} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                          {itemContent}
-                        </a>
-                      );
-                    }
 
-                    return (
-                      <Link key={index} href={item.href} style={{ textDecoration: 'none' }}>
-                        {itemContent}
-                      </Link>
-                    );
+                      return (
+                        <Link key={index} href={item.href || '#'} style={{ textDecoration: 'none' }}>
+                          {itemContent}
+                        </Link>
+                      );
+                    };
+
+                    return renderContent();
                   })}
                 </motion.div>
               )}

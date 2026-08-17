@@ -8,6 +8,7 @@ import { MonthlyRevenueChart, MonthlyConversionChart, CounselorPerformanceChart,
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { exportToExcel, exportToPDF } from '@/lib/utils/exportUtils';
 
 // --- Cohort Data Models ---
 interface Cohort {
@@ -55,51 +56,24 @@ export default function AnalyticsPage() {
 
   // --- Export Functionality ---
   const handleExport = (format: 'PDF' | 'Excel' | 'CSV') => {
-    showToast(`Generating ${format} Export...`, 'info');
-    
-    setTimeout(() => {
-      const headers = ['Cohort ID', 'Name', 'Program', 'Students', 'Mentor', 'Start Date', 'Status', 'Completion %', 'Revenue Generated'];
-      const data = filteredCohorts.map(c => [c.id, c.name, c.program, c.students, c.mentor, c.startDate, c.status, `${c.completionPct}%`, `₹${c.revenue}`]);
-      const safeName = 'Cohort_Management_Export';
-      const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '_');
-      const fileName = `${safeName}_${dateStr}`;
+    const filename = 'Cohort_Management_Report';
+    const columns = [
+      { header: 'Cohort ID', key: 'id' },
+      { header: 'Name', key: 'name' },
+      { header: 'Program', key: 'program' },
+      { header: 'Students', key: 'students' },
+      { header: 'Mentor', key: 'mentor' },
+      { header: 'Start Date', key: 'startDate' },
+      { header: 'Status', key: 'status' },
+      { header: 'Completion %', key: 'completionPct' },
+      { header: 'Revenue', key: 'revenue' },
+    ];
 
-      if (format === 'CSV') {
-        const csvContent = [headers.join(','), ...data.map(row => row.join(','))].join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `${fileName}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } 
-      else if (format === 'Excel') {
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Cohorts");
-        XLSX.writeFile(wb, `${fileName}.xlsx`);
-      } 
-      else if (format === 'PDF') {
-        const doc = new jsPDF();
-        doc.setFontSize(20);
-        doc.text('Empowers Academy', 14, 22);
-        doc.setFontSize(14);
-        doc.setTextColor(100);
-        doc.text('Active Cohorts Report', 14, 32);
-        autoTable(doc, {
-          head: [headers],
-          body: data,
-          startY: 45,
-          theme: 'grid',
-          headStyles: { fillColor: [79, 70, 229] },
-          styles: { fontSize: 8 }
-        });
-        doc.save(`${fileName}.pdf`);
-      }
-      showToast('Export Completed Successfully', 'success');
-    }, 1000);
+    if (format === 'PDF') {
+      exportToPDF(filteredCohorts, filename, 'Cohort Management & Performance Report', columns);
+    } else {
+      exportToExcel(filteredCohorts, filename, 'Cohort Management Report', columns);
+    }
   };
 
   return (

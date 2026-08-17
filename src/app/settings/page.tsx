@@ -3,15 +3,80 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Building, Shield, Bell, Palette, Key, Database, LogOut, Settings as SettingsIcon, 
   CheckCircle2, Download, RefreshCw, Trash2, Edit2, Plus, Monitor, LayoutDashboard, Copy, 
   AlertCircle, Smartphone, Globe, Mail, MapPin, Hash, ShieldCheck, Sun, Moon, Calendar,
-  Upload, Search, Phone, X
+  Upload, Search, Phone, PhoneCall, FileText, X, Check, Link as LinkIcon, ExternalLink, Layers, ArrowRight
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { PremiumInput, PremiumSelect, PremiumTextArea, PremiumCard, ToggleSwitch } from '@/components/common/PremiumForm';
 import Image from 'next/image';
+
+const INITIAL_INTEGRATIONS_DATA = [
+  { id: 'aajjo', name: 'AAJJO', category: 'Lead Source', status: 'Healthy', description: 'B2B marketplace lead auto-capture engine.', connected: true, apiKey: 'aajjo_live_883492', webhookUrl: 'https://api.fortivex.ai/aajjo/webhook', badge: 'SET-UP CHARGES' },
+  { id: 'bonvoice', name: 'Bon Voice', category: 'Telephony', status: 'Healthy', description: 'Cloud telephony, call recording & agent metrics.', connected: true, apiKey: 'bon_live_994821', webhookUrl: 'https://api.fortivex.ai/bonvoice/webhook' },
+  { id: 'calendly', name: 'Calendly', category: 'Scheduling', status: 'Healthy', description: 'Automated demo & interview calendar booking.', connected: true, apiKey: 'cal_live_109283', webhookUrl: 'https://api.fortivex.ai/calendly/webhook' },
+  { id: 'callerdesk', name: 'Caller Desk', category: 'Telephony', status: 'Not connected', description: 'Smart IVR and virtual receptionist system.', connected: false },
+  { id: 'cashfree', name: 'Cashfree', category: 'Payments', status: 'Healthy', description: 'Payment gateway for instant fee collection.', connected: true, apiKey: 'cf_live_993810', badge: 'PAID' },
+  { id: 'commonfloor', name: 'Commonfloor', category: 'Lead Source', status: 'Not connected', description: 'Real estate & institutional inquiry sync.', connected: false },
+  { id: '3cx', name: '3CX', category: 'Telephony', status: 'Action needed', description: 'IP PBX phone system integration.', connected: false },
+  { id: 'exotel', name: 'Exotel', category: 'Telephony', status: 'Healthy', description: 'Enterprise telephony API for call logs & recording.', connected: true, apiKey: 'exotel_live_983742918', webhookUrl: 'https://api.fortivex.ai/telephony/exotel/webhook' },
+  { id: 'facebook', name: 'Facebook', category: 'Marketing', status: 'Healthy', description: 'Facebook Lead Ads & Meta business integration.', connected: true, apiKey: 'fb_meta_993810', webhookUrl: 'https://api.fortivex.ai/facebook/webhook' },
+  { id: 'gmail', name: 'Gmail', category: 'Email', status: 'Healthy', description: 'Google Workspace email sync & mail merge.', connected: true, apiKey: 'gmail_auth_token_99182' },
+  { id: 'google_meet', name: 'Google Meet', category: 'Video Calls', status: 'Healthy', description: 'Instant video demo link generator.', connected: true },
+  { id: 'google_drive', name: 'Google Drive', category: 'Storage', status: 'Healthy', description: 'Cloud document storage & student dossier sync.', connected: true },
+  { id: 'google_forms', name: 'Google Forms', category: 'Forms', status: 'Healthy', description: 'Web inquiry form responses auto-ingestion.', connected: true },
+  { id: 'google_ads', name: 'Google Ads Lead Form', category: 'Marketing', status: 'Healthy', description: 'Sync PPC lead extensions in real-time.', connected: true },
+  { id: 'google_sheets', name: 'Google Sheets', category: 'Data', status: 'Healthy', description: 'Live 2-way sync with Google Spreadsheets.', connected: true },
+  { id: 'housing', name: 'Housing', category: 'Lead Source', status: 'Not connected', description: 'Lead stream from Housing property portal.', connected: false },
+  { id: 'indiamart', name: 'Indiamart', category: 'Lead Source', status: 'Healthy', description: 'B2B buyer leads auto-import engine.', connected: true, apiKey: 'im_live_44921' },
+  { id: 'instagram', name: 'Instagram DM', category: 'Social', status: 'Healthy', description: 'Direct message automation & lead capture.', connected: true },
+  { id: 'jotform', name: 'Jotform', category: 'Forms', status: 'Not connected', description: 'Form builder integration for online applications.', connected: false },
+  { id: 'justdial', name: 'Justdial', category: 'Lead Source', status: 'Healthy', description: 'Local business lead API webhook stream.', connected: true, apiKey: 'jd_live_19827' },
+  { id: 'razorpay', name: 'Razorpay', category: 'Payments', status: 'Healthy', description: 'Online payment links, subscriptions & fee receipts.', connected: true, apiKey: 'rzp_live_8839201', badge: 'PAID' },
+  { id: 'email_parser', name: 'Leads from Email to Salesmax', category: 'Parser', status: 'Healthy', description: 'Parse inbound email inquiries into CRM leads.', connected: true },
+  { id: 'whatsapp', name: 'WhatsApp', category: 'Messaging', status: 'Healthy', description: 'Official WhatsApp Business BSP API integration.', connected: true, apiKey: 'interakt_live_77364512', webhookUrl: 'https://api.fortivex.ai/whatsapp/interakt/webhook' },
+];
+function IntegrationBrandLogo({ id, name }: { id: string; name: string }) {
+  const logoStyles: Record<string, { bg: string; color: string; label?: string; icon?: React.ReactNode }> = {
+    'aajjo':        { bg: 'linear-gradient(135deg, #ff6b00, #1e3a8a)', color: '#ffffff', label: 'AA' },
+    'bonvoice':     { bg: 'linear-gradient(135deg, #0ea5e9, #2563eb)', color: '#ffffff', icon: <Phone size={20} /> },
+    'calendly':     { bg: 'linear-gradient(135deg, #006bfc, #0045a5)', color: '#ffffff', icon: <Calendar size={20} /> },
+    'callerdesk':   { bg: 'linear-gradient(135deg, #8b5cf6, #4c1d95)', color: '#ffffff', icon: <Phone size={20} /> },
+    'cashfree':     { bg: 'linear-gradient(135deg, #10b981, #06b6d4)', color: '#ffffff', label: '₹' },
+    'commonfloor': { bg: 'linear-gradient(135deg, #0f766e, #0d9488)', color: '#ffffff', icon: <Building size={20} /> },
+    '3cx':          { bg: 'linear-gradient(135deg, #dc2626, #991b1b)', color: '#ffffff', label: '3CX' },
+    'exotel':       { bg: 'linear-gradient(135deg, #0284c7, #1d4ed8)', color: '#ffffff', icon: <PhoneCall size={20} /> },
+    'facebook':     { bg: 'linear-gradient(135deg, #1877f2, #0d52b5)', color: '#ffffff', label: 'f' },
+    'gmail':        { bg: 'linear-gradient(135deg, #ea4335, #c5221f)', color: '#ffffff', icon: <Mail size={20} /> },
+    'google_meet':  { bg: 'linear-gradient(135deg, #00832d, #00ac47)', color: '#ffffff', icon: <Globe size={20} /> },
+    'google_drive': { bg: 'linear-gradient(135deg, #ffba00, #00ac47, #006bfc)', color: '#ffffff', icon: <Upload size={20} /> },
+    'google_forms': { bg: 'linear-gradient(135deg, #7248b9, #5e35b1)', color: '#ffffff', icon: <FileText size={20} /> },
+    'google_ads':   { bg: 'linear-gradient(135deg, #fbbc04, #4285f4)', color: '#ffffff', icon: <Search size={20} /> },
+    'google_sheets':{ bg: 'linear-gradient(135deg, #0f9d58, #0b8043)', color: '#ffffff', label: '田' },
+    'housing':      { bg: 'linear-gradient(135deg, #e11d48, #be123c)', color: '#ffffff', icon: <Building size={20} /> },
+    'indiamart':    { bg: 'linear-gradient(135deg, #d97706, #b45309)', color: '#ffffff', label: 'IM' },
+    'instagram':    { bg: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)', color: '#ffffff', label: 'IG' },
+    'jotform':      { bg: 'linear-gradient(135deg, #ff6100, #e65100)', color: '#ffffff', icon: <Edit2 size={20} /> },
+    'justdial':     { bg: 'linear-gradient(135deg, #ff9900, #003399)', color: '#ffffff', label: 'JD' },
+    'razorpay':     { bg: 'linear-gradient(135deg, #0c2340, #0284c7)', color: '#ffffff', label: 'R' },
+    'email_parser': { bg: 'linear-gradient(135deg, #1e293b, #3b82f6)', color: '#ffffff', icon: <Mail size={20} /> },
+    'whatsapp':     { bg: 'linear-gradient(135deg, #25d366, #128c7e)', color: '#ffffff', icon: <PhoneCall size={20} /> },
+  };
+
+  const style = logoStyles[id] || { bg: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: '#ffffff', label: name.charAt(0) };
+
+  return (
+    <div style={{
+      width: '44px', height: '44px', borderRadius: '12px', background: style.bg, color: style.color,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.9rem',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.12)', flexShrink: 0, letterSpacing: '-0.5px'
+    }}>
+      {style.label ? style.label : style.icon}
+    </div>
+  );
+}
 
 const INITIAL_SESSIONS = [
   { id: 1, device: 'MacBook Pro 16"', browser: 'Chrome 120.0', ip: '192.168.1.42', time: 'Just now', status: 'Active', isCurrent: true },
@@ -220,13 +285,23 @@ export default function SettingsPage() {
     showToast('Session terminated.');
   };
 
-    const tabs = [
+  // Integrations Tab State
+  const [integrations, setIntegrations] = useState(INITIAL_INTEGRATIONS_DATA);
+  const [integrationFilterChip, setIntegrationFilterChip] = useState<string>('All');
+  const [integrationSearch, setIntegrationSearch] = useState<string>('');
+  const [selectedIntegrationSetup, setSelectedIntegrationSetup] = useState<any | null>(null);
+  const [setupApiKey, setSetupApiKey] = useState('');
+  const [setupWebhook, setSetupWebhook] = useState('');
+  const [isTestingIntegration, setIsTestingIntegration] = useState(false);
+
+  const tabs = [
     { id: 'profile', label: 'User Profile', icon: <User size={18} /> },
     { id: 'company', label: 'Company Profile', icon: <Building size={18} /> },
     { id: 'security', label: 'Security', icon: <Shield size={18} /> },
     { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette size={18} /> },
     { id: 'api_keys', label: 'API Keys', icon: <Key size={18} /> },
+    { id: 'integrations', label: 'Integrations', icon: <Globe size={18} /> },
     { id: 'backup', label: 'Backup & Data', icon: <Database size={18} /> },
   ];
 
@@ -602,6 +677,224 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: INTEGRATIONS */}
+              {activeTab === 'integrations' && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        Integrations · <span style={{ color: '#2563eb' }}>{integrations.length} total</span>
+                      </h2>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px', margin: 0 }}>
+                        Connect external telephony providers, payment gateways, lead channels, and Google Workspace.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Filter Chips Row */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                    {[
+                      'All', 'Configured', 'Not connected', 'Healthy', 'Action needed', 'Reconnect', 'Mapping pending', 'No events yet', 'Stale'
+                    ].map(chip => {
+                      const count = chip === 'All' 
+                        ? integrations.length 
+                        : chip === 'Configured' 
+                        ? integrations.filter(i => i.connected).length 
+                        : integrations.filter(i => i.status.toLowerCase() === chip.toLowerCase() || (chip === 'Not connected' && !i.connected)).length;
+
+                      const isSelected = integrationFilterChip === chip;
+
+                      return (
+                        <button
+                          key={chip}
+                          onClick={() => setIntegrationFilterChip(chip)}
+                          style={{
+                            padding: '6px 14px', borderRadius: '20px', border: isSelected ? 'none' : '1px solid var(--border-color)',
+                            background: isSelected ? 'var(--primary-color)' : 'var(--bg-secondary)', color: isSelected ? 'white' : 'var(--text-secondary)',
+                            fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                          }}
+                        >
+                          {chip} <span style={{ background: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(100,116,139,0.1)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.72rem' }}>{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Search Bar & Category Filter */}
+                  <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+                      <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      <input 
+                        type="text" 
+                        value={integrationSearch}
+                        onChange={e => setIntegrationSearch(e.target.value)}
+                        placeholder="Search by name or category..." 
+                        style={{ width: '100%', height: '42px', paddingLeft: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 23 App Cards Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                    {integrations.filter(app => {
+                      const matchSearch = app.name.toLowerCase().includes(integrationSearch.toLowerCase()) || app.category.toLowerCase().includes(integrationSearch.toLowerCase());
+                      if (!matchSearch) return false;
+                      if (integrationFilterChip === 'Configured') return app.connected;
+                      if (integrationFilterChip === 'Not connected') return !app.connected;
+                      if (integrationFilterChip !== 'All') return app.status.toLowerCase() === integrationFilterChip.toLowerCase();
+                      return true;
+                    }).map(app => {
+                      const isConnected = app.connected;
+                      return (
+                        <div key={app.id} className="glass-panel" style={{ padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative' }}>
+                          
+                          {/* Header: App Name & Status */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <IntegrationBrandLogo id={app.id} name={app.name} />
+                              <div>
+                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{app.name}</h3>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{app.category}</span>
+                              </div>
+                            </div>
+
+                            {app.badge && (
+                              <span style={{ fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(245,158,11,0.15)', color: '#d97706' }}>
+                                {app.badge}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Description */}
+                          <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1 }}>
+                            {app.description}
+                          </p>
+
+                          {/* Connection Status & Set up Button */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isConnected ? '#10b981' : '#94a3b8' }} />
+                              <span style={{ fontSize: '0.78rem', fontWeight: 600, color: isConnected ? '#10b981' : 'var(--text-tertiary)' }}>
+                                {isConnected ? app.status : 'Not connected'}
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setSelectedIntegrationSetup(app);
+                                setSetupApiKey(app.apiKey || '');
+                                setSetupWebhook(app.webhookUrl || '');
+                              }}
+                              style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--primary-color)', background: isConnected ? 'rgba(37,99,235,0.06)' : 'var(--primary-color)', color: isConnected ? 'var(--primary-color)' : 'white', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              Set up <ArrowRight size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Set Up Modal Side Panel */}
+              {selectedIntegrationSetup && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div className="glass-panel" style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '100%', maxWidth: '540px', maxHeight: '85vh', overflowY: 'auto' }}>
+                    
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
+                      <div>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <IntegrationBrandLogo id={selectedIntegrationSetup.id} name={selectedIntegrationSetup.name} /> {selectedIntegrationSetup.name} Integration
+                        </h2>
+                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px' }}>
+                          Status: <strong style={{ color: selectedIntegrationSetup.connected ? '#10b981' : '#94a3b8' }}>{selectedIntegrationSetup.connected ? 'Connected' : 'Not Connected'}</strong>
+                        </div>
+                      </div>
+                      <button onClick={() => setSelectedIntegrationSetup(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+                    </div>
+
+                    {/* NEXT ACTION Section */}
+                    <div style={{ padding: '16px', background: 'rgba(37,99,235,0.06)', borderRadius: '14px', border: '1px solid rgba(37,99,235,0.15)', marginBottom: '24px' }}>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                        NEXT ACTION
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 600, marginBottom: '12px' }}>
+                        {selectedIntegrationSetup.connected ? 'Manage credentials & API sync parameters' : `Authenticate and link ${selectedIntegrationSetup.name} to FORTIVEX.AI CRM`}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          onClick={() => {
+                            setIsTestingIntegration(true);
+                            setTimeout(() => {
+                              setIsTestingIntegration(false);
+                              const updated = integrations.map(i => i.id === selectedIntegrationSetup.id ? { ...i, connected: true, status: 'Healthy', apiKey: setupApiKey, webhookUrl: setupWebhook } : i);
+                              setIntegrations(updated);
+                              setSelectedIntegrationSetup({ ...selectedIntegrationSetup, connected: true, status: 'Healthy' });
+                              showToast(`${selectedIntegrationSetup.name} successfully connected!`);
+                            }, 1200);
+                          }}
+                          style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <CheckCircle2 size={15} /> Connect →
+                        </button>
+                        
+                        {selectedIntegrationSetup.connected && (
+                          <button
+                            onClick={() => {
+                              const updated = integrations.map(i => i.id === selectedIntegrationSetup.id ? { ...i, connected: false, status: 'Not connected' } : i);
+                              setIntegrations(updated);
+                              setSelectedIntegrationSetup(null);
+                              showToast(`Disconnected ${selectedIntegrationSetup.name}`);
+                            }}
+                            style={{ padding: '8px 16px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: 'none', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                          >
+                            Disconnect
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Form Inputs */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>API Key / Client Token</label>
+                        <input
+                          type="text"
+                          value={setupApiKey}
+                          onChange={e => setSetupApiKey(e.target.value)}
+                          placeholder={`Enter ${selectedIntegrationSetup.name} API Key...`}
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Webhook Callback URL</label>
+                        <input
+                          type="text"
+                          value={setupWebhook}
+                          onChange={e => setSetupWebhook(e.target.value)}
+                          placeholder={`https://api.fortivex.ai/${selectedIntegrationSetup.id}/webhook`}
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bottom Links */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color)', fontSize: '0.82rem', color: '#64748b' }}>
+                      <span style={{ fontWeight: 600 }}>MORE:</span>
+                      <div style={{ display: 'flex', gap: '16px' }}>
+                        <a href="#" onClick={e => { e.preventDefault(); showToast('Redirecting to OAuth authentication...'); }} style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>Connect</a>
+                        <span>·</span>
+                        <a href="#" onClick={e => { e.preventDefault(); showToast('Manual API documentation opened.'); }} style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>Manage manually</a>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

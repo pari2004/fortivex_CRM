@@ -133,7 +133,8 @@ const navMenus: Record<Role, NavGroup[]> = {
             { name: 'Messages', href: '/engagements/messages' },
             { name: 'Video Calls', href: '/engagements/video-calls' },
             { name: 'Call Recordings', href: '/engagements/call-recordings' },
-            { name: 'Visits', href: '/engagements/visits' }
+            { name: 'Visits', href: '/engagements/visits' },
+            { name: 'Activities Table View', href: '/activity' }
           ]
         },
         { name: 'Email Hub', href: '/email-hub', icon: Mail },

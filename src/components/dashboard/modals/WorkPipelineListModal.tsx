@@ -6,7 +6,8 @@ import { X, Search, Filter, RefreshCw, LayoutTemplate, Save } from 'lucide-react
 import { motion } from 'framer-motion';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 import { useCRM } from '@/contexts/CRMContext';
-import { LeadProfileModal } from './LeadProfileModal';
+import { LeadWorkspaceModal } from './LeadWorkspaceModal';
+import { LeadPreviewModal } from './LeadPreviewModal';
 
 // --- Toast Utility ---
 function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -105,6 +106,7 @@ export function WorkPipelineListModal({ title, count, filterState, dashboardData
   
   // Lead Details
   const [viewLead, setViewLead] = useState<any | null>(null);
+  const [fullViewLead, setFullViewLead] = useState<any | null>(null);
 
   // Close with ESC
   useGlobalEscape(!!viewLead, () => setViewLead(null));
@@ -282,7 +284,7 @@ export function WorkPipelineListModal({ title, count, filterState, dashboardData
                       {idx === 0 ? (
                         <div 
                           style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#8b5cf6', fontWeight: 500 }}
-                          onClick={() => setViewLead(d)}
+                          onClick={() => setFullViewLead(d)}
                         >
                           <div style={{ width: '24px', height: '24px', borderRadius: '4px', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#4f46e5' }}>
                             {String(d.name).charAt(0) || 'L'}
@@ -308,11 +310,10 @@ export function WorkPipelineListModal({ title, count, filterState, dashboardData
         </div>
         
         {viewLead && (
-            <LeadProfileModal 
-                isOpen={!!viewLead} 
-                onClose={() => setViewLead(null)} 
-                lead={viewLead} 
-            />
+            <LeadPreviewModal isOpen={!!viewLead} onClose={() => setViewLead(null)} lead={viewLead} onViewLead={(l) => { setViewLead(null); setFullViewLead(l); }} />
+        )}
+        {fullViewLead && (
+            <LeadWorkspaceModal isOpen={!!fullViewLead} onClose={() => setFullViewLead(null)} lead={fullViewLead} />
         )}
       </motion.div>
     </div>,

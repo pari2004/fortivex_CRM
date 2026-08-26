@@ -23,23 +23,26 @@ const quickActions = [
 ];
 
 export function QuickCreateMenu({ isOpen, onClose, onAction }: Props) {
-  if (!isOpen) return null;
-
-
   useGlobalEscape(!!isOpen, () => { onClose() });
+
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div 
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)' }} 
-        onClick={onClose} 
-      />
-      
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass-panel"
-        style={{
+    <AnimatePresence>
+      {isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)' }} 
+            onClick={onClose} 
+          />
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="glass-panel"
+            style={{
           position: 'relative',
           width: '100%',
           maxWidth: '1000px',
@@ -123,6 +126,8 @@ export function QuickCreateMenu({ isOpen, onClose, onAction }: Props) {
           }
         `}} />
       </motion.div>
-    </div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

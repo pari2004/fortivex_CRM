@@ -3,6 +3,7 @@ import { PhoneCall } from 'lucide-react';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area } from 'recharts';
 
 interface CallingTrendChartProps {
+  dashboardData?: any;
     dateFilter: string;
 }
 

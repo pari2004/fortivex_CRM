@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { OpportunitiesDeals } from '@/components/opportunities/tabs/OpportunitiesDeals';
-import { OpportunitiesDealsTabular } from '@/components/opportunities/tabs/OpportunitiesDealsTabular';
 import { OpportunitiesPayments } from '@/components/opportunities/tabs/OpportunitiesPayments';
 import { OpportunitiesPaymentsTabular } from '@/components/opportunities/tabs/OpportunitiesPaymentsTabular';
 import { OpportunitiesQuotes } from '@/components/opportunities/tabs/OpportunitiesQuotes';
@@ -52,8 +51,6 @@ export default function OpportunitiesPage() {
     switch (activeTab) {
       case 'Deals':
         return <OpportunitiesDeals />;
-      case 'Deals Tabular':
-        return <OpportunitiesDealsTabular />;
       case 'Payments':
         return <OpportunitiesPayments />;
       case 'Payments Tabular':

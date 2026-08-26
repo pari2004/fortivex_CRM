@@ -35,6 +35,7 @@ function MapCenterer({ selectedMarker }: { selectedMarker: any }) {
 }
 
 interface LeafletMapProps {
+  dashboardData?: any;
   data: any[];
   selectedMarker: any;
   setSelectedMarker: (marker: any) => void;

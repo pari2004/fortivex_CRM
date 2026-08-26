@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Save, Bell, ChevronDown, PhoneCall, PhoneOutgoing, PhoneIncoming, Activity, X,
   Users, TrendingUp, TrendingDown, LayoutDashboard, Target, Clock, MessageSquare, Phone, 
-  ChevronRight, CheckSquare, UserPlus, UserCheck, RefreshCw, CalendarCheck, Bot, 
+  ChevronRight, ChevronLeft, CheckSquare, UserPlus, UserCheck, RefreshCw, CalendarCheck, Bot, 
   AlertTriangle, PhoneMissed, XCircle, Briefcase, Zap, Plus, CheckCircle 
 } from 'lucide-react';
 import { DashboardWidgetMenu } from '../DashboardWidgetMenu';
@@ -14,6 +14,9 @@ import { WorkPipelineListModal } from '../modals/WorkPipelineListModal';
 import { AdHocTasksModal } from '../modals/AdHocTasksModal';
 import { OverallActivitiesDetailsModal } from '../modals/OverallActivitiesDetailsModal';
 import UserProfileModal from './UserProfileModal';
+import { LeadWorkspaceModal } from '../modals/LeadWorkspaceModal';
+import { UserWorkspaceModal } from '../modals/UserWorkspaceModal';
+import { LeadPreviewModal } from '../modals/LeadPreviewModal';
 import { CustomTrackingMetrics } from './CustomTrackingMetrics';
 import { CallingTrendChart } from './CallingTrendChart';
 import { TeamPulseChart } from './TeamPulseChart';
@@ -37,8 +40,11 @@ export function AdminDashboardDefault() {
   const [dateFilter, setDateFilter] = useState('Last 7 Days'); // Default as per requirements to show 299 leads
   const [activePipeline, setActivePipeline] = useState('All');
   const [activeModal, setActiveModal] = useState<{title: string, type: string} | null>(null);
-  const [selectedUserProfile, setSelectedUserProfile] = useState<any | null>(null);
+  const [activeUserProfile, setActiveUserProfile] = useState<any>(null);
+  const [selectedLeadForProfile, setSelectedLeadForProfile] = useState<any | null>(null);
+  const [fullSelectedLeadForProfile, setFullSelectedLeadForProfile] = useState<any | null>(null);
   const [userActivitySearch, setUserActivitySearch] = useState('');
+  const [selectedUserForLeads, setSelectedUserForLeads] = useState<string | null>(null);
   const [activePipelineModal, setActivePipelineModal] = useState<{title: string, count: number, filterState: any} | null>(null);
   const [adHocTasksOpen, setAdHocTasksOpen] = useState(false);
   const [activeActivitiesTitle, setActiveActivitiesTitle] = useState<string | null>(null);
@@ -119,8 +125,8 @@ export function AdminDashboardDefault() {
       mockLeadCount = 500; // Custom Range
     }
 
-    const team = ['Pavan SH', 'Thanushree BR', 'Parikshit', 'Spoorthi', 'Yashwanth', 'Abhishek', 'Padmesh'];
-    const currentUser = 'Pavan SH';
+    const team = ['Pavan S.H', 'Thanushree BR', 'Parikshit', 'Spoorthi', 'Yashwanth', 'Abhishek', 'Padmesh'];
+    const currentUser = 'Pavan S.H';
     const sources = ['Website', 'Referral', 'Social Media', 'Direct', 'Google Ads', 'LinkedIn'];
     const products = ['CRM Basic', 'CRM Pro', 'Enterprise API', 'Consulting'];
 
@@ -361,7 +367,7 @@ export function AdminDashboardDefault() {
     { name: 'Abhishek', type: 'received', duration: '00:02:10', leadName: 'Abhaya Kumar', datetime: '11/08/2026, 17:48', relativeTime: '2 days', status: 'inactive' },
     { name: 'Yashwanth', type: 'made', duration: '00:00:49', leadName: 'Raj', datetime: '09/08/2026, 09:51', relativeTime: '3 days', status: 'inactive' },
     { name: 'Parikshit', type: 'made', duration: '00:01:30', leadName: 'Anil Kumar', datetime: '13/08/2026, 11:15', relativeTime: '4 hours', status: 'active' },
-    { name: 'Pavan SH', type: 'received', duration: '00:00:00', leadName: 'Shiv Prasad', datetime: '13/08/2026, 16:00', relativeTime: 'less than a minute', status: 'active' },
+    { name: 'Pavan S.H', type: 'received', duration: '00:00:00', leadName: 'Shiv Prasad', datetime: '13/08/2026, 16:00', relativeTime: 'less than a minute', status: 'active' },
     { name: 'Spoorthi', type: 'made', duration: '00:03:45', leadName: 'Nisha', datetime: '12/08/2026, 10:30', relativeTime: '1 day', status: 'active' },
     { name: 'Thanushree BR', type: 'received', duration: '00:05:12', leadName: 'Shashank', datetime: '13/08/2026, 14:20', relativeTime: '1 hour', status: 'active' },
     { name: 'Padmesh', type: 'made', duration: '00:04:30', leadName: 'Demo Lead', datetime: '14/08/2026, 10:00', relativeTime: '30 mins', status: 'active' }
@@ -387,7 +393,7 @@ export function AdminDashboardDefault() {
         
       {activePipelineModal && (
         <WorkPipelineListModal 
-          dashboardData={dashboardData}
+          dashboardData={dashboardData as any}
           title={activePipelineModal.title} 
           count={activePipelineModal.count}
           filterState={activePipelineModal.filterState}
@@ -557,13 +563,11 @@ export function AdminDashboardDefault() {
           
           <div style={{ position: 'relative' }}>
             <button className="primary-btn" onClick={() => setIsQuickCreateOpen(!isQuickCreateOpen)} style={{ padding: '8px' }}><Plus size={18} /></button>
-            <AnimatePresence>
-              <QuickCreateMenu 
-                isOpen={isQuickCreateOpen} 
-                onClose={() => setIsQuickCreateOpen(false)} 
-                onAction={(action) => setActiveQuickCreateForm(action)} 
-              />
-            </AnimatePresence>
+            <QuickCreateMenu 
+              isOpen={isQuickCreateOpen} 
+              onClose={() => setIsQuickCreateOpen(false)} 
+              onAction={(action) => setActiveQuickCreateForm(action)} 
+            />
           </div>
           
           <button className="primary-btn" onClick={handleSave} style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Save size={18} /> Save</button>
@@ -645,9 +649,9 @@ export function AdminDashboardDefault() {
                 { title: 'New Leads', sub: 'New inquiries received', icon: UserPlus, color: '#8b5cf6', count: dashboardData.wpNewLeads.length, suffix: '' },
                 { title: 'Newly Assigned Leads', sub: 'Other (non-new) assigned leads yet to work', icon: UserCheck, color: '#8b5cf6', count: dashboardData.wpNewlyAssigned.length, suffix: '' },
                 { title: 'Repeat Enquiries', sub: 'Repeat lead received within selected period', icon: RefreshCw, color: '#8b5cf6', count: Math.floor(dashboardData.newInquiryLeads.length * 0.05), suffix: '' },
-                { title: 'User Set Follow-up for Today', sub: 'Leads where users have scheduled follow-up with due date of today', icon: CalendarCheck, color: '#8b5cf6', count: Math.floor(dashboardData.totalLeadsWorked.length * 0.8), suffix: '' },
+                { title: 'User Set Follow-up for Today', sub: 'Leads where users have scheduled follow-up with due date of today', icon: CalendarCheck, color: '#8b5cf6', count: leads.filter(l => l.nextFollowUp === new Date().toISOString().split('T')[0] && l.followUpStatus !== 'Completed').length, suffix: '' },
                 { title: 'System Set Follow-up for Today', sub: 'Leads where system has scheduled follow-up with due date of today', icon: Bot, color: '#8b5cf6', count: 0, suffix: 'All caught up' },
-                { title: 'Last 30 Days Overdue Follow-ups', sub: 'Leads with follow-ups overdue in last 30 days', icon: Clock, color: '#ef4444', count: Math.floor(dashboardData.totalLeadsWorked.length * 0.1), suffix: '' },
+                { title: 'Last 30 Days Overdue Follow-ups', sub: 'Leads with follow-ups overdue in last 30 days', icon: Clock, color: '#ef4444', count: leads.filter(l => l.nextFollowUp && l.nextFollowUp < new Date().toISOString().split('T')[0] && l.followUpStatus !== 'Completed').length, suffix: '' },
                 { title: 'Calls You Missed', sub: 'Calls missed in selected period', icon: PhoneMissed, color: '#10b981', count: Math.floor(dashboardData.totalLeadsWorked.length * 0.05), suffix: '' },
                 { title: 'Recent Closed Leads', sub: 'Leads closed in selected period', icon: Briefcase, color: '#f59e0b', count: dashboardData.closedLeads.length, suffix: '' },
               ].map(item => (
@@ -655,7 +659,7 @@ export function AdminDashboardDefault() {
                   key={item.title} 
                   style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)', background: 'var(--bg-card)', cursor: 'pointer', transition: 'background 0.2s' }}
                   className="hover-bg-secondary"
-                  onClick={() => setActivePipelineModal({ title: item.title, count: item.count, filterState: { startDate: dashboardData.startDate, endDate: dashboardData.endDate, activePipeline, dateFilter } })}
+                  onClick={() => setActivePipelineModal({ title: item.title, count: item.count, filterState: { startDate: (dashboardData as any).startDate, endDate: (dashboardData as any).endDate, activePipeline, dateFilter } })}
                 >
                   <div style={{ background: `var(--bg-secondary)`, padding: '8px', borderRadius: '50%', flexShrink: 0 }}>
                     <item.icon size={20} color={item.color} />
@@ -690,60 +694,133 @@ export function AdminDashboardDefault() {
           <div className="glass-panel" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '700px' }}>
             <div style={{ padding: '24px 24px 16px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Users size={20} color="#3b82f6"/> User Activity
+                <Users size={20} color="#3b82f6"/> 
+                {selectedUserForLeads ? `${selectedUserForLeads}'s Assigned Leads` : 'User Activity'}
               </h3>
-            </div>
-            
-            <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <Search size={16} color="var(--text-secondary)" />
-                <input 
-                  type="text" 
-                  placeholder="Search Users" 
-                  value={userActivitySearch}
-                  onChange={e => setUserActivitySearch(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '14px', marginLeft: '8px' }}
-                />
-              </div>
-            </div>
-            
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-              {dynamicUserActivities.filter(u => u.name.toLowerCase().includes(userActivitySearch.toLowerCase())).length > 0 ? 
-                dynamicUserActivities.filter(u => u.name.toLowerCase().includes(userActivitySearch.toLowerCase())).map((user, idx) => (
-                <div 
-                  key={idx} 
-                  style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }}
-                  className="hover-bg-secondary"
-                  onClick={() => setSelectedUserProfile(user)}
+              {selectedUserForLeads && (
+                <button 
+                  onClick={() => setSelectedUserForLeads(null)}
+                  className="secondary-btn"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '0.9rem' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '140px', flexShrink: 0 }}>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>
-                        {user.name.charAt(0)}
-                      </div>
-                      <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '12px', height: '12px', borderRadius: '50%', background: user.status === 'active' ? '#10b981' : '#cbd5e1', border: '2px solid white' }} />
-                    </div>
-                    <div style={{ fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
-                  </div>
-
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '12px', minWidth: 0, paddingRight: '16px' }}>
-                    <Phone size={16} color="#4f46e5" style={{ marginTop: '2px', flexShrink: 0 }} />
-                    <div style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5', wordBreak: 'break-word' }}>
-                      <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{user.name}</span> {user.type} a {user.duration} duration call {user.type === 'made' ? 'to' : 'from'} <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{user.leadName}</span>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', width: '85px', justifyContent: 'flex-end', flexShrink: 0 }}>
-                    <Clock size={14} color={user.status === 'active' ? '#10b981' : '#ef4444'} />
-                    <span style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{user.relativeTime}</span>
-                  </div>
-                </div>
-              )) : (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
-                  No users matched your search.
-                </div>
+                  <ChevronLeft size={16} /> Back
+                </button>
               )}
             </div>
+            
+            {!selectedUserForLeads ? (
+              <>
+                <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <Search size={16} color="var(--text-secondary)" />
+                    <input 
+                      type="text" 
+                      placeholder="Search Users" 
+                      value={userActivitySearch}
+                      onChange={e => setUserActivitySearch(e.target.value)}
+                      style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '14px', marginLeft: '8px' }}
+                    />
+                  </div>
+                </div>
+                
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  {dynamicUserActivities.filter(u => u.name.toLowerCase().includes(userActivitySearch.toLowerCase())).length > 0 ? 
+                    dynamicUserActivities.filter(u => u.name.toLowerCase().includes(userActivitySearch.toLowerCase())).map((user, idx) => (
+                    <div 
+                      key={idx} 
+                      style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }}
+                      className="hover-bg-secondary"
+                      onClick={() => setActiveUserProfile(user)}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '140px', flexShrink: 0 }}>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>
+                            {user.name.charAt(0)}
+                          </div>
+                          <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '12px', height: '12px', borderRadius: '50%', background: user.status === 'active' ? '#10b981' : '#cbd5e1', border: '2px solid white' }} />
+                        </div>
+                        <div style={{ fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+                      </div>
+
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '12px', minWidth: 0, paddingRight: '16px' }}>
+                        <Phone size={16} color="#4f46e5" style={{ marginTop: '2px', flexShrink: 0 }} />
+                        <div style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                          <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{user.name}</span> {user.type} a {user.duration} duration call {user.type === 'made' ? 'to' : 'from'} <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{user.leadName}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', width: '85px', justifyContent: 'flex-end', flexShrink: 0 }}>
+                        <Clock size={14} color={user.status === 'active' ? '#10b981' : '#ef4444'} />
+                        <span style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{user.relativeTime}</span>
+                      </div>
+                    </div>
+                  )) : (
+                    <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
+                      No users matched your search.
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
+                    <tr>
+                      <th style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)' }}>Lead Details</th>
+                      <th style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)' }}>Stage & Status</th>
+                      <th style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)' }}>Follow-up</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leads.filter(l => l.owner === selectedUserForLeads).length > 0 ? (
+                      leads.filter(l => l.owner === selectedUserForLeads).map((lead) => (
+                        <tr 
+                          key={lead.id} 
+                          className="hover-bg-secondary"
+                          style={{ borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }}
+                          onClick={() => setSelectedLeadForProfile(lead)}
+                        >
+                          <td style={{ padding: '16px 24px' }}>
+                            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{lead.name}</div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', gap: '12px' }}>
+                              <span>{lead.phone}</span>
+                              <span>{lead.email}</span>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '4px' }}>Source: {lead.source}</div>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span style={{ display: 'inline-block', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, background: 'rgba(99,102,241,0.1)', color: '#4f46e5', width: 'fit-content' }}>
+                                {lead.stage || 'New Lead'}
+                              </span>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status: {lead.status || 'Active'}</div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Priority: {lead.priority || 'Medium'}</div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <CalendarCheck size={14} color="#64748b" /> {lead.nextFollowUp || 'No follow-up set'}
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                              Last Active: {lead.lastActivity || new Date(lead.updatedAt).toLocaleDateString()}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                              Created: {new Date(lead.createdAt).toLocaleDateString()}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3} style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                          No leads assigned to {selectedUserForLeads}.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
       </div>
 
@@ -804,38 +881,43 @@ export function AdminDashboardDefault() {
 
       {/* ROW 4: Custom Tracking Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-        <CustomTrackingMetrics dateFilter={dateFilter} dashboardData={dashboardData} />
+        <CustomTrackingMetrics dateFilter={dateFilter} dashboardData={dashboardData as any} />
       </div>
 
       {/* ROW 5: Calling Trend & Team Pulse Today */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        <CallingTrendChart dateFilter={dateFilter} dashboardData={dashboardData} />
-        <TeamPulseChart dateFilter={dateFilter} dashboardData={dashboardData} />
+                <CallingTrendChart dateFilter={dateFilter} dashboardData={dashboardData as any} />
+                <TeamPulseChart dateFilter={dateFilter} dashboardData={dashboardData as any} />
       </div>
 
       {/* ROW 6: Where Leads Came From & Who Got Them */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        <LeadSourceDistribution dateFilter={dateFilter} dashboardData={dashboardData} />
-        <UserLeadAssignment dateFilter={dateFilter} dashboardData={dashboardData} />
+        <LeadSourceDistribution dateFilter={dateFilter} dashboardData={dashboardData as any} />
+        <UserLeadAssignment dateFilter={dateFilter} dashboardData={dashboardData as any} />
       </div>
       
       {/* ROW 7: Stage Breakdown Cards */}
-      <StageBreakdownCards dashboardData={dashboardData} />
+      <StageBreakdownCards dashboardData={dashboardData as any} />
 
       {activeActivitiesTitle && (
         <OverallActivitiesDetailsModal 
           title={activeActivitiesTitle} 
           onClose={() => setActiveActivitiesTitle(null)} 
-          dashboardData={dashboardData} 
+          dashboardData={dashboardData as any} 
         />
       )}
 
-      {selectedUserProfile && (
-        <UserProfileModal 
-          user={selectedUserProfile} 
-          onClose={() => setSelectedUserProfile(null)} 
-        />
-      )}
+      <AnimatePresence>
+        {selectedLeadForProfile && (
+          <LeadPreviewModal isOpen={true} lead={selectedLeadForProfile} onClose={() => setSelectedLeadForProfile(null)} onViewLead={(l) => { setSelectedLeadForProfile(null); setFullSelectedLeadForProfile(l); }} />
+        )}
+        {fullSelectedLeadForProfile && (
+          <LeadWorkspaceModal isOpen={true} lead={fullSelectedLeadForProfile} onClose={() => setFullSelectedLeadForProfile(null)} />
+        )}
+        {activeUserProfile && (
+          <UserWorkspaceModal isOpen={true} user={activeUserProfile} onClose={() => setActiveUserProfile(null)} />
+        )}
+      </AnimatePresence>
     </div>
     </div>
   );

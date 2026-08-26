@@ -10,16 +10,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const isAuthPage = pathname === '/login' || pathname === '/signup';
-    
-    if (!isAuthenticated && !isAuthPage) {
+    // Only redirect if not authenticated AND not already on the login or signup page
+    if (!isAuthenticated && pathname !== '/login' && pathname !== '/signup') {
       router.push('/login');
-    } else if (isAuthenticated && isAuthPage) {
-      router.push('/dashboard');
     }
   }, [isAuthenticated, pathname, router]);
 
-  // If not authenticated and not on an auth page, render nothing while redirecting
+  // Don't render anything if we're redirecting to login
   if (!isAuthenticated && pathname !== '/login' && pathname !== '/signup') {
     return null;
   }

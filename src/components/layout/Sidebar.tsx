@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Users, UserPlus, Phone, PhoneCall, Calendar,
@@ -40,7 +40,7 @@ const navMenus: Record<Role, NavGroup[]> = {
             { name: 'Default', href: '/dashboard?tab=Default' },
             { name: 'Activity Metrics', href: '/dashboard?tab=Activity Metrics' },
             { name: 'Source Report', href: '/dashboard?tab=Source Report' },
-            { name: 'Users', href: '/dashboard?tab=Users' },
+            { name: 'User Leads', href: '/dashboard?tab=User Leads' },
             { name: 'Custom', href: '/dashboard?tab=Custom' },
           ]
         },
@@ -50,12 +50,13 @@ const navMenus: Record<Role, NavGroup[]> = {
           icon: Users,
           subItems: [
             { name: 'Active Leads', href: '/leads?tab=Active Leads' },
+            { name: 'Work Leads', href: '/leads?tab=Work Leads' },
             { name: 'Business', href: '/leads?tab=Business' },
             { name: 'Documents', href: '/leads?tab=Documents' },
             { name: 'Segments / Lists', href: '/leads?tab=Segments / Lists' },
             { name: 'Uploads', href: '/leads?tab=Uploads' },
             { name: 'Distribution', href: '/leads?tab=Distribution' },
-            { name: 'Follow-ups', href: '/follow-ups' }
+            { name: 'Follow-ups', href: '/leads?tab=Follow-ups' }
           ]
         },
         {
@@ -73,7 +74,6 @@ const navMenus: Record<Role, NavGroup[]> = {
             { name: 'Admission Completed', href: '/applications?status=Admission Completed' }
           ]
         },
-        { name: 'Follow-ups', href: '/follow-ups', icon: PhoneCall },
         {
           name: 'Students',
           href: '/students',
@@ -109,7 +109,7 @@ const navMenus: Record<Role, NavGroup[]> = {
         { name: 'Calls', href: '/calls', icon: Phone },
         { name: 'Join Fortivex.AI CRM WhatsApp Community', href: 'https://chat.whatsapp.com/GS1U8RoMpvn6XzVwgPZzgr?s=cl&p=i&ilr=0', icon: MessageCircle, external: true },
         { name: 'Email', href: 'https://mail.google.com/', icon: MailWarning, external: true },
-        { name: 'Documents', href: '/documents', icon: FolderOpen },
+
         {
           name: 'Conversations',
           href: '/conversations',
@@ -129,12 +129,13 @@ const navMenus: Record<Role, NavGroup[]> = {
           href: '/engagements',
           icon: Video,
           subItems: [
-            { name: 'Overview', href: '/engagements' },
+            { name: 'All Engagements', href: '/engagements/all' },
+            { name: 'All Activities', href: '/engagements/activities' },
             { name: 'Messages', href: '/engagements/messages' },
+            { name: 'Calls', href: '/engagements/call-recordings' },
             { name: 'Video Calls', href: '/engagements/video-calls' },
-            { name: 'Call Recordings', href: '/engagements/call-recordings' },
-            { name: 'Visits', href: '/engagements/visits' },
-            { name: 'Activities Table View', href: '/activity' }
+            { name: 'Active Table View', href: '/activity' },
+            { name: 'Visits', href: '/engagements/visits' }
           ]
         },
         { name: 'Email Hub', href: '/email-hub', icon: Mail },
@@ -145,7 +146,6 @@ const navMenus: Record<Role, NavGroup[]> = {
           icon: Target,
           subItems: [
             { name: 'Deals', href: '/opportunities?tab=Deals' },
-            { name: 'Deals Tabular', href: '/opportunities?tab=Deals Tabular' },
             { name: 'Payments', href: '/opportunities?tab=Payments' },
             { name: 'Payments Tabular', href: '/opportunities?tab=Payments Tabular' },
             { name: 'Quotes', href: '/opportunities?tab=Quotes' }
@@ -164,7 +164,19 @@ const navMenus: Record<Role, NavGroup[]> = {
           { name: 'Custom Reports', href: '/reports/custom' }
         ] },
         { name: 'Users', href: '/users', icon: UserPlus },
-        { name: 'Roles & Permissions', href: '/roles', icon: ShieldCheck },
+        {
+          name: 'Customization',
+          href: '/customization',
+          icon: Settings,
+          subItems: [
+            { name: 'Organization', href: '/customization/organization' },
+            { name: 'Account Defaults', href: '/customization/account-defaults' },
+            { name: 'Roles & Permissions', href: '/customization/roles-permissions' },
+            { name: 'Properties', href: '/customization/properties' },
+            { name: 'Customization', href: '/customization/customization' },
+            { name: 'Manage Do Not Track', href: '/customization/manage-do-not-track' }
+          ]
+        },
         { name: 'Automation', href: '/automation', icon: Settings },
         { name: 'Settings', href: '/settings', icon: Settings },
         { name: 'Help Center', href: '/help', icon: ShieldCheck },
@@ -182,7 +194,6 @@ const navMenus: Record<Role, NavGroup[]> = {
       name: 'CRM',
       items: [
         { name: 'My Leads', href: '/leads', icon: Users, badge: 45 },
-        { name: 'Follow-ups', href: '/follow-ups', icon: Phone, badge: 12 },
         { name: 'Calendar', href: '/calendar', icon: Calendar },
         { name: 'Admissions', href: '/admissions', icon: CheckCircle, badge: 5 },
       ]
@@ -280,7 +291,7 @@ const navMenus: Record<Role, NavGroup[]> = {
         ] },
         { name: 'My Schedule', href: '/schedule', icon: Calendar },
         { name: 'Calendar', href: 'https://calendar.google.com/', icon: Calendar, external: true },
-        { name: 'Documents', href: '/documents', icon: FolderOpen },
+
       ]
     },
     {
@@ -298,6 +309,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab');
+  const router = useRouter();
   const { role, user, logout } = useAuth();
   const activeGroups = navMenus[role] || [];
   
@@ -574,7 +586,14 @@ export function Sidebar() {
       {/* Bottom Profile Area */}
       <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px' }}>
-          <div style={{ position: 'relative' }}>
+          
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, cursor: 'pointer', borderRadius: '12px', padding: '4px', transition: 'background 0.2s' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            onClick={() => router.push('/users/USR-002')}
+          >
+            <div style={{ position: 'relative' }}>
             <div style={{ 
               width: '42px', 
               height: '42px', 
@@ -608,6 +627,7 @@ export function Sidebar() {
             <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'capitalize' }}>
               {role}
             </div>
+          </div>
           </div>
           <motion.button 
             whileHover={{ scale: 1.1, color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}

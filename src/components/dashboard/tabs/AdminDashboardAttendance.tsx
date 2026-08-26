@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, Download, FileSpreadsheet, FileText, Printer, RefreshCw, 
@@ -13,7 +14,7 @@ import { CellDetailsModal } from '../modals/CellDetailsModal';
 
 const departments = ['Admissions', 'Sales', 'Marketing', 'Finance', 'HR', 'IT', 'Support'];
 const roles = ['Admission Counselor', 'Sales Executive', 'Marketing Manager', 'Support Agent', 'Finance Analyst', 'Team Lead'];
-const names = ['Rahul Sharma', 'Sneha Patel', 'Amit Kumar', 'Priya Singh', 'Vikram Desai', 'Anjali Gupta', 'Karan Mehta', 'Neha Verma'];
+const names = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
 const statuses = ['Present', 'Absent', 'WFH', 'Leave', 'Half Day'];
 
 const generateMockEmployees = () => {
@@ -58,6 +59,7 @@ const generateMockEmployees = () => {
 };
 
 export function AdminDashboardAttendance() {
+  const crm = useCRM();
   const [data] = useState(generateMockEmployees());
   const [searchTerm, setSearchTerm] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);

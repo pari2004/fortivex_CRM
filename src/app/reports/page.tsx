@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { FileText, Download, BarChart2, Share2, Copy, Edit2, CheckCircle, Printer, Eye, FileDigit, Calendar, Trash2, X, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DataToolbar } from '@/components/common/DataToolbar';
@@ -42,7 +43,7 @@ const generateMockReportData = (reportName: string) => {
   const headers = ['Record ID', 'Student Name', 'Program', 'Status', 'Counselor', 'Date'];
   const data = [];
   
-  const names = ['Rahul Sharma', 'Priya Patel', 'Sneha Reddy', 'Amit Kumar', 'Vikram Singh', 'Neha Gupta', 'Arjun Kapoor', 'Sanjay Dutt', 'Riya Sen', 'Karan Johar'];
+  const names = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
   const programs = ['Full Stack Development'];
   const statuses = ['Interested', 'Admitted', 'Demo Scheduled', 'Pending', 'Lost'];
   const counselors = ['Rahul', 'Arjun', 'Kiran', 'Priya', 'Amit'];
@@ -63,6 +64,7 @@ const generateMockReportData = (reportName: string) => {
 };
 
 export default function ReportsPage() {
+  const crm = useCRM();
   const [reports, setReports] = useState<CRMReport[]>(initialReports);
   const [filteredReports, setFilteredReports] = useState<CRMReport[]>(initialReports);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);

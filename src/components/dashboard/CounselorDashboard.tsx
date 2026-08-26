@@ -13,9 +13,12 @@ export function CounselorDashboard() {
   const myTasks = tasksData.slice(0, 3);
   const myEvents = calendarEvents.slice(0, 3);
 
+  const today = new Date().toISOString().split('T')[0];
+  const followUpsToday = leads.filter(l => l.nextFollowUp === today && l.followUpStatus !== 'Completed').length;
+
   const stats = [
-    { title: 'My Active Leads', value: 42, icon: Users, color: '#2563EB', href: '/leads' },
-    { title: 'Follow-ups Today', value: 8, icon: Phone, color: '#f59e0b', href: '/calls' },
+    { title: 'My Active Leads', value: counselorLeads.length, icon: Users, color: '#2563EB', href: '/leads' },
+    { title: 'Follow-ups Today', value: followUpsToday, icon: Phone, color: '#f59e0b', href: '/leads?tab=Follow-ups' },
     { title: 'Demo Sessions', value: 3, icon: CalendarIcon, color: '#10b981', href: 'https://calendar.google.com/', external: true },
     { title: 'Pending Tasks', value: 5, icon: CheckSquare, color: '#8b5cf6', href: '/tasks' },
   ];

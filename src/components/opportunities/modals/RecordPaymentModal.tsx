@@ -21,7 +21,7 @@ export function RecordPaymentModal({ onClose, onSuccess }: Props) {
     e.preventDefault();
     addPayment({
       ...formData,
-      status: 'Paid'
+      status: 'Paid Already'
     });
     onSuccess?.(formData.studentName);
     onClose();

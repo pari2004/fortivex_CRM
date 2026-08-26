@@ -4,6 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TeamPulseChartProps {
+  dashboardData?: any;
     dateFilter: string;
 }
 

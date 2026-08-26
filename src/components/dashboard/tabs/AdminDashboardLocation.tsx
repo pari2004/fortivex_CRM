@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, Download, FileSpreadsheet, FileText, Printer, RefreshCw, 
@@ -19,7 +20,7 @@ const LeafletMap = dynamic(() => import('./LeafletMap'), {
 const departments = ['Admissions', 'Sales', 'Marketing', 'Finance', 'HR', 'Support', 'Field Operations'];
 const roles = ['Field Agent', 'Sales Executive', 'Admission Counselor', 'Regional Manager'];
 const cities = ['Bengaluru', 'Mysuru', 'Hubballi', 'Mangaluru', 'Belagavi', 'Chennai', 'Hyderabad'];
-const names = ['Rahul Sharma', 'Sneha Patel', 'Amit Kumar', 'Priya Singh', 'Vikram Desai', 'Anjali Gupta', 'Karan Mehta', 'Neha Verma', 'Sanjay Dutt', 'Meera Rao'];
+const names = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
 const devices = ['Samsung S23', 'iPhone 14', 'OnePlus 11', 'Oppo Reno', 'Vivo V27'];
 
 const generateMockLocations = () => {
@@ -63,6 +64,7 @@ const generateMockLocations = () => {
 };
 
 export function AdminDashboardLocation() {
+  const crm = useCRM();
   const [data] = useState(generateMockLocations());
   const [searchTerm, setSearchTerm] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);

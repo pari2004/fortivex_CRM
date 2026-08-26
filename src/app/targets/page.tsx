@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Target, IndianRupee, Users, TrendingUp, Search, Filter, Download, Plus, 
@@ -49,6 +50,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'succes
 };
 
 export default function TargetsPage() {
+  const crm = useCRM();
   const [targets, setTargets] = useState(MOCK_TARGETS);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
@@ -414,7 +416,7 @@ export default function TargetsPage() {
       {/* Add New Target Modal */}
       <PremiumModal isOpen={isNewTargetOpen} onClose={() => setIsNewTargetOpen(false)} title="Assign New Target" subtitle="Set goals for counselors" icon={<Target size={24}/>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
-          <PremiumSelect label="Counselor" options={['Select Counselor', 'Rahul Sharma', 'Arjun Kumar', 'Sneha Reddy', 'Priya Sharma', 'Kiran Patel']} />
+          <PremiumSelect label="Counselor" options={['Select Counselor', ...crm.users.map(u => u.name)]} />
           <PremiumSelect label="Program" options={['Full Stack Development', 'Data Science', 'Cloud Computing']} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <PremiumInput label="Revenue Target (₹)" type="number" placeholder="500000" />

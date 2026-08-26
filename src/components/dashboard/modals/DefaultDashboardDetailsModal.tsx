@@ -22,6 +22,16 @@ export function DefaultDashboardDetailsModal({ title, type, onClose, demoData, s
   // Action Modals State (for table row actions)
   const [activeActionModal, setActiveActionModal] = useState<{type: string, data: any} | null>(null);
 
+  const handleSaveAction = (e: React.FormEvent) => {
+    e.preventDefault();
+    showToast('Changes saved successfully');
+    setActiveActionModal(null);
+  };
+
+  const handleRowAction = (action: string, row: any) => {
+    setActiveActionModal({ type: action, data: row });
+  };
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
@@ -118,7 +128,7 @@ export function DefaultDashboardDetailsModal({ title, type, onClose, demoData, s
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      rawData = rawData.filter(item => 
+      rawData = rawData.filter((item: any) => 
         Object.values(item).some(val => 
           val && String(val).toLowerCase().includes(q)
         )

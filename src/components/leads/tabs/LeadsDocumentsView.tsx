@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { Search, Plus, Filter, RefreshCw, MoreVertical, FileText, Image as ImageIcon, Download, Trash2, Edit2, Clock, UploadCloud, X, CheckSquare, Calendar, PhoneCall, Mail, MessageCircle, FileDown, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
@@ -27,7 +28,7 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
 }
 
 // --- Mock Data Generators ---
-const names = ['Rahul Sharma', 'Priya Nair', 'Arjun Kumar', 'Sneha Patel', 'Pavan Sadanand', 'Ananya Rao', 'Vikram Singh', 'Neha Verma', 'Amit Joshi'];
+const names = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
 const docTypes = ['Identity Proof', 'PAN Card', 'Address Proof', 'Education Certificate', 'Application Form', 'Admission Documents', 'Payment Receipt', 'Offer Letter', 'Supporting Documents', 'Profile Photo'];
 const statuses = ['Verified', 'Pending Review', 'Rejected', 'Missing', 'Expired'];
 
@@ -246,6 +247,7 @@ const PreviewModal = ({ doc, onClose }: any) => {
 
 // --- Main Component ---
 export function LeadsDocumentsView() {
+  const crm = useCRM();
   const [leads] = useState(generateActiveLeads());
 
 

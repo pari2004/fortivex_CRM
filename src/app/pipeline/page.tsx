@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { leadsData, LeadStatus, Lead } from '@/lib/data/mockData';
 import { DataToolbar } from '@/components/common/DataToolbar';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
@@ -183,7 +184,7 @@ function AssignCounselorModal({ lead, isOpen, onClose, onSave }: { lead: Lead | 
       <PremiumCard title="Counselor Assignment" icon={<span style={{fontSize: '18px'}}>🤝</span>}>
         <div style={{ gridColumn: '1 / -1' }}>
           <p style={{ margin: '0 0 16px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Assigning lead <strong>{lead.name}</strong> to:</p>
-          <PremiumSelect label="Select Counselor" value={counselor} onChange={e => setCounselor(e.target.value)} options={['Rahul Sharma', 'Sneha Reddy', 'Arjun Kumar', 'Priya Sharma']} icon={<span style={{fontSize: '16px'}}>👨‍💼</span>} />
+          <PremiumSelect label="Select Counselor" value={counselor} onChange={e => setCounselor(e.target.value)} options={['Select Counselor', 'Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh']} icon={<span style={{fontSize: '16px'}}>👨‍💼</span>} />
         </div>
       </PremiumCard>
     </PremiumModal>
@@ -338,6 +339,7 @@ function KanbanCard({ lead, index, activeMenuId, setActiveMenuId, openModal, exe
 
 // --- Main Page Component ---
 export default function PipelinePage() {
+  const crm = useCRM();
   const [isMounted, setIsMounted] = useState(false);
   const [localData, setLocalData] = useState<Lead[]>([]);
   const [filteredData, setFilteredData] = useState<Lead[]>([]);

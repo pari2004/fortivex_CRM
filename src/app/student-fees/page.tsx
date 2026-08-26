@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { DataToolbar, FilterOption } from '@/components/common/DataToolbar';
 import { ActionMenu } from '@/components/common/ActionMenu';
 import { CheckSquare, Square, Eye, Edit, Trash2, CreditCard, MessageSquare, Mail, FileDown, Printer, X, CheckCircle, AlertCircle, Clock } from 'lucide-react';
@@ -31,7 +32,7 @@ export interface StudentFeeRecord {
 
 const generateFeeRecords = (): StudentFeeRecord[] => {
   const data: StudentFeeRecord[] = [];
-  const names = ['Rahul Sharma', 'Priya Reddy', 'Arjun Kumar', 'Sneha Patel', 'Kiran Rao', 'Rohit Verma', 'Ananya Singh', 'Aditya Nair', 'Meera Joshi', 'Suresh Babu', 'Divya Kapoor', 'Vikram Gupta', 'Pooja Menon', 'Sanjay Kumar', 'Neha Agarwal'];
+  const names = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
   for (let i = 1; i <= 40; i++) {
     const total = 50000 + Math.floor(Math.random() * 5) * 10000;
     const pStatus = ['Paid', 'Partial', 'Pending', 'Overdue'][Math.floor(Math.random() * 4)] as any;
@@ -94,6 +95,7 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 export default function StudentFeesPage() {
+  const crm = useCRM();
   const [data, setData] = useState<StudentFeeRecord[]>(initialData);
   const [filteredData, setFilteredData] = useState<StudentFeeRecord[]>(initialData);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

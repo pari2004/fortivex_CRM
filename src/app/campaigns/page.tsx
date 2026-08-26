@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { motion } from 'framer-motion';
 import { 
   Megaphone, Target, TrendingUp, Users, Search, Download, 
@@ -58,7 +59,7 @@ const generateCampaignsData = () => {
 
 const generateLeadsData = () => {
   const d = [];
-  const names = ['Ankit Rao', 'Smriti Mandhana', 'Virat K', 'Rohit S', 'Jasprit B'];
+  const names = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
   for(let i=0; i<15; i++) {
     d.push({
       id: `L-${100+i}`, name: names[i%names.length], mobile: `+91 98${Math.floor(Math.random()*90000000+10000000)}`, email: `${names[i%names.length].split(' ')[0].toLowerCase()}@mail.com`, source: 'Google Ads', program: 'Data Science', status: 'New', counselor: 'Rahul Sharma'
@@ -107,6 +108,7 @@ Generated: ${new Date().toLocaleString()}`], { type: 'text/plain' });
 };
 
 export default function CampaignsPage() {
+  const crm = useCRM();
   const [data, setData] = useState(INITIAL_DATA);
   const [filteredData, setFilteredData] = useState(INITIAL_DATA);
   const [page, setPage] = useState(1);

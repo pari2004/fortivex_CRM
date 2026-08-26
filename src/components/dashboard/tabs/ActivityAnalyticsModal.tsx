@@ -5,6 +5,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 interface Props {
+  dashboardData?: any;
   isOpen: boolean;
   onClose: () => void;
 }

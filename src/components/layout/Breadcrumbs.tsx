@@ -33,10 +33,11 @@ export function Breadcrumbs() {
       {paths.map((path, index) => {
         const href = `/${paths.slice(0, index + 1).join('/')}`;
         const isLast = index === paths.length - 1;
-        const formattedPath = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+        let formattedPath = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+        if (pathname === '/activity' && path === 'activity') formattedPath = 'Active Table View';
 
         return (
-          <React.Fragment key={path}>
+          <React.Fragment key={href}>
             <ChevronRight size={14} style={{ opacity: 0.5 }} />
             {isLast ? (
               <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>

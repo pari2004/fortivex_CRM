@@ -33,26 +33,11 @@ export interface Automation {
 }
 
 export const usersData: User[] = [
-  { id: 'USR-001', name: 'Rahul Sharma', phone: '9876543201', email: 'rahul.s@empowers.edu', role: 'Super Admin', department: 'Management', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-001' },
-  { id: 'USR-002', name: 'Priya Reddy', phone: '9876543202', email: 'priya.r@empowers.edu', role: 'Admin', department: 'Administration', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-11T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-002' },
-  { id: 'USR-003', name: 'Kiran Patel', phone: '9876543203', email: 'kiran.p@empowers.edu', role: 'Operations Manager', department: 'Operations', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-12T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-003' },
-  { id: 'USR-004', name: 'Sneha Rao', phone: '9876543204', email: 'sneha.r@empowers.edu', role: 'Admission Manager', department: 'Admissions', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-13T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-004' },
-  { id: 'USR-005', name: 'Arjun Kumar', phone: '9876543205', email: 'arjun.k@empowers.edu', role: 'Admission Counselor', department: 'Admissions', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-14T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-005' },
-  { id: 'USR-006', name: 'Varun Singh', phone: '9876543206', email: 'varun.s@empowers.edu', role: 'Sales Manager', department: 'Sales', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-15T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-006' },
-  { id: 'USR-007', name: 'Nikhil Verma', phone: '9876543207', email: 'nikhil.v@empowers.edu', role: 'Sales Executive', department: 'Sales', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-16T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-007' },
-  { id: 'USR-008', name: 'Ananya Rao', phone: '9876543208', email: 'ananya.r@empowers.edu', role: 'Marketing Manager', department: 'Marketing', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-17T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-008' },
-  { id: 'USR-009', name: 'Harsh Gupta', phone: '9876543209', email: 'harsh.g@empowers.edu', role: 'Digital Marketing Executive', department: 'Marketing', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-18T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-009' },
-  { id: 'USR-010', name: 'Pooja Nair', phone: '9876543210', email: 'pooja.n@empowers.edu', role: 'HR Manager', department: 'Human Resources', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-19T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-010' },
-  { id: 'USR-011', name: 'Deepak Kumar', phone: '9876543211', email: 'deepak.k@empowers.edu', role: 'Finance Manager', department: 'Finance', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-20T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-011' },
-  { id: 'USR-012', name: 'Rohit Verma', phone: '9876543212', email: 'rohit.v@empowers.edu', role: 'Accounts Executive', department: 'Finance', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-21T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-012' },
-  { id: 'USR-013', name: 'Akash Jain', phone: '9876543213', email: 'akash.j@empowers.edu', role: 'Student Success Manager', department: 'Student Services', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-22T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-013' },
-  { id: 'USR-014', name: 'Sanjana Shetty', phone: '9876543214', email: 'sanjana.s@empowers.edu', role: 'Support Executive', department: 'Support', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-23T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-014' },
-  { id: 'USR-015', name: 'Meghana Rao', phone: '9876543215', email: 'meghana.r@empowers.edu', role: 'Member', department: 'General', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-24T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-015' },
-  { id: 'USR-016', name: 'Vivek Kulkarni', phone: '9876543216', email: 'vivek.k@empowers.edu', role: 'Receptionist', department: 'Front Desk', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-25T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-016' },
-  { id: 'USR-017', name: 'Aditya Joshi', phone: '9876543217', email: 'aditya.j@empowers.edu', role: 'Trainer / Faculty', department: 'Academics', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-26T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-017' },
-  { id: 'USR-018', name: 'Neha Sharma', phone: '9876543218', email: 'neha.s@empowers.edu', role: 'Placement Officer', department: 'Placements', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-27T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-018' },
-  { id: 'USR-019', name: 'Aakash Patel', phone: '9876543219', email: 'aakash.p@empowers.edu', role: 'Content Manager', department: 'Content', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-28T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-019' },
-  { id: 'USR-020', name: 'Ramesh Gowda', phone: '9876543220', email: 'ramesh.g@empowers.edu', role: 'IT Administrator', department: 'IT', status: 'Active', lastLogin: '2026-08-05T10:00:00Z', createdDate: '2026-01-29T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-020' },
+  { id: 'USR-001', name: 'Rahul Sharma', phone: '9876543210', email: 'rahul.s@empowers.edu', role: 'Counselor', department: 'Admissions', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-001' },
+  { id: 'USR-002', name: 'Priya Patel', phone: '9876543211', email: 'priya.p@empowers.edu', role: 'Manager', department: 'Admissions', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-002' },
+  { id: 'USR-003', name: 'Amit Kumar', phone: '9876543212', email: 'amit.k@empowers.edu', role: 'Counselor', department: 'Admissions', status: 'Inactive', lastLogin: '2023-10-20T10:00:00Z', createdDate: '2023-02-15T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-003' },
+  { id: 'USR-004', name: 'Sneha Reddy', phone: '9876543213', email: 'sneha.r@empowers.edu', role: 'Admin', department: 'Operations', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-03-20T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-004' },
+  { id: 'USR-005', name: 'Vikram Singh', phone: '9876543214', email: 'vikram.s@empowers.edu', role: 'Counselor', department: 'Admissions', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-04-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-005' },
 ];
 
 export const rolesData: Role[] = [
@@ -77,3 +62,85 @@ export const automationsData: Automation[] = [
   { id: 'AUT-011', name: 'Certificate Reminder', description: 'Notifies the admin to generate a certificate upon course completion.', trigger: 'Course Completed', action: 'Create Admin Task', status: 'Active', createdBy: 'Vikram Singh', lastRun: '2026-08-03T14:00:00Z', nextRun: 'On Trigger' },
   { id: 'AUT-012', name: 'Placement Reminder', description: 'Adds the student to the placement pipeline when Placement Ready status is set.', trigger: 'Status Changed to Placement Ready', action: 'Update Placement Pipeline', status: 'Active', createdBy: 'Neha Gupta', lastRun: '2026-08-04T09:30:00Z', nextRun: 'On Trigger' }
 ];
+
+
+export interface CRMProperty {
+  id: string;
+  name: string;
+  description: string;
+  relatedTo: 'Contact' | 'Engagement' | 'User';
+  type: 'Text' | 'Number' | 'Option' | 'Date' | 'Date & Time' | 'Boolean' | 'Email' | 'Phone' | 'URL' | 'Multi-select';
+  isSystem: boolean;
+  multipleValues: boolean;
+  searchable: boolean;
+  deleted: boolean;
+  options?: string[]; // For Option or Multi-select types
+  cascadeConfig?: {
+    parentPropertyId: string;
+    mapping: Record<string, string[]>;
+  };
+  displayOrder: number;
+  createdAt: string;
+}
+
+export const defaultPropertiesData: CRMProperty[] = [
+  {
+    id: 'PROP-001', name: 'Lead Source', description: 'Lead Source', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['Organic Search', 'Referral', 'Social Media', 'Direct Traffic', 'Paid Campaign'], displayOrder: 1, createdAt: '2023-01-01T10:00:00Z'
+  },
+  {
+    id: 'PROP-002', name: 'Interested In?', description: 'Interested In?', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['Course', 'Webinar', 'Consultation', 'Other'], displayOrder: 2, createdAt: '2023-01-02T10:00:00Z'
+  },
+  {
+    id: 'PROP-003', name: 'What are you looking for?', description: 'What are you looking for?', relatedTo: 'Contact', type: 'Text',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false, displayOrder: 3, createdAt: '2023-01-03T10:00:00Z'
+  },
+  {
+    id: 'PROP-004', name: 'Current Company Type', description: 'Current Company Type', relatedTo: 'Contact', type: 'Text',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false, displayOrder: 4, createdAt: '2023-01-04T10:00:00Z'
+  },
+  {
+    id: 'PROP-005', name: 'Lead Tag', description: 'Lead Tag', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['VIP', 'Hot', 'Warm', 'Cold', 'Spam'], displayOrder: 5, createdAt: '2023-01-05T10:00:00Z'
+  },
+  {
+    id: 'PROP-006', name: 'Deal Stage', description: 'Deal Stage', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Negotiation', 'Won', 'Lost'], displayOrder: 6, createdAt: '2023-01-06T10:00:00Z'
+  },
+  {
+    id: 'PROP-007', name: 'Enrollment Timeline', description: 'Enrollment Timeline', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['Immediately', '1-3 Months', '3-6 Months', '6+ Months'], displayOrder: 7, createdAt: '2023-01-07T10:00:00Z'
+  },
+  {
+    id: 'PROP-008', name: 'Technical Background', description: 'Technical Background', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['None', 'Basic', 'Intermediate', 'Advanced', 'Expert'], displayOrder: 8, createdAt: '2023-01-08T10:00:00Z'
+  },
+  {
+    id: 'PROP-009', name: 'Career Goal', description: 'Career Goal', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['Career Change', 'Upskilling', 'Promotion', 'Freelancing', 'Other'], displayOrder: 9, createdAt: '2023-01-09T10:00:00Z'
+  },
+  {
+    id: 'PROP-010', name: 'Experience Level', description: 'Experience Level', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['0-1 Years', '1-3 Years', '3-5 Years', '5+ Years'], displayOrder: 10, createdAt: '2023-01-10T10:00:00Z'
+  },
+  {
+    id: 'PROP-011', name: 'Call Outcome', description: 'Call Outcome', relatedTo: 'Engagement', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['Answered', 'No Answer', 'Left Voicemail', 'Busy', 'Wrong Number'], displayOrder: 11, createdAt: '2023-01-11T10:00:00Z'
+  },
+  {
+    id: 'PROP-012', name: 'Lead Lifecycle Name', description: 'Lead Lifecycle Name', relatedTo: 'Contact', type: 'Option',
+    isSystem: true, multipleValues: false, searchable: true, deleted: false,
+    options: ['Subscriber', 'Lead', 'Marketing Qualified', 'Sales Qualified', 'Opportunity', 'Customer', 'Evangelist', 'Other'], displayOrder: 12, createdAt: '2023-01-12T10:00:00Z'
+  }
+];
+

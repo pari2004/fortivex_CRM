@@ -17,7 +17,7 @@ import { AdminDashboardDefault } from './tabs/AdminDashboardDefault';
 import { AdminDashboardActivityMetrics } from './tabs/AdminDashboardActivityMetrics';
 import { useSearchParams } from 'next/navigation';
 
-const tabs = ['Default', 'Source Report', 'Users', 'Attendance', 'Location', 'Custom'];
+const tabs = ['Default', 'Source Report', 'User Leads', 'Attendance', 'Location', 'Custom'];
 
 
 
@@ -35,14 +35,16 @@ export function AdminDashboard() {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', paddingBottom: '24px' }}>
         
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Dashboard</h1>
-            <div style={{ marginLeft: '12px' }}>
-              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Enterprise Admin Analytics & Overview.</p>
+        {activeTab !== 'Custom' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Dashboard</h1>
+              <div style={{ marginLeft: '12px' }}>
+                <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Enterprise Admin Analytics & Overview.</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
 
 
@@ -63,7 +65,7 @@ export function AdminDashboard() {
 
             {activeTab === 'Source Report' && <AdminDashboardSourceReport />}
             
-            {activeTab === 'Users' && <AdminDashboardUsers />}
+            {activeTab === 'User Leads' && <AdminDashboardUsers />}
             
             {activeTab === 'Attendance' && <AdminDashboardAttendance />}
             

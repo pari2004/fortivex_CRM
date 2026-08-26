@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 interface Props {
+  dashboardData?: any;
   onAction: (action: string) => void;
 }
 

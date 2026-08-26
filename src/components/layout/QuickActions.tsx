@@ -20,6 +20,8 @@ export function QuickActions() {
   
   const { addLead, addApplication, addStudent, logCall, scheduleDemo, uploadDocument } = useCRM();
 
+  useGlobalEscape(!!isOpen, () => { setIsOpen(false) });
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -214,9 +216,7 @@ export function QuickActions() {
                     textAlign: 'left' as const
                   };
 
-                
-  useGlobalEscape(!!isOpen, () => { setIsOpen(false) });
-  return (
+                  return (
                     <motion.button
                       key={idx}
                       whileHover={{ backgroundColor: 'var(--bg-tertiary)', x: 4 }}

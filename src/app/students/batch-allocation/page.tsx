@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, CheckCircle, Clock, Search, Filter, Plus, Calendar,
   BookOpen, UserCheck, AlertCircle, ArrowRight, X, ChevronRight,
-  Layers, Check, UserPlus, RefreshCw, Trash2, Shield, Eye
+  Layers, Check, UserPlus, RefreshCw, Trash2, Shield, Eye, Monitor
 } from 'lucide-react';
 
 interface Student {
@@ -32,7 +33,10 @@ interface Batch {
   timing: string;
   startDate: string;
   endDate: string;
-  status: 'Upcoming' | 'Active' | 'Full' | 'Completed';
+  status: 'Upcoming' | 'Active' | 'Full' | 'Completed' | 'Cancelled';
+  mode?: 'Online' | 'Offline' | 'Hybrid';
+  location?: string;
+  description?: string;
   students: Student[];
 }
 
@@ -116,6 +120,98 @@ const INITIAL_BATCHES: Batch[] = [
     status: 'Upcoming',
     students: [],
   },
+  {
+    id: 'BAT-05',
+    code: 'BA-2026-M1',
+    name: 'Business Analyst',
+    program: 'Business Analyst',
+    mentor: 'Arjun Kumar',
+    capacity: 30,
+    enrolled: 0,
+    shift: 'Morning',
+    timing: '09:00 AM - 11:30 AM (Mon - Fri)',
+    startDate: '10 Sep 2026',
+    endDate: '10 Jan 2027',
+    status: 'Upcoming',
+    students: [],
+  },
+  {
+    id: 'BAT-06',
+    code: 'AI-2026-E1',
+    name: 'AI Program',
+    program: 'AI Program',
+    mentor: 'Vikram Singh',
+    capacity: 25,
+    enrolled: 0,
+    shift: 'Evening',
+    timing: '06:00 PM - 08:30 PM (Mon - Fri)',
+    startDate: '15 Sep 2026',
+    endDate: '15 Jan 2027',
+    status: 'Upcoming',
+    students: [],
+  },
+  {
+    id: 'BAT-07',
+    code: 'PG-AI-2026-W1',
+    name: 'PG Executive Agentic AI & Generative AI',
+    program: 'PG Executive Agentic AI & Generative AI',
+    mentor: 'Anita Desai',
+    capacity: 20,
+    enrolled: 0,
+    shift: 'Weekend',
+    timing: '10:00 AM - 04:00 PM (Sat - Sun)',
+    startDate: '01 Oct 2026',
+    endDate: '01 Mar 2027',
+    status: 'Upcoming',
+    students: [],
+  }
+];
+
+
+export interface UpcomingClass {
+  id: string;
+  course: string;
+  subject: string;
+  date: string;
+  time: string;
+  classType: string;
+  batchCode: string;
+  mentor: string;
+  meetingLink: string;
+  status: string;
+  mode: 'Online' | 'Offline' | 'Experienced';
+}
+
+const INITIAL_UPCOMING_CLASSES: UpcomingClass[] = [
+  // Cloud Computing & DevOps
+  { id: 'UC-01', course: 'Cloud Computing & DevOps', subject: 'Linux Fundamentals', date: '24 Aug 2026', time: '07:00 AM', classType: 'Weekday Morning', batchCode: 'CCA-DEV-M01', mentor: 'Suresh Iyer', meetingLink: 'https://meet.google.com/abc-defg-hij', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-02', course: 'Cloud Computing & DevOps', subject: 'Cloud Computing Fundamentals', date: '24 Aug 2026', time: '07:00 PM', classType: 'Weekday Evening', batchCode: 'CCA-DEV-E01', mentor: 'Ramesh Singh', meetingLink: 'https://meet.google.com/xyz-uvwx-yz1', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-03', course: 'Cloud Computing & DevOps', subject: 'Docker', date: '25 Aug 2026', time: '02:00 PM', classType: 'Weekday Afternoon', batchCode: 'CCA-DEV-A01', mentor: 'Suresh Iyer', meetingLink: '', status: 'Scheduled', mode: 'Offline' },
+  { id: 'UC-04', course: 'Cloud Computing & DevOps', subject: 'Kubernetes', date: '27 Aug 2026', time: '10:00 AM', classType: 'Weekend Morning', batchCode: 'CCA-DEV-W01', mentor: 'Ramesh Singh', meetingLink: 'https://meet.google.com/qwe-rtyu-iop', status: 'Scheduled', mode: 'Experienced' },
+  
+  // Cybersecurity (CEH v13)
+  { id: 'UC-05', course: 'Cybersecurity (CEH v13)', subject: 'Cybersecurity Fundamentals', date: '24 Aug 2026', time: '07:00 AM', classType: 'Weekday Morning', batchCode: 'CEH-CYB-M01', mentor: 'Karthik Raja', meetingLink: 'https://meet.google.com/aaa-bbbb-ccc', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-06', course: 'Cybersecurity (CEH v13)', subject: 'Ethical Hacking', date: '24 Aug 2026', time: '07:00 PM', classType: 'Weekday Evening', batchCode: 'CEH-CYB-E01', mentor: 'Karthik Raja', meetingLink: '', status: 'Scheduled', mode: 'Offline' },
+  { id: 'UC-07', course: 'Cybersecurity (CEH v13)', subject: 'Network Security', date: '25 Aug 2026', time: '02:00 PM', classType: 'Weekday Afternoon', batchCode: 'CEH-CYB-A01', mentor: 'Manoj Kumar', meetingLink: 'https://meet.google.com/ddd-eeee-fff', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-08', course: 'Cybersecurity (CEH v13)', subject: 'Penetration Testing', date: '27 Aug 2026', time: '10:00 AM', classType: 'Weekend Morning', batchCode: 'CEH-CYB-W01', mentor: 'Manoj Kumar', meetingLink: 'https://meet.google.com/ggg-hhhh-iii', status: 'Scheduled', mode: 'Experienced' },
+
+  // Business Analyst and AI Program
+  { id: 'UC-09', course: 'Business Analyst and AI Program', subject: 'Business Analysis Fundamentals', date: '24 Aug 2026', time: '07:00 AM', classType: 'Weekday Morning', batchCode: 'BA-2026-M1', mentor: 'Arjun Kumar', meetingLink: 'https://meet.google.com/123-4567-890', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-10', course: 'Business Analyst and AI Program', subject: 'Requirement Gathering', date: '25 Aug 2026', time: '02:00 PM', classType: 'Weekday Afternoon', batchCode: 'BAAI-A01', mentor: 'Arjun Kumar', meetingLink: '', status: 'Scheduled', mode: 'Offline' },
+  { id: 'UC-11', course: 'Business Analyst and AI Program', subject: 'Data Analysis', date: '24 Aug 2026', time: '07:00 PM', classType: 'Weekday Evening', batchCode: 'BAAI-E01', mentor: 'Arjun Kumar', meetingLink: 'https://meet.google.com/456-7890-123', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-12', course: 'Business Analyst and AI Program', subject: 'Generative AI', date: '27 Aug 2026', time: '10:00 AM', classType: 'Weekend Morning', batchCode: 'BAAI-W01', mentor: 'Vikram Singh', meetingLink: '', status: 'Scheduled', mode: 'Experienced' },
+
+  // PG Executive Agentic AI & Generative AI
+  { id: 'UC-13', course: 'PG Executive Agentic AI & Generative AI', subject: 'Python for AI', date: '24 Aug 2026', time: '07:00 AM', classType: 'Weekday Morning', batchCode: 'PGAI-M01', mentor: 'Anita Desai', meetingLink: 'https://meet.google.com/zxv-cnmb-jkl', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-14', course: 'PG Executive Agentic AI & Generative AI', subject: 'Generative AI', date: '25 Aug 2026', time: '02:00 PM', classType: 'Weekday Afternoon', batchCode: 'PGAI-A01', mentor: 'Vikram Singh', meetingLink: '', status: 'Scheduled', mode: 'Offline' },
+  { id: 'UC-15', course: 'PG Executive Agentic AI & Generative AI', subject: 'RAG', date: '24 Aug 2026', time: '07:00 PM', classType: 'Weekday Evening', batchCode: 'PG-AI-2026-E1', mentor: 'Anita Desai', meetingLink: 'https://meet.google.com/qqq-www-eee', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-16', course: 'PG Executive Agentic AI & Generative AI', subject: 'Agentic AI', date: '27 Aug 2026', time: '10:00 AM', classType: 'Weekend Morning', batchCode: 'PG-AI-2026-W1', mentor: 'Anita Desai', meetingLink: 'https://meet.google.com/rrr-ttt-yyy', status: 'Scheduled', mode: 'Experienced' },
+
+  // Full Stack Development
+  { id: 'UC-17', course: 'Full Stack Development', subject: 'JavaScript', date: '24 Aug 2026', time: '07:00 AM', classType: 'Weekday Morning', batchCode: 'FSD-2026-A1', mentor: 'Rahul Sharma', meetingLink: 'https://meet.google.com/asd-fghj-klz', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-18', course: 'Full Stack Development', subject: 'React', date: '25 Aug 2026', time: '02:00 PM', classType: 'Weekday Afternoon', batchCode: 'FSD-A01', mentor: 'Priya Sharma', meetingLink: '', status: 'Scheduled', mode: 'Offline' },
+  { id: 'UC-19', course: 'Full Stack Development', subject: 'Node.js', date: '24 Aug 2026', time: '07:00 PM', classType: 'Weekday Evening', batchCode: 'FSD-E01', mentor: 'Rahul Sharma', meetingLink: 'https://meet.google.com/xcv-bnmq-wer', status: 'Scheduled', mode: 'Online' },
+  { id: 'UC-20', course: 'Full Stack Development', subject: 'Full Stack Project', date: '27 Aug 2026', time: '10:00 AM', classType: 'Weekend Morning', batchCode: 'FSD-W01', mentor: 'Priya Sharma', meetingLink: '', status: 'Scheduled', mode: 'Experienced' },
 ];
 
 const INITIAL_HISTORY = [
@@ -125,12 +221,65 @@ const INITIAL_HISTORY = [
 ];
 
 export default function BatchAllocationPage() {
+  const { students: crmStudents, updateStudent } = useCRM();
   const [activeTab, setActiveTab] = useState<'batches' | 'unallocated' | 'history'>('batches');
   const [batches, setBatches] = useState<Batch[]>(INITIAL_BATCHES);
-  const [unallocatedStudents, setUnallocatedStudents] = useState<Student[]>(INITIAL_UNALLOCATED_STUDENTS);
+
+  // Derive batches with students mapped directly from crmStudents
+  const mappedBatches = useMemo(() => {
+    return batches.map(b => ({
+      ...b,
+      students: crmStudents
+        .filter(s => s.batch === b.name || s.batch === b.code || s.program === b.program)
+        .map(s => ({
+          id: s.id,
+          name: s.name,
+          email: s.email,
+          phone: s.phone,
+          program: s.program || b.program,
+          enrollmentDate: s.enrollmentDate || '-',
+          preferredShift: (s as any).preferredShift || 'Morning',
+          status: 'Allocated' as any,
+          currentBatch: b.code
+        }))
+    }));
+  }, [crmStudents, batches]);
+
+  // Derive unallocated students from crmStudents
+  const unallocatedStudents = useMemo(() => {
+    return crmStudents
+      .filter(s => !s.batch && !mappedBatches.some(b => b.students.some(bs => bs.id === s.id)))
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+        program: s.program || 'General',
+        enrollmentDate: s.enrollmentDate || '-',
+        preferredShift: (s as any).preferredShift || 'Morning',
+        status: 'Unallocated' as any
+      }));
+  }, [crmStudents, mappedBatches]);
+  
   const [history, setHistory] = useState(INITIAL_HISTORY);
+
   
   // Search & Filter State
+  
+  // Upcoming Batches State
+  const [upcomingModeFilter, setUpcomingModeFilter] = useState('All');
+  const [upcomingCourseFilter, setUpcomingCourseFilter] = useState('All Courses');
+  const [isClassroomModalOpen, setIsClassroomModalOpen] = useState(false);
+  const [selectedUpcomingClass, setSelectedUpcomingClass] = useState<UpcomingClass | null>(null);
+
+  const filteredUpcomingClasses = useMemo(() => {
+    return INITIAL_UPCOMING_CLASSES.filter(uc => {
+      const modeMatch = upcomingModeFilter === 'All' || uc.mode === upcomingModeFilter;
+      const courseMatch = upcomingCourseFilter === 'All Courses' || uc.course === upcomingCourseFilter;
+      return modeMatch && courseMatch;
+    });
+  }, [upcomingModeFilter, upcomingCourseFilter]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [programFilter, setProgramFilter] = useState('All');
   const [shiftFilter, setShiftFilter] = useState('All');
@@ -162,13 +311,17 @@ export default function BatchAllocationPage() {
     timing: '09:00 AM - 11:30 AM (Mon - Fri)',
     startDate: '',
     endDate: '',
+    mode: 'Online' as 'Online' | 'Offline' | 'Hybrid',
+    location: '',
+    description: '',
+    status: 'Upcoming' as 'Upcoming' | 'Active' | 'Completed' | 'Cancelled'
   });
 
   // Calculate Metrics
   const totalUnallocated = unallocatedStudents.length;
-  const activeBatchesCount = batches.filter(b => b.status === 'Active' || b.status === 'Upcoming').length;
-  const totalCapacity = batches.reduce((acc, b) => acc + b.capacity, 0);
-  const totalEnrolled = batches.reduce((acc, b) => acc + b.enrolled, 0);
+  const activeBatchesCount = mappedBatches.filter(b => b.status === 'Active' || b.status === 'Upcoming').length;
+  const totalCapacity = mappedBatches.reduce((acc, b) => acc + b.capacity, 0);
+  const totalEnrolled = mappedBatches.reduce((acc, b) => acc + b.enrolled, 0);
   const capacityUtilization = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
 
   // Single Student Allocation
@@ -182,19 +335,19 @@ export default function BatchAllocationPage() {
       return;
     }
 
-    const updatedStudent = { ...student, status: 'Allocated' as const, currentBatch: selectedBatch.code };
+    // Find in crmStudents and update globally
+    const crmStudent = crmStudents.find(s => s.id === student.id);
+    if (crmStudent) {
+      updateStudent({ ...crmStudent, batch: selectedBatch.code });
+    }
 
-    // Update batch enrolled count & students roster
     const updatedBatches = [...batches];
     updatedBatches[batchIndex] = {
       ...selectedBatch,
       enrolled: selectedBatch.enrolled + 1,
       status: selectedBatch.enrolled + 1 >= selectedBatch.capacity ? 'Full' : selectedBatch.status,
-      students: [...selectedBatch.students, updatedStudent],
     };
-
     setBatches(updatedBatches);
-    setUnallocatedStudents(unallocatedStudents.filter(s => s.id !== student.id));
     
     // Log in history
     setHistory([
@@ -238,7 +391,6 @@ export default function BatchAllocationPage() {
     };
 
     setBatches(updatedBatches);
-    setUnallocatedStudents(unallocatedStudents.filter(s => !selectedStudentIds.includes(s.id)));
     
     const newHistoryEntries = studentsToAllocate.map(s => ({
       id: `HIS-${Date.now()}-${s.id}`,
@@ -274,7 +426,6 @@ export default function BatchAllocationPage() {
 
     // Return student back to unallocated list
     const unallocatedCopy = { ...studentToRemove, status: 'Unallocated' as const, currentBatch: undefined };
-    setUnallocatedStudents([unallocatedCopy, ...unallocatedStudents]);
 
     // Update roster view if active
     if (viewingBatchRoster?.id === batchId) {
@@ -302,17 +453,21 @@ export default function BatchAllocationPage() {
       name: newBatchForm.name,
       program: newBatchForm.program,
       mentor: newBatchForm.mentor,
-      capacity: Number(newBatchForm.capacity) || 25,
+      capacity: newBatchForm.capacity,
       enrolled: 0,
       shift: newBatchForm.shift,
       timing: newBatchForm.timing,
-      startDate: newBatchForm.startDate || '15 Aug 2026',
-      endDate: newBatchForm.endDate || '15 Dec 2026',
-      status: 'Upcoming',
+      startDate: newBatchForm.startDate,
+      endDate: newBatchForm.endDate,
+      status: newBatchForm.status,
+      mode: newBatchForm.mode,
+      location: newBatchForm.location,
+      description: newBatchForm.description,
       students: [],
     };
 
-    setBatches([newBatch, ...batches]);
+    setBatches([...batches, newBatch]);
+    showToast(`✅ Successfully created batch ${newBatchForm.name}!`);
     setIsCreateBatchModalOpen(false);
     setNewBatchForm({
       code: '',
@@ -321,11 +476,14 @@ export default function BatchAllocationPage() {
       mentor: '',
       capacity: 25,
       shift: 'Morning',
-      timing: '09:00 AM - 11:30 AM (Mon - Fri)',
+      timing: '',
       startDate: '',
       endDate: '',
+      mode: 'Online',
+      location: '',
+      description: '',
+      status: 'Upcoming'
     });
-    showToast(`✨ Created new batch: ${newBatch.code}`);
   };
 
   // Filtering Unallocated List
@@ -498,7 +656,7 @@ export default function BatchAllocationPage() {
       {/* TAB 1: ACTIVE BATCHES GRID */}
       {activeTab === 'batches' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
-          {batches.map((batch) => {
+          {mappedBatches.map((batch, index) => {
             const fillPercentage = Math.round((batch.enrolled / batch.capacity) * 100);
             const getStatusColor = (status: string) => {
               switch (status) {
@@ -512,7 +670,7 @@ export default function BatchAllocationPage() {
 
             return (
               <motion.div
-                key={batch.id}
+                key={`${batch.id}-${index}`}
                 whileHover={{ y: -5 }}
                 className="glass-panel"
                 style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}
@@ -568,7 +726,7 @@ export default function BatchAllocationPage() {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', paddingTop: '8px' }}>
                   <button
-                    onClick={() => setViewingBatchRoster(batch)}
+                    onClick={() => setViewingBatchRoster(mappedBatches.find(b => b.id === batch.id) || batch)}
                     style={{
                       flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--glass-border)',
                       background: 'rgba(255,255,255,0.1)', fontSize: '0.85rem', fontWeight: 600,
@@ -600,6 +758,119 @@ export default function BatchAllocationPage() {
           })}
         </div>
       )}
+
+      
+        {/* UPCOMING BATCHES SECTION */}
+        <div style={{ marginTop: '40px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f97316', textDecoration: 'underline', textUnderlineOffset: '6px', marginBottom: '24px' }}>
+            Upcoming Batches
+          </h2>
+
+          {/* Mode Filters */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            {['Online', 'Offline', 'Experienced'].map(mode => (
+              <button
+                key={mode}
+                onClick={() => setUpcomingModeFilter(upcomingModeFilter === mode ? 'All' : mode)}
+                style={{
+                  padding: '6px 16px',
+                  background: 'transparent',
+                  border: upcomingModeFilter === mode ? '1px solid #f97316' : '1px solid transparent',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  borderRadius: '4px',
+                  fontWeight: upcomingModeFilter === mode ? 600 : 400
+                }}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+
+          {/* Course Filters */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', overflowX: 'auto', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            {['All Courses', 'Cloud Computing & DevOps', 'Cybersecurity (CEH v13)', 'Business Analyst and AI Program', 'PG Executive Agentic AI & Generative AI', 'Full Stack Development'].map(course => (
+              <button
+                key={course}
+                onClick={() => setUpcomingCourseFilter(course)}
+                style={{
+                  padding: '6px 16px',
+                  background: 'transparent',
+                  border: upcomingCourseFilter === course ? '1px solid #f97316' : '1px solid transparent',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  borderRadius: '4px',
+                  whiteSpace: 'nowrap',
+                  fontWeight: upcomingCourseFilter === course ? 600 : 400
+                }}
+              >
+                {course}
+              </button>
+            ))}
+          </div>
+
+          {/* Tables by Course */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {['Cloud Computing & DevOps', 'Cybersecurity (CEH v13)', 'Business Analyst and AI Program', 'PG Executive Agentic AI & Generative AI', 'Full Stack Development']
+              .filter(course => upcomingCourseFilter === 'All Courses' || upcomingCourseFilter === course)
+              .map(course => {
+                const courseClasses = filteredUpcomingClasses.filter(c => c.course === course);
+                if (courseClasses.length === 0) return null;
+                
+                return (
+                  <div key={course} className="glass-panel" style={{ padding: '20px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                    <h3 style={{ color: '#f97316', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '16px' }}>{course}</h3>
+                    
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                            <th style={{ padding: '12px 16px', fontWeight: 600, fontSize: '0.9rem' }}>Action</th>
+                            <th style={{ padding: '12px 16px', fontWeight: 600, fontSize: '0.9rem' }}>Subject</th>
+                            <th style={{ padding: '12px 16px', fontWeight: 600, fontSize: '0.9rem' }}>Date</th>
+                            <th style={{ padding: '12px 16px', fontWeight: 600, fontSize: '0.9rem' }}>Time</th>
+                            <th style={{ padding: '12px 16px', fontWeight: 600, fontSize: '0.9rem' }}>Class Type</th>
+                            <th style={{ padding: '12px 16px', fontWeight: 600, fontSize: '0.9rem' }}>Batch Code</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {courseClasses.map((cls) => (
+                            <tr key={cls.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }}>
+                              <td style={{ padding: '12px 16px' }}>
+                                <button
+                                  onClick={() => {
+                                    setSelectedUpcomingClass(cls);
+                                    setIsClassroomModalOpen(true);
+                                  }}
+                                  style={{ padding: '6px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer' }}
+                                >
+                                  Join Classroom
+                                </button>
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem' }}>{cls.subject}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem', color: '#3b82f6', fontWeight: 500 }}>{cls.date.replace(/ /g, '-')}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem', color: '#3b82f6', fontWeight: 500 }}>{cls.time}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem', color: '#3b82f6' }}>{cls.classType.toLowerCase().replace(' ', '-')}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{cls.batchCode}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {filteredUpcomingClasses.length === 0 && (
+                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                  No upcoming batches match the selected filters.
+                </div>
+              )}
+          </div>
+        </div>
+
 
       {/* TAB 2: UNALLOCATED STUDENTS TABLE */}
       {activeTab === 'unallocated' && (
@@ -855,77 +1126,57 @@ export default function BatchAllocationPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateBatchSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <form onSubmit={handleCreateBatchSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '70vh', overflowY: 'auto', paddingRight: '4px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Batch Code *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. FSD-2026-B2"
-                      value={newBatchForm.code}
-                      onChange={(e) => setNewBatchForm({ ...newBatchForm, code: e.target.value })}
-                      required
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}
-                    />
+                    <input type="text" placeholder="e.g. FSD-2026-B2" value={newBatchForm.code} onChange={(e) => setNewBatchForm({ ...newBatchForm, code: e.target.value })} required style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Batch Name *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Full Stack Morning B2"
-                      value={newBatchForm.name}
-                      onChange={(e) => setNewBatchForm({ ...newBatchForm, name: e.target.value })}
-                      required
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}
-                    />
+                    <input type="text" placeholder="e.g. Full Stack Morning B2" value={newBatchForm.name} onChange={(e) => setNewBatchForm({ ...newBatchForm, name: e.target.value })} required style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
                   </div>
                 </div>
 
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Program / Course *</label>
-                  <select
-                    value={newBatchForm.program}
-                    onChange={(e) => setNewBatchForm({ ...newBatchForm, program: e.target.value })}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}
-                  >
+                  <select value={newBatchForm.program} onChange={(e) => setNewBatchForm({ ...newBatchForm, program: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}>
                     <option value="Full Stack Web Development">Full Stack Web Development</option>
                     <option value="Data Science & AI">Data Science & AI</option>
                     <option value="UI/UX Design Masterclass">UI/UX Design Masterclass</option>
                     <option value="Cloud DevOps Engineering">Cloud DevOps Engineering</option>
+                    <option value="Business Analyst">Business Analyst</option>
+                    <option value="AI Program">AI Program</option>
+                    <option value="PG Executive Agentic AI & Generative AI">PG Executive Agentic AI & Generative AI</option>
                   </select>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Mentor Name *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Rahul Sharma"
-                      value={newBatchForm.mentor}
-                      onChange={(e) => setNewBatchForm({ ...newBatchForm, mentor: e.target.value })}
-                      required
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}
-                    />
+                    <input type="text" placeholder="e.g. Rahul Sharma" value={newBatchForm.mentor} onChange={(e) => setNewBatchForm({ ...newBatchForm, mentor: e.target.value })} required style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Max Capacity Seats</label>
-                    <input
-                      type="number"
-                      value={newBatchForm.capacity}
-                      onChange={(e) => setNewBatchForm({ ...newBatchForm, capacity: Number(e.target.value) })}
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}
-                    />
+                    <input type="number" value={newBatchForm.capacity} onChange={(e) => setNewBatchForm({ ...newBatchForm, capacity: Number(e.target.value) })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Shift</label>
-                    <select
-                      value={newBatchForm.shift}
-                      onChange={(e) => setNewBatchForm({ ...newBatchForm, shift: e.target.value as any })}
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}
-                    >
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Start Date</label>
+                    <input type="date" value={newBatchForm.startDate} onChange={(e) => setNewBatchForm({ ...newBatchForm, startDate: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>End Date</label>
+                    <input type="date" value={newBatchForm.endDate} onChange={(e) => setNewBatchForm({ ...newBatchForm, endDate: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Schedule</label>
+                    <select value={newBatchForm.shift} onChange={(e) => setNewBatchForm({ ...newBatchForm, shift: e.target.value as any })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}>
                       <option value="Morning">Morning</option>
                       <option value="Afternoon">Afternoon</option>
                       <option value="Evening">Evening</option>
@@ -934,30 +1185,43 @@ export default function BatchAllocationPage() {
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Timing String</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 09:00 AM - 11:30 AM"
-                      value={newBatchForm.timing}
-                      onChange={(e) => setNewBatchForm({ ...newBatchForm, timing: e.target.value })}
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}
-                    />
+                    <input type="text" placeholder="e.g. 09:00 AM - 11:30 AM" value={newBatchForm.timing} onChange={(e) => setNewBatchForm({ ...newBatchForm, timing: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
                   </div>
                 </div>
 
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Mode</label>
+                    <select value={newBatchForm.mode} onChange={(e) => setNewBatchForm({ ...newBatchForm, mode: e.target.value as any })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}>
+                      <option value="Online">Online</option>
+                      <option value="Offline">Offline</option>
+                      <option value="Hybrid">Hybrid</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Location / Meeting Link</label>
+                    <input type="text" placeholder="e.g. Room 101 or Zoom Link" value={newBatchForm.location} onChange={(e) => setNewBatchForm({ ...newBatchForm, location: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
+                  </div>
+                </div>
+                
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Batch Status</label>
+                  <select value={newBatchForm.status} onChange={(e) => setNewBatchForm({ ...newBatchForm, status: e.target.value as any })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }}>
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Description</label>
+                  <textarea rows={2} placeholder="Optional batch notes..." value={newBatchForm.description} onChange={(e) => setNewBatchForm({ ...newBatchForm, description: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', outline: 'none', marginTop: '4px' }} />
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateBatchModalOpen(false)}
-                    style={{ padding: '10px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--glass-border)', cursor: 'pointer' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    style={{ padding: '10px 20px', borderRadius: '8px', background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    Create Batch
-                  </button>
+                  <button type="button" onClick={() => setIsCreateBatchModalOpen(false)} style={{ padding: '10px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--glass-border)', cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" style={{ padding: '10px 20px', borderRadius: '8px', background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Create Batch</button>
                 </div>
               </form>
             </motion.div>
@@ -1088,6 +1352,97 @@ export default function BatchAllocationPage() {
                 >
                   Close
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+
+      {/* MODAL: JOIN CLASSROOM / SESSION DETAILS */}
+      <AnimatePresence>
+        {isClassroomModalOpen && selectedUpcomingClass && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="glass-panel"
+              style={{ width: '100%', maxWidth: '500px', padding: '0', borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+            >
+              <div style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Session Details</h3>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '4px' }}>Review class details and join classroom</div>
+                </div>
+                <button onClick={() => { setIsClassroomModalOpen(false); setSelectedUpcomingClass(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Course</span>
+                  <span style={{ fontSize: '1rem', fontWeight: 500 }}>{selectedUpcomingClass.course}</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Subject</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 500 }}>{selectedUpcomingClass.subject}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Mentor</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 500 }}>{selectedUpcomingClass.mentor}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Date & Time</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 500, color: '#3b82f6' }}>{selectedUpcomingClass.date} at {selectedUpcomingClass.time}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Class Type</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 500 }}>{selectedUpcomingClass.classType}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Batch Code</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 500, letterSpacing: '1px' }}>{selectedUpcomingClass.batchCode}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Status</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 500, color: '#10b981' }}>{selectedUpcomingClass.status}</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Meeting Link</span>
+                  {selectedUpcomingClass.meetingLink ? (
+                    <a href={selectedUpcomingClass.meetingLink} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', wordBreak: 'break-all' }}>
+                      {selectedUpcomingClass.meetingLink}
+                    </a>
+                  ) : (
+                    <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Offline / No Link Provided</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ padding: '16px 24px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button
+                  onClick={() => { setIsClassroomModalOpen(false); setSelectedUpcomingClass(null); }}
+                  style={{ padding: '10px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--glass-border)', cursor: 'pointer', color: 'var(--text-primary)' }}
+                >
+                  Close
+                </button>
+                {selectedUpcomingClass.meetingLink && (
+                  <a
+                    href={selectedUpcomingClass.meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: '10px 20px', borderRadius: '8px', background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onClick={() => { setIsClassroomModalOpen(false); setSelectedUpcomingClass(null); }}
+                  >
+                    <Monitor size={16} /> Open Meeting
+                  </a>
+                )}
               </div>
             </motion.div>
           </div>

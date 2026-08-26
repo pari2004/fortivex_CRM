@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, Download, FileSpreadsheet, FileText, Printer, RefreshCw, Save, 
@@ -23,7 +24,7 @@ const sources = [
   'Existing Student Referral', 'Corporate Partnership', 'Offline Advertisement', 'Others'
 ];
 
-const managers = ['Alex Wong', 'Sarah Miller', 'John Doe', 'Priya Sharma', 'Arjun Kumar'];
+const managers = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
 
 const formatCurrency = (val: number) => {
   if (val >= 10000000) {
@@ -110,6 +111,7 @@ const generateMockSources = () => {
 const dateOptions = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month', 'Custom Date'];
 
 export function AdminDashboardSourceReport() {
+  const crm = useCRM();
   const [data, setData] = useState<SourceData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);

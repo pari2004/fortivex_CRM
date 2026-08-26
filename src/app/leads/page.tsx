@@ -4,13 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { AddNewLeadModal } from '@/components/leads/AddNewLeadModal';
+import { NewUploadWizard } from '@/components/leads/NewUploadWizard';
+import { UploadCloud } from 'lucide-react';
 import { LeadsDefaultView } from '@/components/leads/tabs/LeadsDefaultView';
+import { LeadsWorkView } from '@/components/leads/tabs/LeadsWorkView';
 import { LeadsBusinessView } from '@/components/leads/tabs/LeadsBusinessView';
 import { LeadsDocumentsView } from '@/components/leads/tabs/LeadsDocumentsView';
 import { LeadsSegmentsView } from '@/components/leads/tabs/LeadsSegmentsView';
 import { LeadsUploadsView } from '@/components/leads/tabs/LeadsUploadsView';
 import { LeadsDistributionView } from '@/components/leads/tabs/LeadsDistributionView';
-
+import { LeadsFollowUpView } from '@/components/leads/tabs/LeadsFollowUpView';
+import { useCRM } from '@/contexts/CRMContext';
 // --- Toast Utility ---
 function showToast(message: string, type: 'success' | 'error' = 'success') {
   const toast = document.createElement('div');
@@ -36,6 +40,9 @@ export default function LeadsPage() {
   const [activeTab, setActiveTab] = useState('Active Leads');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newLeadEvent, setNewLeadEvent] = useState<any>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [newUploadEvent, setNewUploadEvent] = useState<any>(null);
+  const { processUpload } = useCRM();
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -48,17 +55,21 @@ export default function LeadsPage() {
     switch (activeTab) {
       case 'Active Leads':
       case 'All Leads':
-        return <LeadsDefaultView activeTab={activeTab} newLeadEvent={newLeadEvent} />;
+        return <LeadsDefaultView activeTab={activeTab} newLeadEvent={newLeadEvent} newUploadEvent={newUploadEvent} />;
+      case 'Work Leads':
+        return <LeadsWorkView newLeadEvent={newLeadEvent} newUploadEvent={newUploadEvent} />;
       case 'Business':
         return <LeadsBusinessView />;
       case 'Documents':
         return <LeadsDocumentsView />;
       case 'Segments / Lists':
-        return <LeadsSegmentsView />;
+        return <LeadsSegmentsView newUploadEvent={newUploadEvent} />;
       case 'Uploads':
-        return <LeadsUploadsView />;
+        return <LeadsUploadsView newUploadEvent={newUploadEvent} />;
       case 'Distribution':
         return <LeadsDistributionView />;
+      case 'Follow-ups':
+        return <LeadsFollowUpView />;
       default:
         return <LeadsDefaultView activeTab="Active Leads" newLeadEvent={newLeadEvent} />;
     }
@@ -74,15 +85,24 @@ export default function LeadsPage() {
           <p style={{ color: 'var(--text-secondary)' }}>Manage your leads and data efficiently.</p>
         </div>
         
-        {(activeTab === 'Active Leads' || activeTab === 'All Leads') && (
+                <div style={{ display: 'flex', gap: '12px' }}>
           <button 
-            onClick={() => setIsAddModalOpen(true)} 
-            className="primary-btn" 
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            onClick={() => setIsUploadModalOpen(true)} 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'white', color: 'var(--primary-color)', fontWeight: 600, border: '1px solid var(--primary-color)', cursor: 'pointer' }}
           >
-            <Plus size={18} /> Add New Lead
+            <UploadCloud size={18} /> New Upload
           </button>
-        )}
+          
+          {(activeTab === 'Active Leads' || activeTab === 'All Leads' || activeTab === 'Work Leads') && (
+            <button 
+              onClick={() => setIsAddModalOpen(true)} 
+              className="primary-btn" 
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            >
+              <Plus size={18} /> Add New Lead
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab Content Rendering */}
@@ -101,6 +121,20 @@ export default function LeadsPage() {
         />
       )}
       
+
+      {/* New Upload Wizard Modal */}
+      {isUploadModalOpen && (
+        <NewUploadWizard 
+          onClose={() => setIsUploadModalOpen(false)}
+          onSuccess={(data) => {
+             processUpload(data.uploadRecord, data.importedLeads);
+             setNewUploadEvent(data);
+             setIsUploadModalOpen(false);
+             showToast(`Successfully uploaded list: ${data.uploadRecord.listName}`);
+          }}
+        />
+      )}
+
     </div>
   );
 }

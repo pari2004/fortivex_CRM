@@ -6,6 +6,7 @@ import { useCRM } from '@/contexts/CRMContext';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
 interface Props {
+  dashboardData?: any;
   isOpen: boolean;
   onClose: () => void;
   recordId: string;

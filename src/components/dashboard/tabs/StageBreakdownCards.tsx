@@ -4,7 +4,7 @@ import { WorkPipelineListModal } from '../modals/WorkPipelineListModal';
 import { ChevronLeft, ChevronRight, Users, Filter, DollarSign, Target } from 'lucide-react';
 
 interface StageBreakdownCardsProps {
-    dashboardData: any;
+      dashboardData: any;
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
@@ -123,7 +123,7 @@ export function StageBreakdownCards({ dashboardData }: StageBreakdownCardsProps)
                                             outerRadius="85%"
                                             paddingAngle={2}
                                             dataKey="value"
-                                            onClick={(data) => handleSegmentClick(card, data.name)}
+                                            onClick={(data) => handleSegmentClick(card, data.name || '')}
                                             style={{ cursor: 'pointer' }}
                                         >
                                             {card.breakdown.map((entry, index) => (

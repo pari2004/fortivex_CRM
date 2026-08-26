@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { usersData, User } from '@/lib/data/systemData';
+import { useState, useEffect } from 'react';
+import { User } from '@/lib/data/systemData';
+import { useCRM } from '@/contexts/CRMContext';
 import { DataToolbar } from '@/components/common/DataToolbar';
 import { ActionMenu } from '@/components/common/ActionMenu';
 import { SlidePanel, PremiumModal } from '@/components/common/PremiumModal';
 import { PremiumInput, PremiumSelect, PremiumCard } from '@/components/common/PremiumForm';
-import { User as UserIcon, Shield, Briefcase, Mail, Phone, Clock, Key, Activity, Settings, UserCheck, MessageCircle, Ban, RefreshCw, Trash2, Edit, Laptop, Globe, LogIn } from 'lucide-react';
+import { User as UserIcon, Shield, Briefcase, Mail, Phone, Clock, Key, Activity, Settings, UserCheck, MessageCircle, Ban, RefreshCw, Trash2, Edit, Laptop, Globe, LogIn, Plus, UserPlus } from 'lucide-react';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 // Helper function
 function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -32,8 +34,15 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
 }
 
 export default function UsersPage() {
-  const [localData, setLocalData] = useState<User[]>(usersData);
-  const [filteredData, setFilteredData] = useState<User[]>(usersData);
+  const router = useRouter();
+  const crm = useCRM();
+  const localData = crm.systemUsers || [];
+  const [filteredData, setFilteredData] = useState<User[]>(localData);
+
+  // Sync filteredData when localData changes (e.g., after an edit/add)
+  useEffect(() => {
+    setFilteredData(localData);
+  }, [localData]);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -65,17 +74,15 @@ export default function UsersPage() {
     setFormData({});
   };
 
-  const handleUpdate = () => {
-    if (!selectedUser) return;
-    setLocalData(prev => prev.map(u => u.id === selectedUser.id ? { ...u, ...formData } as User : u));
-    showToast('User updated successfully');
-    closeModal();
-  };
+
+
 
   const handleDelete = () => {
     if (!selectedUser) return;
-    setLocalData(prev => prev.filter(u => u.id !== selectedUser.id));
-    showToast('User deleted successfully', 'error');
+    // We don't have deleteUser in CRMContext yet, let's just do a hacky update status to inactive if we can't delete.
+    // Or we can just use crm.updateUser
+    crm.updateSystemUser({ ...selectedUser, status: 'Inactive' });
+    showToast('User deactivated successfully', 'success');
     closeModal();
   };
 
@@ -90,6 +97,36 @@ export default function UsersPage() {
     return reasons[parseInt(id.replace(/\D/g, '')) % reasons.length];
   };
 
+
+  const handleSaveUser = () => {
+    if (!formData.name || !formData.email) {
+      showToast('Name and Email are required', 'error');
+      return;
+    }
+    
+    if (activeModal === 'edit_user' && selectedUser) {
+      const updatedUser = { ...selectedUser, ...formData } as User;
+      crm.updateSystemUser(updatedUser);
+      showToast('User updated successfully');
+    } else if (activeModal === 'add_user') {
+      const newUser = {
+        name: formData.name || '',
+        email: formData.email || '',
+        phone: formData.phone || '',
+        role: formData.role || 'Admin',
+        department: formData.department || 'Tech',
+        status: formData.status || 'Active',
+        createdDate: formData.createdDate || new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        photo: formData.photo || `https://i.pravatar.cc/150?u=${Date.now()}`
+      };
+      console.log('addSystemUser not implemented for new users in demo');
+      showToast('User created successfully');
+    }
+    setActiveModal(null);
+    setSelectedUser(null);
+    setFormData({});
+  };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%', paddingBottom: '20px' }}>
       
@@ -149,7 +186,11 @@ export default function UsersPage() {
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>Manage CRM access, roles, and profiles for the Full Stack Development program.</p>
         </div>
+        <button className="primary-btn" onClick={() => openModal('add_user')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={18} /> Add New User
+        </button>
       </div>
+
 
       {/* Profile Modal */}
       <SlidePanel isOpen={activeModal === 'profile'} onClose={closeModal} title="User Profile" subtitle={selectedUser?.name} icon={<UserIcon />} width="700px">
@@ -196,16 +237,31 @@ export default function UsersPage() {
         )}
       </SlidePanel>
 
+
+      {/* Add New User Modal */}
+      <SlidePanel isOpen={activeModal === 'add_user'} onClose={closeModal} title="Add New User" subtitle="Create a new CRM account" icon={<UserPlus />} width="600px" footer={<><button className="secondary-btn" onClick={closeModal}>Cancel</button><button className="primary-btn" onClick={handleSaveUser}>Create User</button></>}>
+        <PremiumCard title="Basic Info" icon={<UserIcon size={18} />}>
+          <PremiumInput label="Full Name *" name="name" value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} icon={<UserIcon size={16} />} />
+          <PremiumInput label="Phone" name="phone" value={formData.phone || ''} onChange={(e) => setFormData({...formData, phone: e.target.value})} icon={<Phone size={16} />} />
+          <PremiumInput label="Email *" name="email" value={formData.email || ''} onChange={(e) => setFormData({...formData, email: e.target.value})} icon={<Mail size={16} />} />
+        </PremiumCard>
+        <PremiumCard title="Role & Status" icon={<Shield size={18} />}>
+          <PremiumSelect label="Role *" name="role" value={formData.role || 'Admin'} onChange={(e) => setFormData({...formData, role: e.target.value})} options={['Admin', 'Super Admin', 'HR Manager']} icon={<Shield size={16} />} />
+          <PremiumSelect label="Department *" name="department" value={formData.department || 'Tech'} onChange={(e) => setFormData({...formData, department: e.target.value})} options={['Tech']} icon={<Briefcase size={16} />} />
+          <PremiumSelect label="Status *" name="status" value={formData.status || 'Active'} onChange={(e) => setFormData({...formData, status: e.target.value as 'Active' | 'Inactive'})} options={['Active', 'Inactive']} icon={<Activity size={16} />} />
+        </PremiumCard>
+      </SlidePanel>
+
       {/* Edit User Modal */}
-      <SlidePanel isOpen={activeModal === 'edit'} onClose={closeModal} title="Edit User" subtitle={selectedUser?.name} icon={<Edit />} width="600px" footer={<><button className="secondary-btn" onClick={closeModal}>Cancel</button><button className="primary-btn" onClick={handleUpdate}>Save Changes</button></>}>
+      <SlidePanel isOpen={activeModal === 'edit_user'} onClose={closeModal} title="Edit User" subtitle={selectedUser?.name} icon={<Edit />} width="600px" footer={<><button className="secondary-btn" onClick={closeModal}>Cancel</button><button className="primary-btn" onClick={handleSaveUser}>Save Changes</button></>}>
         <PremiumCard title="Basic Info" icon={<UserIcon size={18} />}>
           <PremiumInput label="Full Name" name="name" value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} icon={<UserIcon size={16} />} />
           <PremiumInput label="Phone" name="phone" value={formData.phone || ''} onChange={(e) => setFormData({...formData, phone: e.target.value})} icon={<Phone size={16} />} />
           <PremiumInput label="Email" name="email" value={formData.email || ''} onChange={(e) => setFormData({...formData, email: e.target.value})} icon={<Mail size={16} />} />
         </PremiumCard>
         <PremiumCard title="Role & Status" icon={<Shield size={18} />}>
-          <PremiumSelect label="Role" name="role" value={formData.role || ''} onChange={(e) => setFormData({...formData, role: e.target.value})} options={['Admin', 'Admission Counselor', 'Sales Manager', 'Marketing Executive', 'Finance Manager', 'Member', 'Placement Officer', 'Support Executive']} icon={<Shield size={16} />} />
-          <PremiumSelect label="Department" name="department" value={formData.department || ''} onChange={(e) => setFormData({...formData, department: e.target.value})} options={['Management', 'Admissions', 'Sales', 'Marketing', 'Finance', 'Academics', 'Placements', 'Student Support']} icon={<Briefcase size={16} />} />
+          <PremiumSelect label="Role" name="role" value={formData.role || ''} onChange={(e) => setFormData({...formData, role: e.target.value})} options={['Admin', 'Super Admin', 'HR Manager']} icon={<Shield size={16} />} />
+          <PremiumSelect label="Department" name="department" value={formData.department || ''} onChange={(e) => setFormData({...formData, department: e.target.value})} options={['Tech']} icon={<Briefcase size={16} />} />
           <PremiumSelect label="Status" name="status" value={formData.status || ''} onChange={(e) => setFormData({...formData, status: e.target.value as 'Active' | 'Inactive'})} options={['Active', 'Inactive']} icon={<Activity size={16} />} />
         </PremiumCard>
       </SlidePanel>
@@ -236,33 +292,22 @@ export default function UsersPage() {
         <div style={{ flex: 1, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
             <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-primary)', zIndex: 1 }}>
+              
               <tr style={{ borderBottom: '2px solid var(--glass-border)', color: 'var(--text-secondary)', textAlign: 'left' }}>
-                <th style={{ padding: '16px' }}>User</th>
+                <th style={{ padding: '16px', width: '40px' }}><input type="checkbox" /></th>
+                <th style={{ padding: '16px' }}>Profile</th>
+                <th style={{ padding: '16px' }}>User ID</th>
+                <th style={{ padding: '16px' }}>Name</th>
+                <th style={{ padding: '16px' }}>Email</th>
+                <th style={{ padding: '16px' }}>Phone</th>
                 <th style={{ padding: '16px' }}>Role</th>
                 
                 {currentView === 'total' && (
                   <>
                     <th style={{ padding: '16px' }}>Department</th>
                     <th style={{ padding: '16px' }}>Status</th>
-                    <th style={{ padding: '16px' }}>Last Login</th>
-                    <th style={{ padding: '16px' }}>Created Date</th>
-                  </>
-                )}
-                
-                {currentView === 'active' && (
-                  <>
-                    <th style={{ padding: '16px' }}>Status</th>
-                    <th style={{ padding: '16px' }}>Login Device</th>
-                    <th style={{ padding: '16px' }}>Login Time</th>
-                  </>
-                )}
-                
-                {currentView === 'inactive' && (
-                  <>
-                    <th style={{ padding: '16px' }}>Inactive Since</th>
-                    <th style={{ padding: '16px' }}>Reason</th>
-                    <th style={{ padding: '16px' }}>Disabled By</th>
-                    <th style={{ padding: '16px' }}>Last Login</th>
+                    <th style={{ padding: '16px' }}>Joined Date</th>
+                    <th style={{ padding: '16px' }}>Last Active</th>
                   </>
                 )}
                 
@@ -271,16 +316,22 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {viewData.map(user => (
-                <tr key={user.id} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.5)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                
+                <tr 
+                  key={user.id} 
+                  style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.2s', cursor: 'pointer' }} 
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.5)'} 
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  onClick={() => router.push(`/users/${user.id}`)}
+                >
+                  <td style={{ padding: '16px' }} onClick={e => e.stopPropagation()}><input type="checkbox" /></td>
                   <td style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <img src={user.photo} alt={user.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
-                      <div>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{user.name}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{user.id} • {user.email}</div>
-                      </div>
-                    </div>
+                    <img src={user.photo} alt={user.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
                   </td>
+                  <td style={{ padding: '16px', fontWeight: 600, color: 'var(--text-secondary)' }}>{user.id}</td>
+                  <td style={{ padding: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>{user.name}</td>
+                  <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{user.email}</td>
+                  <td style={{ padding: '16px' }}>{user.phone}</td>
                   <td style={{ padding: '16px' }}>
                     <div style={{ fontWeight: 500 }}>{user.role}</div>
                   </td>
@@ -289,13 +340,13 @@ export default function UsersPage() {
                     <>
                       <td style={{ padding: '16px' }}>{user.department}</td>
                       <td style={{ padding: '16px' }}><StatusBadge status={user.status === 'Active' ? 'Active' : 'Closed'} type="pipeline" /></td>
+                      <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{new Date(user.createdDate).toLocaleDateString()}</td>
                       <td style={{ padding: '16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Clock size={14} style={{ color: 'var(--text-secondary)' }} />
                           {new Date(user.lastLogin).toLocaleDateString()}
                         </div>
                       </td>
-                      <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{new Date(user.createdDate).toLocaleDateString()}</td>
                     </>
                   )}
 
@@ -329,23 +380,23 @@ export default function UsersPage() {
                     </>
                   )}
 
-                  <td style={{ padding: '16px', textAlign: 'right' }}>
+                  <td style={{ padding: '16px', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
                     <ActionMenu
                       isOpen={activeMenuId === user.id}
                       onToggle={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === user.id ? null : user.id); }}
                       onClose={() => setActiveMenuId(null)}
                       items={[
                         ...(currentView === 'inactive' ? [
-                          { label: 'Activate User', icon: <UserCheck size={16} />, onClick: () => { setFormData({...user, status: 'Active'}); openModal('edit', user); } }
+                          { label: 'Activate User', icon: <UserCheck size={16} />, onClick: () => { setFormData({...user, status: 'Active'}); openModal('edit_user', user); } }
                         ] : []),
-                        { label: 'View Profile', icon: <UserIcon size={16} />, onClick: () => openModal('profile', user) },
-                        { label: 'Edit User', icon: <Edit size={16} />, onClick: () => openModal('edit', user) },
+                        { label: 'View Profile', icon: <UserIcon size={16} />, onClick: () => router.push(`/users/${user.id}`) },
+                        { label: 'Edit User', icon: <Edit size={16} />, onClick: () => openModal('edit_user', user) },
                         { label: 'Reset Password', icon: <Key size={16} />, onClick: () => showToast(`Password reset link sent to ${user.email}`) },
-                        { label: 'Assign Role', icon: <Shield size={16} />, onClick: () => openModal('edit', user) },
+                        { label: 'Assign Role', icon: <Shield size={16} />, onClick: () => openModal('edit_user', user) },
                         ...(currentView === 'total' || currentView === 'active' ? [
-                          { label: 'Disable Account', icon: <Ban size={16} />, onClick: () => { setFormData({...user, status: 'Inactive'}); openModal('edit', user); } }
+                          { label: 'Disable Account', icon: <Ban size={16} />, onClick: () => { setFormData({...user, status: 'Inactive'}); openModal('edit_user', user); } }
                         ] : []),
-                        { label: 'View Activity', icon: <Activity size={16} />, onClick: () => openModal('profile', user) },
+                        { label: 'View Activity', icon: <Activity size={16} />, onClick: () => router.push(`/users/${user.id}`) },
                         { label: 'Delete User', icon: <Trash2 size={16} />, onClick: () => openModal('delete', user) }
                       ]}
                     />

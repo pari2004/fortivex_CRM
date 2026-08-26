@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useCRM } from '@/contexts/CRMContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Target, TrendingUp, Clock, Search, Filter, Download, 
@@ -19,7 +20,7 @@ import { SlidePanel } from '@/components/common/PremiumModal';
 // --- MOCK DATA ---
 const generateTeamData = () => {
   const data = [];
-  const names = ['Rahul Sharma', 'Sneha Reddy', 'Arjun Kumar', 'Priya Patil', 'Kiran Rao', 'Vikram Singh', 'Ananya Desai', 'Aditya Nair', 'Meera Joshi', 'Suresh Babu', 'Divya Kapoor', 'Sanjay Kumar', 'Neha Agarwal', 'Rohit Verma', 'Pooja Menon', 'Amit Patel', 'Riya Sen', 'Karan Johar', 'Sunil Shetty', 'Ravi Teja', 'Ajay Devgn', 'Akshay Kumar', 'Salman Khan', 'Shahrukh Khan', 'Aamir Khan'];
+  const names = ['Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Sneha Reddy', 'Vikram Singh'];
   const designations = ['Senior Counselor', 'Counselor', 'Team Lead', 'Sales Executive', 'Admissions Officer'];
   const statuses = ['Active', 'Active', 'Active', 'Active', 'On Leave', 'Training', 'Offline'];
   
@@ -80,6 +81,7 @@ const simulateDownload = (filename: string) => {
 };
 
 export default function TeamPerformancePage() {
+  const crm = useCRM();
   const [data, setData] = useState(TEAM_DATA);
   const [filteredData, setFilteredData] = useState(TEAM_DATA);
   const [page, setPage] = useState(1);

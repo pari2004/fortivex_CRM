@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Filter, MoreVertical, X as XIcon, Edit2, Copy, Eye, Download, Users, Trash2, Printer, BarChart2, RefreshCw } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, X as XIcon, Edit2, Copy, Eye, Download, Users, Trash2, Printer, BarChart2, RefreshCw, ChevronRight, Activity, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
+import { useCRM } from '@/contexts/CRMContext';
 
 // --- Toast Utility ---
 function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -25,36 +26,6 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
     if (document.body.contains(toast)) document.body.removeChild(toast);
   }, 3000);
 }
-
-// --- Demo Data ---
-const initialDistributions = [
-  { id: 'D-001', name: 'Website Lead Distribution', summary: 'Route website inquiries.', entityType: 'Lead', type: 'Round Robin', createdOn: '2024-05-01', totalLeads: 450, status: 'Active' },
-  { id: 'D-002', name: 'New Inquiry Distribution', summary: 'Distribute regional inquiries.', entityType: 'Lead', type: 'Weighted', createdOn: '2024-04-15', totalLeads: 320, status: 'Active' },
-  { id: 'D-003', name: 'High Priority Lead Distribution', summary: 'Route high-value leads.', entityType: 'Lead', type: 'Direct Assign', createdOn: '2024-04-10', totalLeads: 120, status: 'Active' },
-  { id: 'D-004', name: 'Admission Follow-up Distribution', summary: 'Re-route stale leads.', entityType: 'Opportunity', type: 'Round Robin', createdOn: '2024-03-22', totalLeads: 850, status: 'Inactive' },
-  { id: 'D-005', name: 'Marketing Campaign Distribution', summary: 'Handle campaign leads.', entityType: 'Lead', type: 'Weighted', createdOn: '2024-05-05', totalLeads: 2100, status: 'Active' },
-  { id: 'D-006', name: 'Referral Lead Distribution', summary: 'Route referral leads.', entityType: 'Lead', type: 'Direct Assign', createdOn: '2024-02-14', totalLeads: 65, status: 'Active' },
-  { id: 'D-007', name: 'Sales Team Distribution', summary: 'Baseline distribution.', entityType: 'Lead', type: 'Round Robin', createdOn: '2024-01-10', totalLeads: 1540, status: 'Active' },
-  { id: 'D-008', name: 'Unassigned Lead Distribution', summary: 'Catch-all fallback.', entityType: 'Lead', type: 'Catch-All', createdOn: '2024-01-15', totalLeads: 85, status: 'Active' }
-];
-
-// Generate extra demo data to allow pagination
-const generateExtraDistributions = () => {
-  const types = ['Round Robin', 'Weighted', 'Direct Assign', 'Catch-All'];
-  const entities = ['Lead', 'Opportunity', 'Contact'];
-  return Array.from({length: 25}).map((_, i) => ({
-    id: `D-10${i}`,
-    name: `Custom Region ${i + 1} Routing`,
-    summary: `Region ${i + 1} demographic route.`,
-    entityType: entities[i % entities.length],
-    type: types[i % types.length],
-    createdOn: '2024-05-10',
-    totalLeads: 50 + (i * 15),
-    status: i % 5 === 0 ? 'Inactive' : 'Active'
-  }));
-};
-
-const allMockDistributions = [...initialDistributions, ...generateExtraDistributions()];
 
 // --- Action Dropdown ---
 const ActionDropdown = ({ isUp, onClose, onAction, record, targetRect }: any) => {
@@ -109,11 +80,6 @@ const ActionDropdown = ({ isUp, onClose, onAction, record, targetRect }: any) =>
       {renderBtn('Manage Leads', <Users size={16} />, 'manage')}
       {renderBtn('View Analytics', <BarChart2 size={16} />, 'analytics')}
       {renderBtn('Refresh', <RefreshCw size={16} />, 'refresh')}
-      <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
-      {renderBtn('Export PDF', <Download size={16} />, 'export_pdf')}
-      {renderBtn('Export Excel', <Download size={16} />, 'export_excel')}
-      {renderBtn('Export CSV', <Download size={16} />, 'export_csv')}
-      {renderBtn('Print', <Printer size={16} />, 'print')}
       <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
       {renderBtn('Delete Distribution', <Trash2 size={16} />, 'delete')}
     </motion.div>,
@@ -171,7 +137,7 @@ const KPICard = ({ title, value, onClick, active }: any) => (
 
 // --- Main View ---
 export function LeadsDistributionView() {
-  const [data, setData] = useState(allMockDistributions);
+  const { lists, distributions, addDistribution, updateDistribution, deleteDistribution, leads, updateLead, users, addList } = useCRM();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
@@ -202,14 +168,30 @@ export function LeadsDistributionView() {
   const itemsPerPage = 10;
   
   // Modals / Modifiers
-  const [createModal, setCreateModal] = useState(false);
-  const [editRecord, setEditRecord] = useState<any>(null);
   const [viewRecord, setViewRecord] = useState<any>(null);
   useGlobalEscape(!!viewRecord, () => { setViewRecord(null) });
-  const [deleteModal, setDeleteModal] = useState<string | null>(null);
+
+  // Wizard State
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  
+  // Wizard Form State
+  const [distName, setDistName] = useState('');
+  const [distSourceType, setDistSourceType] = useState('list');
+  const [distConnectedSource, setDistConnectedSource] = useState('');
+  const [distListId, setDistListId] = useState('');
+  const [distAssignMethod, setDistAssignMethod] = useState('Assign to Employee');
+  const [distAssignUser, setDistAssignUser] = useState('');
+  const [distAssignTeam, setDistAssignTeam] = useState('');
+
+  // Diagnostics State
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [diagInput, setDiagInput] = useState('');
+  const [diagResult, setDiagResult] = useState<any>(null);
+
   // Filter & Search Logic
   const filteredData = useMemo(() => {
-    let res = data;
+    let res = distributions || [];
     
     // KPI Filters
     if (activeFilter === 'Active') res = res.filter(d => d.status === 'Active');
@@ -235,43 +217,132 @@ export function LeadsDistributionView() {
       );
     }
     return res;
-  }, [data, searchQuery, activeFilter, colFilters]);
+  }, [distributions, searchQuery, activeFilter, colFilters]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   // Stats for KPIs
   const stats = useMemo(() => {
-    const totalLeads = data.reduce((acc, curr) => acc + curr.totalLeads, 0);
+    const totalLeads = distributions?.reduce((acc, curr) => acc + (curr.totalLeads || 0), 0) || 0;
     return {
-      total: data.length,
-      active: data.filter(d => d.status === 'Active').length,
+      total: distributions?.length || 0,
+      active: distributions?.filter(d => d.status === 'Active').length || 0,
       leadsDistributed: totalLeads,
-      assigned: data.filter(d => d.type !== 'Catch-All').length,
-      unassigned: data.filter(d => d.type === 'Catch-All').length,
-      average: data.length ? Math.round(totalLeads / data.length) : 0
+      assigned: distributions?.filter(d => d.type !== 'Catch-All').length || 0,
+      unassigned: distributions?.filter(d => d.type === 'Catch-All').length || 0,
+      average: distributions?.length ? Math.round(totalLeads / distributions.length) : 0
     };
-  }, [data]);
+  }, [distributions]);
 
   const handleAction = (action: string, record: any) => {
     setActiveMenuId(null);
     if (action === 'view') setViewRecord(record);
-    else if (action === 'edit') setEditRecord(record);
+    else if (action === 'edit') showToast(`Edit Distribution is currently restricted.`, 'error');
     else if (action === 'manage') showToast(`Opening Lead Manager for ${record.name}`);
     else if (action === 'analytics') showToast(`Loading Analytics Dashboard for ${record.name}`);
     else if (action === 'refresh') showToast(`Refreshed ${record.name} rules successfully`);
-    else if (action.startsWith('export_') || action === 'print') showToast(`${action.replace('_', ' ')} initiated...`);
     else if (action === 'duplicate') {
-      const copy = { ...record, id: `D-${Date.now()}`, name: `${record.name} - Copy`, totalLeads: 0 };
-      setData([copy, ...data]);
+      const copy = { ...record, name: `${record.name} - Copy`, totalLeads: 0 };
+      addDistribution(copy);
       showToast('Distribution duplicated successfully');
     }
     else if (action === 'delete') {
       if (confirm(`Are you sure you want to delete ${record.name}?`)) {
-        setData(data.filter(d => d.id !== record.id));
+        deleteDistribution(record.id);
         showToast('Distribution deleted', 'error');
       }
     }
+  };
+
+  const handleCreateDistribution = () => {
+    // Determine summary based on setup
+    const assignTarget = distAssignMethod === 'Assign to Employee' ? (users.find(u=>u.id===distAssignUser)?.name || 'User') : (distAssignMethod === 'Send to Team' ? distAssignTeam : distAssignMethod);
+    const summary = `Routes from ${distSourceType === 'list' ? 'List' : distConnectedSource} to ${assignTarget}`;
+    
+    // Simulate updating leads matching the list
+    let matchedLeads = 0;
+    if (distSourceType === 'list' && distListId) {
+      // For demo, we update up to 10 active leads as "matched"
+      const leadsToUpdate = leads.filter(l => l.status !== 'Closed Won' && l.status !== 'Closed Lost').slice(0, 10);
+      matchedLeads = leadsToUpdate.length;
+      
+      const targetUser = users.find(u => u.id === distAssignUser)?.name || 'Assigned User';
+
+      leadsToUpdate.forEach(lead => {
+         updateLead({ ...lead, counselor: targetUser });
+      });
+    }
+
+    addDistribution({
+      name: distName || 'New Distribution',
+      summary: summary,
+      entityType: 'Lead',
+      type: distAssignMethod,
+      createdOn: new Date().toISOString().split('T')[0],
+      totalLeads: matchedLeads,
+      status: 'Active',
+      sourceListId: distListId,
+      assignmentConfig: {
+         method: distAssignMethod,
+         targetUser: distAssignUser,
+         targetTeam: distAssignTeam
+      }
+    } as any);
+
+    setWizardOpen(false);
+    setWizardStep(1);
+    setDistName('');
+    showToast(`Distribution created and applied to ${matchedLeads} leads.`);
+  };
+
+  const runDiagnostics = () => {
+    if (!diagInput) {
+       setDiagResult({ error: 'Please enter a valid Lead ID or search term.' });
+       return;
+    }
+    const matchedLead = leads.find(l => l.id.toLowerCase() === diagInput.toLowerCase() || l.name.toLowerCase().includes(diagInput.toLowerCase()) || l.mobile?.includes(diagInput));
+    
+    if (matchedLead) {
+       const matchedDist = distributions?.find(d => d.assignmentConfig?.targetUser === matchedLead.counselor) || distributions?.[0];
+       setDiagResult({
+          found: true,
+          leadName: matchedLead.name,
+          owner: matchedLead.counselor,
+          stage: matchedLead.status,
+          distName: matchedDist?.name || 'Unknown Distribution',
+          ruleOrder: 1,
+          reason: `Lead matched filters for distribution "${matchedDist?.name || 'Default'}" and was assigned to ${matchedLead.counselor}.`
+       });
+    } else {
+       setDiagResult({ found: false, error: `No CRM Lead found matching "${diagInput}"` });
+    }
+  };
+
+  const [newListModal, setNewListModal] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [newListTrigger, setNewListTrigger] = useState('When Lead is Created');
+
+  const handleCreateListFromWizard = () => {
+     addList({
+       name: newListName || 'New Distribution List',
+       sourceCategory: 'External Lead Sources',
+       allowDuplicates: false,
+       disallowAutoRechain: false,
+       description: `Trigger: ${newListTrigger}`,
+       owner: 'Current User',
+       contains: Math.floor(Math.random() * 500) + 10,
+       distribution: 'Kept Unassigned',
+       createdDate: new Date().toISOString().split('T')[0],
+       lastUpdated: new Date().toISOString().split('T')[0],
+       listType: 'Distribution Trigger',
+       listCreationType: 'Manual',
+       bulkUploadSource: 'N/A',
+       listStatus: 'Active',
+       createdOn: new Date().toISOString().split('T')[0]
+     } as any);
+     showToast('List created successfully and available for distribution.');
+     setNewListModal(false);
   };
 
   return (
@@ -308,7 +379,10 @@ export function LeadsDistributionView() {
 
         {/* Right: Actions */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-           <button onClick={() => setCreateModal(true)} className="primary-btn" style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 600, cursor: 'pointer' }}>
+           <button onClick={() => setDiagnosticsOpen(true)} className="secondary-btn" style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 600, cursor: 'pointer' }}>
+             <Activity size={18} /> Diagnosis
+           </button>
+           <button onClick={() => {setWizardOpen(true); setWizardStep(1);}} className="primary-btn" style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 600, cursor: 'pointer' }}>
              <Plus size={18} /> New Distribution
            </button>
         </div>
@@ -425,30 +499,8 @@ export function LeadsDistributionView() {
         </div>
       </div>
 
-      {/* --- Modals --- */}
+      {/* --- View Details Modal --- */}
       <AnimatePresence>
-        {createModal && (
-          <GenericModal title="New Distribution" saveText="Create Distribution" onClose={() => setCreateModal(false)} onSave={() => { setCreateModal(false); showToast('Distribution created successfully'); setData([{ id: `D-${Date.now()}`, name: 'New Custom Route', summary: 'Newly defined routing logic.', entityType: 'Lead', type: 'Weighted', createdOn: new Date().toISOString().split('T')[0], totalLeads: 0, status: 'Active' }, ...data])}}>
-             <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Distribution Name</label><input type="text" placeholder="Enter name" style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-             <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Summary</label><textarea rows={3} placeholder="Describe the distribution logic..." style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} /></div>
-             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Entity Type</label><select style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}><option>Lead</option><option>Opportunity</option><option>Contact</option></select></div>
-                <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Distribution Type</label><select style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}><option>Round Robin</option><option>Weighted</option><option>Direct Assign</option><option>Catch-All</option></select></div>
-             </div>
-          </GenericModal>
-        )}
-
-        {editRecord && (
-          <GenericModal title="Edit Distribution" saveText="Save Changes" onClose={() => setEditRecord(null)} onSave={() => { setEditRecord(null); showToast('Changes saved successfully'); }}>
-             <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Distribution Name</label><input type="text" defaultValue={editRecord.name} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-             <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Summary</label><textarea rows={3} defaultValue={editRecord.summary} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} /></div>
-             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Entity Type</label><select defaultValue={editRecord.entityType} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}><option>Lead</option><option>Opportunity</option><option>Contact</option></select></div>
-                <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Distribution Type</label><select defaultValue={editRecord.type} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}><option>Round Robin</option><option>Weighted</option><option>Direct Assign</option><option>Catch-All</option></select></div>
-             </div>
-          </GenericModal>
-        )}
-
         {viewRecord && (
           <GenericModal title="Distribution Details" onClose={() => setViewRecord(null)}>
              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -460,7 +512,7 @@ export function LeadsDistributionView() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
                    <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Entity Type</span><br/><b>{viewRecord.entityType}</b></div>
                    <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Routing Type</span><br/><b>{viewRecord.type}</b></div>
-                   <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Leads Processed</span><br/><b>{viewRecord.totalLeads.toLocaleString()}</b></div>
+                   <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Leads Processed</span><br/><b>{viewRecord.totalLeads?.toLocaleString() || 0}</b></div>
                    <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Created On</span><br/><b>{viewRecord.createdOn}</b></div>
                    <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status</span><br/>
                      <span style={{ display: 'inline-block', marginTop: '4px', padding: '2px 8px', borderRadius: '12px', background: viewRecord.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: viewRecord.status === 'Active' ? '#166534' : '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -472,7 +524,236 @@ export function LeadsDistributionView() {
           </GenericModal>
         )}
       </AnimatePresence>
-      
+
+      {/* --- Diagnostics Modal --- */}
+      <AnimatePresence>
+         {diagnosticsOpen && (
+            <GenericModal title="Distribution Diagnostics" onClose={() => {setDiagnosticsOpen(false); setDiagResult(null); setDiagInput('');}} width="600px">
+               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                  Let's trace the assignment using current CRM data. I will only inspect configuration and lead state — nothing will be changed.
+               </div>
+
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                  <button className="secondary-btn" style={{ padding: '12px', textAlign: 'left', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                     <div style={{ background: 'var(--primary-color)', color: 'white', padding: '6px', borderRadius: '6px' }}><Search size={16}/></div>
+                     <div><div style={{ fontWeight: 600 }}>Start with a lead number</div><div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Paste one lead number that was not assigned as expected.</div></div>
+                  </button>
+                  <button className="secondary-btn" style={{ padding: '12px', textAlign: 'left', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                     <div style={{ background: 'var(--status-won)', color: 'white', padding: '6px', borderRadius: '6px' }}><Cpu size={16}/></div>
+                     <div><div style={{ fontWeight: 600 }}>Check a distribution rule</div><div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Inspect rule order, AND/OR logic, and assignees.</div></div>
+                  </button>
+                  <button className="secondary-btn" style={{ padding: '12px', textAlign: 'left', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                     <div style={{ background: 'var(--status-warn)', color: 'white', padding: '6px', borderRadius: '6px' }}><Filter size={16}/></div>
+                     <div><div style={{ fontWeight: 600 }}>Select a list to diagnose</div><div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Verify list criteria and linked distributions.</div></div>
+                  </button>
+               </div>
+
+               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input type="text" placeholder="Paste a lead ID or name to trace..." value={diagInput} onChange={e=>setDiagInput(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} />
+                  <button onClick={runDiagnostics} className="primary-btn" style={{ padding: '10px 16px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Analyze</button>
+               </div>
+
+               {diagResult && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '20px', padding: '16px', background: diagResult.found ? '#f0fdf4' : '#fef2f2', border: `1px solid ${diagResult.found ? '#bbf7d0' : '#fecaca'}`, borderRadius: '8px' }}>
+                     {diagResult.found ? (
+                        <>
+                           <h4 style={{ color: '#166534', marginBottom: '8px' }}>✓ Match Found</h4>
+                           <div style={{ fontSize: '0.85rem', color: '#166534', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div><b>Lead Name:</b> {diagResult.leadName}</div>
+                              <div><b>Current Owner:</b> {diagResult.owner}</div>
+                              <div><b>Stage:</b> {diagResult.stage}</div>
+                              <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(255,255,255,0.5)', borderRadius: '4px' }}>
+                                 <b>Diagnostics Result:</b><br/>{diagResult.reason}
+                              </div>
+                           </div>
+                        </>
+                     ) : (
+                        <div style={{ color: '#991b1b', fontSize: '0.85rem' }}><b>Error:</b> {diagResult.error}</div>
+                     )}
+                  </motion.div>
+               )}
+            </GenericModal>
+         )}
+      </AnimatePresence>
+
+      {/* --- New Distribution Wizard --- */}
+      <AnimatePresence>
+        {wizardOpen && (
+          <GenericModal title={wizardStep === 1 ? "Which leads should be distributed?" : wizardStep === 2 ? "Send them to..." : "Review & Save"} width="600px" onClose={() => setWizardOpen(false)}>
+             
+             {wizardStep === 1 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                   
+                   <div>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Distribution Name</label>
+                      <input type="text" placeholder="e.g. Website Referrals" value={distName} onChange={e=>setDistName(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} />
+                   </div>
+
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                         <input type="radio" name="source" checked={distSourceType === 'connected'} onChange={() => setDistSourceType('connected')} />
+                         <span style={{ fontWeight: 600 }}>Leads from a connected source</span>
+                      </label>
+                      {distSourceType === 'connected' && (
+                         <select value={distConnectedSource} onChange={e=>setDistConnectedSource(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', marginLeft: '24px', width: 'calc(100% - 24px)' }}>
+                            <option value="">Select a source...</option>
+                            <option value="Website Forms">Website Forms</option>
+                            <option value="Facebook Campaigns">Facebook Campaigns</option>
+                            <option value="Google Ads">Google Ads</option>
+                         </select>
+                      )}
+
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px' }}>
+                         <input type="radio" name="source" checked={distSourceType === 'list'} onChange={() => setDistSourceType('list')} />
+                         <span style={{ fontWeight: 600 }}>Leads matching a list or filter</span>
+                      </label>
+                      {distSourceType === 'list' && (
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '24px' }}>
+                            <select value={distListId} onChange={e=>setDistListId(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                               <option value="">Select an existing CRM list...</option>
+                               {lists?.map(l => (
+                                  <option key={l.id} value={l.id}>{l.name} ({l.contains || 0} leads)</option>
+                                ))}
+                            </select>
+                            <div style={{ textAlign: 'right' }}>
+                               <button onClick={() => setNewListModal(true)} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+                                  Need a new list? Create one
+                               </button>
+                            </div>
+                         </div>
+                      )}
+                   </div>
+
+                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+                      <button onClick={() => setWizardStep(2)} disabled={!distName || (distSourceType === 'list' && !distListId) || (distSourceType === 'connected' && !distConnectedSource)} className="primary-btn" style={{ padding: '10px 24px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', opacity: (!distName || (distSourceType === 'list' && !distListId) || (distSourceType === 'connected' && !distConnectedSource)) ? 0.5 : 1 }}>
+                         Next <ChevronRight size={16} style={{ marginLeft: '4px' }} />
+                      </button>
+                   </div>
+                </motion.div>
+             )}
+
+             {wizardStep === 2 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                   
+                   <div>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Distribution Method</label>
+                      <select value={distAssignMethod} onChange={e=>setDistAssignMethod(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                         <option>Assign to Employee</option>
+                         <option>Send to Team</option>
+                         <option>Round Robin</option>
+                         <option>Even Distribution</option>
+                         <option>Assign to Selected Owner</option>
+                         <option>Keep Unassigned</option>
+                      </select>
+                   </div>
+
+                   {['Assign to Employee', 'Assign to Selected Owner'].includes(distAssignMethod) && (
+                      <div>
+                         <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Select CRM User</label>
+                         <select value={distAssignUser} onChange={e=>setDistAssignUser(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                            <option value="">Select User...</option>
+                            {users?.map(u => (
+                               <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
+                            ))}
+                         </select>
+                      </div>
+                   )}
+
+                   {distAssignMethod === 'Send to Team' && (
+                      <div>
+                         <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Select CRM Team</label>
+                         <select value={distAssignTeam} onChange={e=>setDistAssignTeam(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                            <option value="">Select Team...</option>
+                            <option value="Sales Team Alpha">Sales Team Alpha</option>
+                            <option value="Marketing Outreach">Marketing Outreach</option>
+                         </select>
+                      </div>
+                   )}
+
+                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+                      <button onClick={() => setWizardStep(1)} className="secondary-btn" style={{ padding: '10px 24px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button onClick={() => setWizardStep(3)} className="primary-btn" style={{ padding: '10px 24px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Review <ChevronRight size={16} style={{ marginLeft: '4px' }} /></button>
+                   </div>
+                </motion.div>
+             )}
+
+             {wizardStep === 3 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                   
+                   <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                         <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Distribution Name</span>
+                         <span style={{ fontWeight: 600 }}>{distName}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                         <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Lead Source / List</span>
+                         <span style={{ fontWeight: 600 }}>{distSourceType === 'list' ? (lists?.find(l=>l.id===distListId)?.name || 'Unknown List') : distConnectedSource}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                         <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Distribution Method</span>
+                         <span style={{ fontWeight: 600 }}>{distAssignMethod}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                         <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Target Assignment</span>
+                         <span style={{ fontWeight: 600 }}>
+                            {distAssignMethod === 'Send to Team' ? distAssignTeam : (users?.find(u=>u.id===distAssignUser)?.name || 'N/A')}
+                         </span>
+                      </div>
+                      <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                         <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Created By</span>
+                         <span style={{ fontWeight: 600 }}>Current User</span>
+                      </div>
+                   </div>
+
+                   <div style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+                      Clicking "Save & Apply" will run this rule and update any matching leads in your CRM immediately.
+                   </div>
+
+                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+                      <button onClick={() => setWizardStep(2)} className="secondary-btn" style={{ padding: '10px 24px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button onClick={handleCreateDistribution} className="primary-btn" style={{ padding: '10px 24px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Save & Apply</button>
+                   </div>
+                </motion.div>
+             )}
+          </GenericModal>
+        )}
+      </AnimatePresence>
+
+      {/* --- List Creation Modal --- */}
+      <AnimatePresence>
+         {newListModal && (
+            <GenericModal title="Create New Target List" onClose={() => setNewListModal(false)} saveText="Create & Use This List" onSave={handleCreateListFromWizard}>
+               <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>List Name</label>
+                  <input type="text" placeholder="e.g. Hot Website Leads" value={newListName} onChange={e=>setNewListName(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} />
+               </div>
+               <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>What kind of changes should trigger this list?</label>
+                  <select value={newListTrigger} onChange={e=>setNewListTrigger(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                     <option>When Lead is Created</option>
+                     <option>When Lead is Modified</option>
+                     <option>When Lead is Deleted</option>
+                     <option>When a Lead Property is Modified</option>
+                  </select>
+               </div>
+               <div style={{ marginTop: '16px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter which changes qualify</label>
+                  <div style={{ padding: '16px', border: '1px dashed var(--border-color)', borderRadius: '8px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                     <select style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                        <option>Lead Name</option>
+                        <option>Lead Owner</option>
+                        <option>Lead Stage</option>
+                        <option>Lead Source</option>
+                        <option>Lead Status</option>
+                     </select>
+                     <button style={{ padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}>+ Add Another Trigger (OR Condition)</button>
+                  </div>
+               </div>
+            </GenericModal>
+         )}
+      </AnimatePresence>
+
       {/* Column Filter Dropdown */}
       {activeFilterCol && filterMenuTarget && createPortal(
         <div 

@@ -3,13 +3,40 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users } from 'lucide-react';
 
 interface CustomTrackingMetricsProps {
-    dateFilter: string;
+    dateFilter?: string;
+    dashboardData?: any;
 }
 
-export function CustomTrackingMetrics({ dateFilter }: CustomTrackingMetricsProps) {
+export function CustomTrackingMetrics({ dateFilter, dashboardData }: CustomTrackingMetricsProps) {
     const [showUserWise, setShowUserWise] = useState(false);
 
-    const users = ['Pavan SH', 'Thanushree BR', 'Parikshit', 'Spoorthi', 'Yashwanth', 'Abhishek'];
+    const leads = dashboardData?.pipelineFilteredLeads || [];
+
+    // Leads in Call Back Later
+    const callBackLaterLeads = leads.filter((l: any) => l['Last Disposition'] === 'Callback requested');
+    
+    // Leads in RNR (Ring No Response) and Not Called
+    const rnrAndNotCalledLeads = leads.filter((l: any) => 
+        l.status === 'New Lead' || 
+        l['Unanswered Calls'] > 0 || 
+        l['Missed Calls'] > 0
+    );
+
+    const totalCallBackLater = callBackLaterLeads.length;
+    const totalRnrNotCalled = rnrAndNotCalledLeads.length;
+
+    // Calculate user-wise stats
+    const allUsers = Array.from(new Set(leads.map((l: any) => l['Lead Owner']))).filter(Boolean) as string[];
+    // Fallback users if no leads
+    const usersList = allUsers.length > 0 ? allUsers : ['Pavan SH', 'Thanushree BR', 'Parikshit', 'Spoorthi', 'Yashwanth', 'Abhishek'];
+
+    const userStats = usersList.map(user => {
+        return {
+            user,
+            callBack: callBackLaterLeads.filter((l: any) => l['Lead Owner'] === user).length,
+            rnr: rnrAndNotCalledLeads.filter((l: any) => l['Lead Owner'] === user).length
+        };
+    });
 
     return (
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
@@ -29,11 +56,11 @@ export function CustomTrackingMetrics({ dateFilter }: CustomTrackingMetricsProps
 
             <div style={{ display: 'flex', gap: '24px' }}>
                 <div style={{ padding: '24px', border: '1px solid var(--glass-border)', borderRadius: '12px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)' }}>
-                    <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#3b82f6' }}>454</span>
+                    <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{totalCallBackLater}</span>
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '8px' }}>leads in call back later</span>
                 </div>
                 <div style={{ padding: '24px', border: '1px solid var(--glass-border)', borderRadius: '12px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)' }}>
-                    <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#3b82f6' }}>527</span>
+                    <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{totalRnrNotCalled}</span>
                     <span style={{ fontSize: '0.8rem', color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 8px', borderRadius: '12px', marginTop: '4px', marginBottom: '4px' }}>+1 5M</span>
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', textAlign: 'center' }}>leads in rnr and not called</span>
                 </div>
@@ -54,19 +81,19 @@ export function CustomTrackingMetrics({ dateFilter }: CustomTrackingMetricsProps
                                 <button onClick={() => setShowUserWise(false)} style={{ background: 'var(--bg-secondary)', border: 'none', padding: '8px', borderRadius: '50%', cursor: 'pointer' }}><X size={18} /></button>
                             </div>
                             <div style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {users.map(user => (
-                                    <div key={user} style={{ padding: '16px', border: '1px solid var(--glass-border)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                {userStats.map(stat => (
+                                    <div key={stat.user} style={{ padding: '16px', border: '1px solid var(--glass-border)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{user.charAt(0)}</div>
-                                            <span style={{ fontWeight: 600 }}>{user}</span>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{stat.user.charAt(0)}</div>
+                                            <span style={{ fontWeight: 600 }}>{stat.user}</span>
                                         </div>
                                         <div style={{ display: 'flex', gap: '24px' }}>
                                             <div style={{ textAlign: 'center' }}>
-                                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#3b82f6' }}>{Math.floor(Math.random() * 100)}</div>
+                                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#3b82f6' }}>{stat.callBack}</div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Call Back Later</div>
                                             </div>
                                             <div style={{ textAlign: 'center' }}>
-                                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#3b82f6' }}>{Math.floor(Math.random() * 100)}</div>
+                                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#3b82f6' }}>{stat.rnr}</div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>RNR & Not Called</div>
                                             </div>
                                         </div>

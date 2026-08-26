@@ -1,10 +1,15 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Search, Filter, RefreshCw, Download, ChevronLeft, ChevronRight, CheckSquare, Square, MoreVertical, Eye, Edit2, Clock, MessageCircle, UserPlus, Trash2, X, Plus } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, Filter, RefreshCw, Download, ChevronLeft, ChevronRight, CheckSquare, Square, MoreVertical, Eye, Edit2, Clock, MessageCircle, UserPlus, Trash2, X, Plus, Columns } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
+import { useCRM } from '@/contexts/CRMContext';
+import { CustomizeBusinessColumnsModal } from '../modals/CustomizeBusinessColumnsModal';
+import { LinkLeadsModal } from '../modals/LinkLeadsModal';
+import { AddNewLeadModal } from '../AddNewLeadModal';
+import { BusinessLead } from '@/lib/data/mockData';
 
 // --- Toast Utility ---
 function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -26,57 +31,22 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
   }, 3000);
 }
 
-// --- Mock Data Generator ---
-const businessNames = ['TechNova Solutions', 'BrightPath Education', 'GreenLeaf Healthcare', 'Apex Digital Systems', 'Horizon Learning Hub', 'Vertex Consulting', 'PrimeTech Innovations', 'BlueSky Enterprises', 'NextGen Academy', 'UrbanEdge Solutions'];
-const locations = ['Bengaluru, Karnataka', 'Mumbai, Maharashtra', 'Hyderabad, Telangana', 'Chennai, Tamil Nadu', 'Pune, Maharashtra', 'Delhi, India'];
-const industries = ['Education', 'Technology', 'Healthcare', 'Finance', 'Consulting', 'Retail'];
-const addedByList = ['Admin User', 'Sales Team', 'Marketing Team', 'Rahul Sharma', 'Priya Nair'];
-const priorities = ['High', 'Medium', 'Low'];
-const dates = ['Today', 'Yesterday', '2 days ago', '4 days ago', '1 week ago'];
-
-const generateBusinessData = (count = 50) => {
-  return Array.from({ length: count }).map((_, i) => {
-    const bName = businessNames[i % businessNames.length];
-    return {
-      id: `B-${1000 + i}`,
-      name: `${bName} ${i > 9 ? i : ''}`.trim(),
-      address: locations[i % locations.length],
-      website: `www.${bName.toLowerCase().replace(/\s+/g, '')}.com`,
-      industry: industries[i % industries.length],
-      priority: priorities[i % priorities.length],
-      addedBy: addedByList[i % addedByList.length],
-      createdOn: dates[i % dates.length],
-      // Details fields
-      contactPerson: ['Amit Kumar', 'Neha Sharma', 'Rohan Das', 'Kavita Singh'][i % 4],
-      mobile: `+91 98${String(10000000 + i * 12345).substring(0, 8)}`,
-      email: `contact@${bName.toLowerCase().replace(/\s+/g, '')}.com`,
-      leadSource: ['Website', 'Referral', 'LinkedIn', 'Cold Call'][i % 4],
-      assignedTeam: ['Sales North', 'Sales South', 'Enterprise'][i % 3],
-      notes: 'Initial contact established.',
-    };
-  });
-};
-
-// --- Modals & Popovers ---
-const GenericModal = ({ title, onClose, onSave, children, width = '500px' }: any) => {
+// --- Generic Modal ---
+const GenericModal = ({ title, children, onClose, onSave, saveText = "Save", maxWidth = "500px" }: any) => {
+  useGlobalEscape(true, onClose);
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(4px)' }} onClick={onClose}>
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-        style={{ background: 'var(--bg-primary)', padding: '24px', borderRadius: '16px', width, maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid var(--glass-border)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{title}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}><X size={20} /></button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} style={{ width: '90vw', maxWidth, maxHeight: '90vh', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{title}</h2>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={20} /></button>
         </div>
-        <div style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {children}
-        </div>
+        <div style={{ padding: '24px', overflowY: 'auto' }}>{children}</div>
         {onSave && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-            <button onClick={onClose} className="secondary-btn">Cancel</button>
-            <button onClick={onSave} className="primary-btn">Save Changes</button>
+          <div style={{ padding: '20px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--bg-secondary)', borderRadius: '0 0 16px 16px' }}>
+            <button onClick={onClose} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '8px', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={onSave} style={{ padding: '10px 24px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>{saveText}</button>
           </div>
         )}
       </motion.div>
@@ -85,487 +55,455 @@ const GenericModal = ({ title, onClose, onSave, children, width = '500px' }: any
   );
 };
 
-const ActionDropdown = ({ isUp, onAction, business }: any) => {
-  const renderBtn = (label: string, icon: any, action: string) => (
-    <button
-      onClick={(e) => { e.stopPropagation(); onAction(action, business); }}
-      style={{
-        display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
-        background: 'transparent', border: 'none', borderRadius: '6px',
-        cursor: 'pointer', textAlign: 'left', width: '100%',
-        color: action === 'delete' ? 'var(--status-lost)' : 'var(--text-primary)',
-        transition: 'background 0.2s', fontSize: '0.85rem'
-      }}
-      onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
-      onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-    >
-      {icon} {label}
-    </button>
-  );
+const ALL_BUSINESS_COLUMNS = ['Business Name', 'Address', 'Website', 'Industry', 'Priority', 'Added By', 'Created On', 'Mobile', 'Email'];
+const DEFAULT_BUSINESS_COLUMNS = ['Business Name', 'Address', 'Website', 'Industry', 'Priority', 'Added By', 'Created On'];
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: isUp ? 10 : -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      style={{
-        position: 'absolute', right: '10px', top: isUp ? 'auto' : '30px', bottom: isUp ? '30px' : 'auto',
-        width: '200px', zIndex: 99, padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px',
-        boxShadow: 'var(--shadow-lg)', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--glass-border)',
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {renderBtn('View Details', <Eye size={16} />, 'details')}
-      {renderBtn('Edit Business', <Edit2 size={16} />, 'edit')}
-      <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
-      {renderBtn('View Activity', <Clock size={16} />, 'activity')}
-      {renderBtn('Add Note', <MessageCircle size={16} />, 'note')}
-      {renderBtn('Assign Owner', <UserPlus size={16} />, 'assign')}
-      <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
-      {renderBtn('Delete', <Trash2 size={16} />, 'delete')}
-    </motion.div>
-  );
-};
-
-
-// --- Main Component ---
 export function LeadsBusinessView() {
-  const [data, setData] = useState(() => generateBusinessData(75));
+  const { businessLeads, addBusinessLead, updateBusinessLead, deleteBusinessLeads, linkLeadsToBusiness } = useCRM();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
-  useGlobalEscape(!!filterOpen, () => { setFilterOpen(false) });
-  const [filters, setFilters] = useState<{ industry: string, priority: string, addedBy: string }>({ industry: '', priority: '', addedBy: '' });
-  
-  // Selection
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
-  // Modals / Interaction State
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  useGlobalEscape(!!activeMenuId, () => { setActiveMenuId(null) });
-  const [exportOpen, setExportOpen] = useState(false);
-  const [isAddBusinessModalOpen, setIsAddBusinessModalOpen] = useState(false);
-  
-  const [newBusinessData, setNewBusinessData] = useState({
-    name: '', address: '', website: '', industry: 'Technology', priority: 'Medium',
-    addedBy: 'Admin User', createdOn: 'Today', contactPerson: '', mobile: '', email: '',
-    leadSource: 'Website', assignedTeam: 'Sales North', notes: ''
-  });
-  
+  // Modals
+  const [activeRowMenu, setActiveRowMenu] = useState<string | null>(null);
   const [detailsRecord, setDetailsRecord] = useState<any>(null);
-  useGlobalEscape(!!detailsRecord, () => { setDetailsRecord(null) });
   const [editRecord, setEditRecord] = useState<any>(null);
+  const [addRecordOpen, setAddRecordOpen] = useState(false);
+  const [newBusiness, setNewBusiness] = useState<Partial<BusinessLead>>({});
+  
   const [activityRecord, setActivityRecord] = useState<any>(null);
   const [noteRecord, setNoteRecord] = useState<any>(null);
   const [assignRecord, setAssignRecord] = useState<any>(null);
+  const [linkLeadsBusinessId, setLinkLeadsBusinessId] = useState<string | null>(null);
+  const [addNewLeadBusinessId, setAddNewLeadBusinessId] = useState<string | null>(null);
 
-  // Pagination
-  const [page, setPage] = useState(1);
-  const itemsPerPage = 15;
+  // Column Customization
+  const [customizeColumnsOpen, setCustomizeColumnsOpen] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_BUSINESS_COLUMNS);
 
-  // Filter & Search Logic
-  const filteredData = useMemo(() => {
-    let result = data;
-    
-    // Apply column filters
-    if (filters.industry) result = result.filter(d => d.industry === filters.industry);
-    if (filters.priority) result = result.filter(d => d.priority === filters.priority);
-    if (filters.addedBy) result = result.filter(d => d.addedBy === filters.addedBy);
-
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(d => 
-        d.name.toLowerCase().includes(q) || 
-        d.address.toLowerCase().includes(q) || 
-        d.website.toLowerCase().includes(q) ||
-        d.industry.toLowerCase().includes(q) ||
-        d.addedBy.toLowerCase().includes(q)
-      );
+  useEffect(() => {
+    const saved = localStorage.getItem('crm_business_columns');
+    if (saved) {
+      try {
+        setVisibleColumns(JSON.parse(saved));
+      } catch(e) {}
     }
-    return result;
-  }, [data, searchQuery, filters]);
+  }, []);
+
+  const handleSaveColumns = (cols: string[]) => {
+    setVisibleColumns(cols);
+    localStorage.setItem('crm_business_columns', JSON.stringify(cols));
+  };
+
+  const handleResetColumns = () => {
+    setVisibleColumns(DEFAULT_BUSINESS_COLUMNS);
+    localStorage.removeItem('crm_business_columns');
+  };
+
+  useGlobalEscape(!!activeRowMenu, () => setActiveRowMenu(null));
+
+  const filteredData = useMemo(() => {
+    return businessLeads.filter(b => b.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [businessLeads, searchTerm]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Handlers
-  const handleSelectAll = () => {
-    if (selectedIds.size === currentData.length && currentData.length > 0) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(currentData.map(d => d.id)));
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'High': return 'bg-red-50 text-red-600 border-red-200';
+      case 'Medium': return 'bg-yellow-50 text-yellow-600 border-yellow-200';
+      case 'Low': return 'bg-green-50 text-green-600 border-green-200';
+      default: return 'bg-gray-50 text-gray-600 border-gray-200';
     }
   };
 
-  const handleSelectRow = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (selectedIds.has(id)) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set([id]));
-    }
+  const toggleSelectAll = () => {
+    if (selectedIds.length === currentData.length) setSelectedIds([]);
+    else setSelectedIds(currentData.map(d => d.id));
   };
 
-  const handleAction = (action: string, record: any) => {
-    setActiveMenuId(null);
-    if (action === 'details') setDetailsRecord(record);
-    else if (action === 'edit') setEditRecord(record);
-    else if (action === 'activity') setActivityRecord(record);
-    else if (action === 'note') setNoteRecord(record);
-    else if (action === 'assign') setAssignRecord(record);
-    else if (action === 'delete') {
-      if (confirm(`Are you sure you want to delete ${record.name}?`)) {
-        setData(prev => prev.filter(d => d.id !== record.id));
-        setSelectedIds(prev => { const n = new Set(prev); n.delete(record.id); return n; });
-        showToast('Business deleted', 'error');
-      }
-    }
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleAddBusiness = () => {
-    if (!newBusinessData.name || !newBusinessData.address) {
-      showToast('Name and Address are required', 'error');
+  
+  const handleExport = () => {
+    const dataToExport = selectedIds.length > 0 ? currentData.filter(d => selectedIds.includes(d.id)) : filteredData;
+    if (dataToExport.length === 0) {
+      showToast('No data to export', 'error');
       return;
     }
-    const newRecord = {
-      id: `B-${Math.floor(Math.random() * 10000)}`,
-      ...newBusinessData
-    };
-    setData([newRecord, ...data]);
-    setIsAddBusinessModalOpen(false);
-    setNewBusinessData({
-      name: '', address: '', website: '', industry: 'Technology', priority: 'Medium',
-      addedBy: 'Admin User', createdOn: 'Today', contactPerson: '', mobile: '', email: '',
-      leadSource: 'Website', assignedTeam: 'Sales North', notes: ''
+    const headers = visibleColumns.join(',');
+    const rows = dataToExport.map(row => {
+      return visibleColumns.map(col => {
+        let val = '';
+        if (col === 'Business Name') val = row.name;
+        if (col === 'Address') val = row.address || '';
+        if (col === 'Website') val = row.website || '';
+        if (col === 'Industry') val = row.industry || '';
+        if (col === 'Priority') val = row.priority || '';
+        if (col === 'Added By') val = row.addedBy || '';
+        if (col === 'Created On') val = row.createdOn || '';
+        if (col === 'Mobile') val = row.mobile || '';
+        if (col === 'Email') val = row.email || '';
+        // Escape quotes and commas
+        return `"${String(val).replace(/"/g, '""')}"`;
+      }).join(',');
     });
-    showToast('New Business Added', 'success');
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `business_export_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Export successful');
   };
 
-  const getPriorityColor = (p: string) => {
-    if (p === 'High') return 'bg-red-100 text-red-800 border-red-200';
-    if (p === 'Medium') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    return 'bg-blue-100 text-blue-800 border-blue-200';
+  const handleDeleteSelected = () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} business(es)?`)) {
+      deleteBusinessLeads(selectedIds);
+      setSelectedIds([]);
+      showToast(`${selectedIds.length} business(es) deleted`);
+    }
+  };
+
+  const handleSaveNewBusiness = () => {
+    if (!newBusiness.name) {
+      showToast('Business Name is required', 'error');
+      return;
+    }
+    const business: Omit<BusinessLead, 'id'> = {
+      name: newBusiness.name || '',
+      companyName: newBusiness.name || '',
+      contactPerson: newBusiness.contactPerson || '',
+      designation: '',
+      businessType: 'B2B',
+      industry: newBusiness.industry || 'Technology',
+      employees: '50-100',
+      expectedAdmissions: 0,
+      assignedManager: 'Admin',
+      revenuePotential: 0,
+      status: 'Active',
+      date: new Date().toISOString().split('T')[0],
+      address: newBusiness.address || '',
+      website: newBusiness.website || '',
+      priority: newBusiness.priority || 'Medium',
+      addedBy: 'Current User',
+      createdOn: 'Today',
+      mobile: newBusiness.mobile || '',
+      email: newBusiness.email || '',
+      notes: newBusiness.notes || '',
+      associatedLeads: []
+    };
+    addBusinessLead(business);
+    setAddRecordOpen(false);
+    setNewBusiness({});
+    showToast('Business added successfully');
+  };
+
+  const handleSaveEditBusiness = () => {
+    if (editRecord) {
+      updateBusinessLead(editRecord);
+      setEditRecord(null);
+      showToast('Business updated');
+    }
+  };
+
+  // Render Cell based on column
+  const renderCell = (col: string, row: BusinessLead) => {
+    switch (col) {
+      case 'Business Name': return <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{row.name}</div>;
+      case 'Address': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.address || '—'}</div>;
+      case 'Website': return <a href={`https://${row.website}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.85rem', color: 'var(--primary-color)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>{row.website || '—'}</a>;
+      case 'Industry': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.industry || '—'}</div>;
+      case 'Priority': return <div><span className={`px-2 py-1 text-xs font-bold rounded-full border ${getPriorityColor(row.priority || '')}`}>{row.priority || '—'}</span></div>;
+      case 'Added By': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.addedBy || '—'}</div>;
+      case 'Created On': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.createdOn || '—'}</div>;
+      case 'Mobile': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.mobile || '—'}</div>;
+      case 'Email': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.email || '—'}</div>;
+      default: return <span>—</span>;
+    }
   };
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-primary)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px', position: 'relative' }}>
       
-      {/* Toolbar */}
-      <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
-        
-        {/* Left Side: Search & Selection */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '10px 16px', borderRadius: '8px', width: '350px', border: '1px solid var(--border-color)' }}>
-            <Search size={18} color="var(--text-tertiary)" />
+      {/* Top Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', background: 'var(--bg-card)', padding: '16px 24px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={18} color="var(--text-tertiary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input 
               type="text" 
-              placeholder="Search across Business..." 
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-              style={{ background: 'transparent', border: 'none', outline: 'none', marginLeft: '12px', width: '100%', fontSize: '0.95rem', color: 'var(--text-primary)' }} 
+              placeholder="Search business..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ padding: '8px 16px 8px 36px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-primary)', width: '250px', fontSize: '0.9rem' }}
             />
           </div>
           
-          {selectedIds.size > 0 && (
-            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--primary-color)', background: 'var(--primary-light)', padding: '6px 12px', borderRadius: '6px' }}>
-              {selectedIds.size} businesses selected
-            </span>
-          )}
+          <button 
+            onClick={() => setCustomizeColumnsOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }} className="hover-bg-secondary">
+            <Columns size={16} /> Customize Table Columns
+          </button>
         </div>
 
-        {/* Right Side: Actions */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button onClick={() => showToast('Data Refreshed', 'success')} style={{ padding: '10px', background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Refresh">
-            <RefreshCw size={18} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }} className="hover-bg-secondary">
+            <Download size={16} /> Export
+          </button>
+          <button onClick={() => setAddRecordOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: 'white', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }}>
+            <Plus size={16} /> Add New Business
+          </button>
+        </div>
+      </div>
+
+      {/* Selected Business Toolbar */}
+      {selectedIds.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--bg-card)', padding: '12px 24px', borderRadius: '12px', border: '1px solid var(--primary-color)', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.1)', animation: 'fadeIn 0.2s ease-out' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: 'var(--primary-color)', borderRight: '1px solid var(--glass-border)', paddingRight: '16px' }}>
+            <CheckSquare size={18} /> {selectedIds.length} Selected
+          </div>
+          <button onClick={() => setSelectedIds([])} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }} className="hover-text-primary">
+            <X size={14} /> Clear Selection
           </button>
           
-          <div style={{ position: 'relative' }}>
-            <button 
-              onClick={() => setFilterOpen(!filterOpen)} 
-              style={{ 
-                padding: '10px', 
-                background: Object.values(filters).some(v => v !== '') ? 'var(--primary-light)' : 'transparent', 
-                border: '1px solid var(--glass-border)', 
-                borderRadius: '8px', 
-                cursor: 'pointer', 
-                color: Object.values(filters).some(v => v !== '') ? 'var(--primary-color)' : 'var(--text-secondary)' 
-              }} 
-              title="Filter"
-            >
-              <Filter size={18} />
-            </button>
-            <AnimatePresence>
-              {filterOpen && (
-                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '280px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', zIndex: 100, padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Filters</h4>
-                    {(Object.values(filters).some(v => v !== '') || searchQuery !== '') && (
-                      <button onClick={() => { setFilters({ industry: '', priority: '', addedBy: '' }); setSearchQuery(''); }} style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.85rem' }}>Clear All</button>
-                    )}
-                  </div>
+          <div style={{ flex: 1 }} />
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Industry</label>
-                    <select value={filters.industry} onChange={e => setFilters({...filters, industry: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-primary)' }}>
-                      <option value="">All Industries</option>
-                      {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
-                    </select>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Priority</label>
-                    <select value={filters.priority} onChange={e => setFilters({...filters, priority: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-primary)' }}>
-                      <option value="">All Priorities</option>
-                      {priorities.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Added By</label>
-                    <select value={filters.addedBy} onChange={e => setFilters({...filters, addedBy: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-primary)' }}>
-                      <option value="">All Users</option>
-                      {addedByList.map(a => <option key={a} value={a}>{a}</option>)}
-                    </select>
-                  </div>
-
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setExportOpen(!exportOpen)} className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Download size={16} /> Export
-            </button>
-            <AnimatePresence>
-              {exportOpen && (
-                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '150px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', zIndex: 100, padding: '4px' }}>
-                  {['CSV', 'Excel', 'PDF'].map(ext => (
-                    <button key={ext} onClick={() => { setExportOpen(false); showToast(`Exporting to ${ext}...`); }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }} onMouseOver={e => e.currentTarget.style.background='var(--bg-secondary)'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
-                      Export {ext}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <button 
-            onClick={() => setIsAddBusinessModalOpen(true)} 
-            className="primary-btn" 
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
-          >
-            <Plus size={18} /> Add New Business
+          <button onClick={() => setDetailsRecord(businessLeads.find(b => b.id === selectedIds[0]))} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Eye size={16} /> View Associated Leads
+          </button>
+          <button onClick={() => setLinkLeadsBusinessId(selectedIds[0])} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <UserPlus size={16} /> Link Leads With Business
+          </button>
+          <button onClick={() => setAddNewLeadBusinessId(selectedIds[0])} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Plus size={16} /> Add New Lead
+          </button>
+          <button onClick={() => setEditRecord(businessLeads.find(b => b.id === selectedIds[0]))} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Edit2 size={16} /> Edit Business
+          </button>
+          <button onClick={handleDeleteSelected} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Trash2 size={16} /> Delete {selectedIds.length} Business{selectedIds.length > 1 ? 'es' : ''}
           </button>
         </div>
-      </div>
-
-      {/* Table Container */}
-      <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto' }}>
-        <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ position: 'sticky', top: 0, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', zIndex: 10, fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-            <tr>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '60px', textAlign: 'center' }}>
-                <button onClick={handleSelectAll} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                  {selectedIds.size === currentData.length && currentData.length > 0 ? <CheckSquare size={18} color="var(--primary-color)" /> : <Square size={18} />}
-                </button>
-              </th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', minWidth: '200px' }}>Business Name</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', minWidth: '200px' }}>Address</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', minWidth: '180px' }}>Website</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)' }}>Industry</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)' }}>Priority</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)' }}>Added By</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)' }}>Created On</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '80px', textAlign: 'center' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.length === 0 ? (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-tertiary)' }}>No business records found.</td></tr>
-            ) : currentData.map((row, idx) => (
-              <tr key={row.id} style={{ borderBottom: '1px solid var(--glass-border)', background: selectedIds.has(row.id) ? 'var(--primary-light)' : 'transparent', transition: 'background 0.2s', height: '64px' }} onClick={() => handleAction('details', row)}>
-                <td style={{ padding: '16px', textAlign: 'center' }} onClick={e => handleSelectRow(row.id, e)}>
-                  <div style={{ cursor: 'pointer', color: selectedIds.has(row.id) ? 'var(--primary-color)' : 'var(--text-tertiary)' }}>
-                    {selectedIds.has(row.id) ? <CheckSquare size={18} /> : <Square size={18} />}
-                  </div>
-                </td>
-                <td style={{ padding: '16px', fontWeight: 600, color: 'var(--primary-color)', cursor: 'pointer' }}>{row.name}</td>
-                <td style={{ padding: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }} title={row.address}>{row.address}</td>
-                <td style={{ padding: '16px' }} onClick={e => e.stopPropagation()}>
-                  <a href={`https://${row.website}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'none' }} onMouseOver={e => e.currentTarget.style.textDecoration='underline'} onMouseOut={e => e.currentTarget.style.textDecoration='none'}>
-                    {row.website}
-                  </a>
-                </td>
-                <td style={{ padding: '16px' }}>{row.industry}</td>
-                <td style={{ padding: '16px' }}><span className={`px-2 py-1 text-xs font-bold rounded-full border ${getPriorityColor(row.priority)}`}>{row.priority}</span></td>
-                <td style={{ padding: '16px' }}>{row.addedBy}</td>
-                <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{row.createdOn}</td>
-                <td style={{ padding: '16px', textAlign: 'center', position: 'relative' }} onClick={e => e.stopPropagation()}>
-                  <button onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: '4px', borderRadius: '4px' }} onMouseOver={e => e.currentTarget.style.background='var(--bg-secondary)'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
-                    <MoreVertical size={18} />
-                  </button>
-                  <AnimatePresence>
-                    {activeMenuId === row.id && (
-                      <ActionDropdown isUp={idx > itemsPerPage - 4} onAction={handleAction} business={row} />
-                    )}
-                  </AnimatePresence>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {isAddBusinessModalOpen && (
-        <GenericModal title="Add New Business" onClose={() => setIsAddBusinessModalOpen(false)} onSave={handleAddBusiness} width="600px">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Business Name *</label>
-              <input type="text" value={newBusinessData.name} onChange={e => setNewBusinessData({...newBusinessData, name: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }} placeholder="e.g. Acme Corp" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Industry</label>
-              <select value={newBusinessData.industry} onChange={e => setNewBusinessData({...newBusinessData, industry: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }}>
-                {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
-              </select>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Address *</label>
-              <input type="text" value={newBusinessData.address} onChange={e => setNewBusinessData({...newBusinessData, address: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }} placeholder="Location/City" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Website</label>
-              <input type="text" value={newBusinessData.website} onChange={e => setNewBusinessData({...newBusinessData, website: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }} placeholder="www.example.com" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Priority</label>
-              <select value={newBusinessData.priority} onChange={e => setNewBusinessData({...newBusinessData, priority: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }}>
-                {priorities.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Added By</label>
-              <select value={newBusinessData.addedBy} onChange={e => setNewBusinessData({...newBusinessData, addedBy: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }}>
-                {addedByList.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Created On</label>
-              <input type="text" value={newBusinessData.createdOn} onChange={e => setNewBusinessData({...newBusinessData, createdOn: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }} />
-            </div>
-          </div>
-        </GenericModal>
       )}
 
-      {/* Pagination Footer */}
-      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
-        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-          Showing <b>{(page - 1) * itemsPerPage + 1}–{Math.min(page * itemsPerPage, filteredData.length)}</b> of <b>{filteredData.length}</b> businesses
+      {/* Main Table */}
+      <div style={{ flex: 1, background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
+            <thead style={{ background: 'var(--bg-secondary)', position: 'sticky', top: 0, zIndex: 10 }}>
+              <tr>
+                <th style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-tertiary)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', width: '60px' }}>
+                  <div onClick={toggleSelectAll} style={{ cursor: 'pointer', color: selectedIds.length > 0 ? 'var(--primary-color)' : 'var(--text-tertiary)' }}>
+                    {selectedIds.length > 0 && selectedIds.length === currentData.length ? <CheckSquare size={18} /> : <Square size={18} />}
+                  </div>
+                </th>
+                {visibleColumns.map(col => (
+                  <th key={col} style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-tertiary)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                    {col}
+                  </th>
+                ))}
+                <th style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', width: '60px', position: 'sticky', right: 0, background: 'var(--bg-secondary)', zIndex: 11 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentData.map((row) => (
+                <tr key={row.id} style={{ borderBottom: '1px solid var(--glass-border)', background: selectedIds.includes(row.id) ? 'rgba(59, 130, 246, 0.02)' : 'var(--bg-primary)', transition: 'background 0.2s' }} className="hover-bg-secondary">
+                  <td style={{ padding: '16px 24px' }}>
+                    <div onClick={() => toggleSelect(row.id)} style={{ cursor: 'pointer', color: selectedIds.includes(row.id) ? 'var(--primary-color)' : 'var(--text-tertiary)' }}>
+                      {selectedIds.includes(row.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                    </div>
+                  </td>
+                  {visibleColumns.map(col => (
+                    <td key={`${row.id}-${col}`} style={{ padding: '16px 24px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                      {renderCell(col, row)}
+                    </td>
+                  ))}
+                  <td style={{ padding: '16px 24px', position: 'sticky', right: 0, background: selectedIds.includes(row.id) ? 'var(--bg-secondary)' : 'var(--bg-primary)', borderLeft: '1px solid var(--glass-border)' }}>
+                    <div style={{ position: 'relative' }}>
+                      <button onClick={(e) => { e.stopPropagation(); setActiveRowMenu(activeRowMenu === row.id ? null : row.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} className="hover-bg-secondary">
+                        <MoreVertical size={18} />
+                      </button>
+                      
+                      <AnimatePresence>
+                        {activeRowMenu === row.id && (
+                          <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.15 }} style={{ position: 'absolute', right: '100%', top: '0', marginRight: '8px', width: '220px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden' }}>
+                            <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <button onClick={() => { setDetailsRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Eye size={16} color="var(--text-tertiary)" /> View Details</button>
+                              <button onClick={() => { setDetailsRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><UserPlus size={16} color="var(--text-tertiary)" /> View Associated Leads</button>
+                              <button onClick={() => { setEditRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Edit2 size={16} color="var(--text-tertiary)" /> Edit Business</button>
+                              <button onClick={() => { setLinkLeadsBusinessId(row.id); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><UserPlus size={16} color="var(--text-tertiary)" /> Link Leads</button>
+                              <button onClick={() => { setAddNewLeadBusinessId(row.id); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Plus size={16} color="var(--text-tertiary)" /> Add New Lead</button>
+                              <button onClick={() => { setNoteRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><MessageCircle size={16} color="var(--text-tertiary)" /> Add Note</button>
+                              
+                              <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
+                              
+                              <button onClick={() => { setSelectedIds([row.id]); setTimeout(handleExport, 100); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Download size={16} color="var(--text-tertiary)" /> Export Business</button>
+                              <button onClick={() => { showToast('Business refreshed'); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><RefreshCw size={16} color="var(--text-tertiary)" /> Refresh</button>
+                              
+                              <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
+                              
+                              <button onClick={() => { 
+                                if (window.confirm(`Are you sure you want to delete ${row.name}?`)) {
+                                  deleteBusinessLeads([row.id]);
+                                  showToast('Business deleted');
+                                }
+                                setActiveRowMenu(null); 
+                              }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#ef4444', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Trash2 size={16} /> Delete Business</button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {currentData.length === 0 && (
+                <tr>
+                  <td colSpan={visibleColumns.length + 2} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No business records found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: page === 1 ? 'not-allowed' : 'pointer', opacity: page === 1 ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem' }}>
-            <ChevronLeft size={16} /> Previous
-          </button>
-          
-          <div style={{ display: 'flex', gap: '4px', margin: '0 8px' }}>
-             {Array.from({length: Math.min(totalPages, 5)}).map((_, i) => {
-               const p = i + 1;  return (
-                 <button key={p} onClick={() => setPage(p)} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', background: page === p ? 'var(--primary-color)' : 'transparent', color: page === p ? 'white' : 'var(--text-primary)', border: page === p ? 'none' : '1px solid var(--glass-border)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
-                   {p}
-                 </button>
-               )
-             })}
-          </div>
 
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: page === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem' }}>
-            Next <ChevronRight size={16} />
-          </button>
+        {/* Pagination */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)' }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ChevronLeft size={16} /> Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button key={i + 1} onClick={() => setCurrentPage(i + 1)} style={{ width: '32px', height: '32px', border: '1px solid var(--border-color)', borderRadius: '6px', background: currentPage === i + 1 ? 'var(--primary-color)' : 'var(--bg-primary)', color: currentPage === i + 1 ? 'white' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>
+                {i + 1}
+              </button>
+            ))}
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} style={{ padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: currentPage === totalPages || totalPages === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* --- Modals Render --- */}
       <AnimatePresence>
+        <CustomizeBusinessColumnsModal key="customize-cols" 
+          isOpen={customizeColumnsOpen}
+          onClose={() => setCustomizeColumnsOpen(false)}
+          availableColumns={ALL_BUSINESS_COLUMNS}
+          currentVisibleColumns={visibleColumns}
+          onSave={handleSaveColumns}
+          onResetToDefault={handleResetColumns}
+        />
+
+        
+        {addNewLeadBusinessId && (
+          <AddNewLeadModal
+            key="add-new-lead-modal"
+            onClose={() => setAddNewLeadBusinessId(null)}
+            onSuccess={(leadData) => {
+              if (leadData?.id) {
+                linkLeadsToBusiness(addNewLeadBusinessId, [leadData.id]);
+                showToast(`Lead linked to business`);
+              }
+            }}
+          />
+        )}
+
+        {linkLeadsBusinessId && (
+          <LinkLeadsModal key="link-leads"
+            isOpen={!!linkLeadsBusinessId}
+            onClose={() => setLinkLeadsBusinessId(null)}
+            businessId={linkLeadsBusinessId}
+          />
+        )}
+
+        {/* Existing Modals Re-wired */}
         {detailsRecord && (
-          <GenericModal title="Business Details" width="700px" onClose={() => setDetailsRecord(null)}>
+          <GenericModal key="details-modal" title={`Business Details: ${detailsRecord.name}`} onClose={() => setDetailsRecord(null)}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
               <div>
-                 <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '12px' }}>Business Info</h4>
-                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Business Name</span><b>{detailsRecord.name}</b></div>
-                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Business ID</span><b>{detailsRecord.id}</b></div>
+                 <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '12px' }}>Company Details</h4>
                  <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Industry</span><b>{detailsRecord.industry}</b></div>
-                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Website</span><a href={`https://${detailsRecord.website}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)' }}>{detailsRecord.website}</a></div>
-                 <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Address</span><b>{detailsRecord.address}</b></div>
+                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Address</span><b>{detailsRecord.address}</b></div>
+                 <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Website</span><a href={`https://${detailsRecord.website}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 600 }}>{detailsRecord.website}</a></div>
+                 
+                 <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '12px', marginTop: '24px' }}>Associated Leads</h4>
+                 <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Count</span><b>{detailsRecord.associatedLeads?.length || 0} Linked Leads</b></div>
               </div>
               <div>
                  <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '12px' }}>Contact Info</h4>
-                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Contact Person</span><b>{detailsRecord.contactPerson}</b></div>
-                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Mobile</span><b>{detailsRecord.mobile}</b></div>
-                 <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Email</span><b>{detailsRecord.email}</b></div>
+                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Contact Person</span><b>{detailsRecord.contactPerson || '—'}</b></div>
+                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Mobile</span><b>{detailsRecord.mobile || '—'}</b></div>
+                 <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Email</span><b>{detailsRecord.email || '—'}</b></div>
                  
                  <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '12px', marginTop: '24px' }}>CRM Info</h4>
-                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Priority</span><span className={`px-2 py-1 text-xs font-bold rounded-full border ${getPriorityColor(detailsRecord.priority)}`}>{detailsRecord.priority}</span></div>
-                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Added By</span><b>{detailsRecord.addedBy}</b></div>
-                 <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Created On</span><b>{detailsRecord.createdOn}</b></div>
+                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Priority</span><span className={`px-2 py-1 text-xs font-bold rounded-full border ${getPriorityColor(detailsRecord.priority || '')}`}>{detailsRecord.priority || '—'}</span></div>
+                 <div style={{ marginBottom: '8px' }}><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Added By</span><b>{detailsRecord.addedBy || '—'}</b></div>
+                 <div><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Created On</span><b>{detailsRecord.createdOn || '—'}</b></div>
               </div>
             </div>
-            <div style={{ marginTop: '16px' }}>
-               <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '12px' }}>Notes</h4>
-               <p style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{detailsRecord.notes}</p>
-            </div>
+          </GenericModal>
+        )}
+
+        
+        {noteRecord && (
+          <GenericModal key="note-modal" title={`Add Note to ${noteRecord.name}`} onClose={() => setNoteRecord(null)} onSave={() => {
+            updateBusinessLead({...noteRecord, notes: (noteRecord.notes ? noteRecord.notes + '\n' : '') + 'New Note added ' + new Date().toLocaleDateString()});
+            setNoteRecord(null);
+            showToast('Note added');
+          }}>
+            <textarea placeholder="Enter note details..." rows={5} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} />
           </GenericModal>
         )}
 
         {editRecord && (
-          <GenericModal title="Edit Business" onClose={() => setEditRecord(null)} onSave={() => { setEditRecord(null); showToast('Business updated'); }}>
+          <GenericModal key="edit-modal" title="Edit Business" onClose={() => setEditRecord(null)} onSave={handleSaveEditBusiness}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Business Name</label><input type="text" defaultValue={editRecord.name} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Industry</label><select defaultValue={editRecord.industry} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>{industries.map(t=><option key={t}>{t}</option>)}</select></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Address</label><input type="text" defaultValue={editRecord.address} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Website</label><input type="text" defaultValue={editRecord.website} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Contact Person</label><input type="text" defaultValue={editRecord.contactPerson} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Mobile</label><input type="text" defaultValue={editRecord.mobile} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Priority</label><select defaultValue={editRecord.priority} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>{priorities.map(t=><option key={t}>{t}</option>)}</select></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Business Name</label><input type="text" value={editRecord.name} onChange={e => setEditRecord({...editRecord, name: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Industry</label><select value={editRecord.industry || ''} onChange={e => setEditRecord({...editRecord, industry: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>{['Education', 'Technology', 'Healthcare', 'Finance', 'Consulting', 'Retail'].map(t=><option key={t}>{t}</option>)}</select></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Address</label><input type="text" value={editRecord.address || ''} onChange={e => setEditRecord({...editRecord, address: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Website</label><input type="text" value={editRecord.website || ''} onChange={e => setEditRecord({...editRecord, website: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Contact Person</label><input type="text" value={editRecord.contactPerson || ''} onChange={e => setEditRecord({...editRecord, contactPerson: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Mobile</label><input type="text" value={editRecord.mobile || ''} onChange={e => setEditRecord({...editRecord, mobile: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Priority</label><select value={editRecord.priority || ''} onChange={e => setEditRecord({...editRecord, priority: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>{['High', 'Medium', 'Low'].map(t=><option key={t}>{t}</option>)}</select></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label><input type="text" value={editRecord.email || ''} onChange={e => setEditRecord({...editRecord, email: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
             </div>
-            <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Notes</label><textarea rows={3} defaultValue={editRecord.notes} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} /></div>
+            <div style={{ marginTop: '16px' }}><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Notes</label><textarea rows={3} value={editRecord.notes || ''} onChange={e => setEditRecord({...editRecord, notes: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} /></div>
           </GenericModal>
         )}
 
-        {activityRecord && (
-          <GenericModal title={`Activity: ${activityRecord.name}`} onClose={() => setActivityRecord(null)}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{ color: 'var(--primary-color)', marginTop: '2px' }}><CheckSquare size={18} /></div>
-                <div><div style={{ fontWeight: 600, fontSize: '0.95rem' }}>Business Created</div><div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>by {activityRecord.addedBy} on {activityRecord.createdOn}</div></div>
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{ color: 'var(--text-tertiary)', marginTop: '2px' }}><MessageCircle size={18} /></div>
-                <div><div style={{ fontWeight: 600, fontSize: '0.95rem' }}>Note Added</div><div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>"Initial contact established." by System</div></div>
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{ color: 'var(--text-tertiary)', marginTop: '2px' }}><UserPlus size={18} /></div>
-                <div><div style={{ fontWeight: 600, fontSize: '0.95rem' }}>Lead Assigned</div><div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Assigned to {activityRecord.addedBy}</div></div>
-              </div>
+        {addRecordOpen && (
+          <GenericModal key="add-modal" title="Add New Business" onClose={() => setAddRecordOpen(false)} onSave={handleSaveNewBusiness}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Business Name <span style={{color: 'red'}}>*</span></label><input type="text" value={newBusiness.name || ''} onChange={e => setNewBusiness({...newBusiness, name: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Industry</label><select value={newBusiness.industry || ''} onChange={e => setNewBusiness({...newBusiness, industry: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                 <option value="">Select Industry</option>
+                 {['Education', 'Technology', 'Healthcare', 'Finance', 'Consulting', 'Retail'].map(t=><option key={t}>{t}</option>)}
+               </select></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Address</label><input type="text" value={newBusiness.address || ''} onChange={e => setNewBusiness({...newBusiness, address: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Website</label><input type="text" value={newBusiness.website || ''} onChange={e => setNewBusiness({...newBusiness, website: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Contact Person</label><input type="text" value={newBusiness.contactPerson || ''} onChange={e => setNewBusiness({...newBusiness, contactPerson: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Mobile</label><input type="text" value={newBusiness.mobile || ''} onChange={e => setNewBusiness({...newBusiness, mobile: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Priority</label><select value={newBusiness.priority || ''} onChange={e => setNewBusiness({...newBusiness, priority: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                 <option value="">Select Priority</option>
+                 {['High', 'Medium', 'Low'].map(t=><option key={t}>{t}</option>)}
+               </select></div>
+               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label><input type="text" value={newBusiness.email || ''} onChange={e => setNewBusiness({...newBusiness, email: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
             </div>
+            <div style={{ marginTop: '16px' }}><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Notes</label><textarea rows={3} value={newBusiness.notes || ''} onChange={e => setNewBusiness({...newBusiness, notes: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} /></div>
           </GenericModal>
         )}
 
-        {noteRecord && (
-          <GenericModal title="Add Note" onClose={() => setNoteRecord(null)} onSave={() => { setNoteRecord(null); showToast('Note added'); }}>
-            <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Add Note for {noteRecord.name}</label><textarea rows={4} placeholder="Type your note here..." style={{ width: '100%', padding: '10px', marginTop: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} /></div>
-          </GenericModal>
-        )}
-
-        {assignRecord && (
-          <GenericModal title="Assign Owner" onClose={() => setAssignRecord(null)} onSave={() => { setAssignRecord(null); showToast('Owner updated'); }}>
-            <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Assign New Owner for {assignRecord.name}</label><select defaultValue={assignRecord.addedBy} style={{ width: '100%', padding: '10px', marginTop: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>{addedByList.map(t=><option key={t}>{t}</option>)}</select></div>
-          </GenericModal>
-        )}
       </AnimatePresence>
     </div>
   );

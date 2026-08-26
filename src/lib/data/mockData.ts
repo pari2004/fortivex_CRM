@@ -143,6 +143,15 @@ export interface Application {
 export type StudentStatus = 'Active' | 'Enrolled' | 'Pending Documents' | 'Pending Payment' | 'Orientation Scheduled' | 'In Progress' | 'Internship' | 'Placement Ready' | 'Placed' | 'Alumni' | 'On Hold';
 export type PlacementStatus = 'Not Started' | 'In Training' | 'Interviewing' | 'Placed' | 'Opted Out';
 
+export interface StudentActivity {
+  id: string;
+  type: 'Admission' | 'Batch Allocation' | 'Attendance' | 'Assessment' | 'Mentor Interaction' | 'Follow-up' | 'Payment' | 'Internship' | 'Certificate' | 'Placement' | 'Document Upload' | 'Note' | 'Call' | 'Email' | 'WhatsApp';
+  title: string;
+  description: string;
+  user: string;
+  date: string;
+}
+
 export interface Student {
   id: string;
   name: string;
@@ -154,24 +163,41 @@ export interface Student {
   address?: string;
   city?: string;
   state?: string;
+  emergencyContact?: string;
   qualification: string;
   college?: string;
   graduationYear?: string;
   cgpa?: string;
+  previousExperience?: string;
+  technicalSkills?: string;
   program: Program;
   batch: string;
   mentor: string;
+  counselor?: string;
   enrollmentDate: string;
+  enrollmentId?: string;
   status: StudentStatus;
-  paymentStatus: 'Paid' | 'Pending' | 'Overdue';
+  paymentStatus: 'Paid' | 'Partially Paid' | 'Pending' | 'Overdue';
   totalFee: number;
   paidAmount: number;
   progress: number;
   attendance: number;
+  assignmentsCompleted?: number;
+  assignmentsTotal?: number;
+  assessmentsAvg?: number;
   placementStatus: PlacementStatus;
+  internshipStatus?: 'Not Started' | 'Ongoing' | 'Completed';
+  internshipCompany?: string;
+  certificateStatus?: 'Pending' | 'Issued';
   company?: string;
   package?: string;
   notes?: string;
+  leadId?: string;
+  leadName?: string;
+  leadStage?: string;
+  leadSource?: string;
+  nextFollowUp?: string;
+  activities?: StudentActivity[];
   [key: string]: any;
 }
 
@@ -193,7 +219,7 @@ export interface Task {
 const firstNames = ['Rahul', 'Priya', 'Amit', 'Sneha', 'Arjun', 'Kiran', 'Vikram', 'Neha', 'Sanjay', 'Riya', 'Karan', 'Deepak', 'Anjali', 'Ravi', 'Pooja', 'Sunil', 'Swati', 'Vijay', 'Meera', 'Rakesh'];
 const lastNames = ['Sharma', 'Patel', 'Kumar', 'Reddy', 'Singh', 'Gupta', 'Dutt', 'Sen', 'Johar', 'Verma', 'Nair', 'Iyer', 'Deshmukh', 'Joshi', 'Chauhan', 'Yadav', 'Menon', 'Bose', 'Das', 'Chatterjee'];
 const sources = ['Website', 'Facebook', 'LinkedIn', 'Referral', 'Google Ads', 'Instagram', 'Direct'];
-const counselors = ['Pavan SH', 'Thanushree BR', 'Parikshit', 'Spoorthi', 'Yashwanth', 'Abhishek'];
+const counselors = ['Pavan S.H', 'Thanushree BR', 'Parikshit', 'Spoorthi', 'Yashwanth', 'Abhishek'];
 const members = ['David Chen', 'Sarah Miller', 'John Doe', 'Jane Smith', 'Alex Wong'];
 const batches = ['FSD-2026-A', 'FSD-2026-B', 'FSD-2026-C', 'FSD-Weekend-01'];
 const programs: Program[] = ['Full Stack Development', 'Data Science', 'AI & Machine Learning', 'Cloud Computing'];
@@ -239,6 +265,17 @@ const generateLeads = (count: number): Lead[] => {
     
     generated.push({
       id: `L-${String(i + 1).padStart(4, '0')}`,
+      priority: Math.random() > 0.7 ? 'High' : (Math.random() > 0.4 ? 'Medium' : 'Low'),
+      interestedIn: Math.random() > 0.5 ? 'AI Programme' : 'FSD Course',
+      companyType: Math.random() > 0.5 ? 'MNC' : 'Startup',
+      experienceLevel: Math.random() > 0.5 ? 'Fresher' : '2-3 Years',
+      whatLookingFor: 'Upskilling',
+      careerGoal: Math.random() > 0.5 ? 'Career Growth' : 'Switch Domain',
+      enrollmentTimeline: Math.random() > 0.5 ? 'Immediate' : 'Next Month',
+      technicalBackground: Math.random() > 0.5 ? 'Computer Science' : 'Non-IT',
+      leadLifecycleName: 'Standard',
+      leadStage: status,
+
       name: cName,
       email: `lead${i + 1}@example.com`,
       phone: `+91 ${Math.floor(9000000000 + Math.random() * 999999999)}`,
@@ -248,7 +285,7 @@ const generateLeads = (count: number): Lead[] => {
       source: sources[Math.floor(Math.random() * sources.length)],
       counselor: owner,
       assignedTo: owner, // assign to the counselor
-      priority: ['High', 'Medium', 'Low'][Math.floor(Math.random() * 3)] as any,
+
       leadScore: Math.floor(Math.random() * 100),
       qualification: qualifications[Math.floor(Math.random() * qualifications.length)],
       createdAt: randomDate(sevenDaysAgo, oneDayAgo),
@@ -271,6 +308,16 @@ const generateLeads = (count: number): Lead[] => {
     const status = ['New Lead', 'Contacted', 'Interested', 'Lost', 'Admitted'][Math.floor(Math.random() * 5)];
     
     generated.push({
+      priority: ['High', 'Medium', 'Low'][Math.floor(Math.random() * 3)] as any,
+      interestedIn: Math.random() > 0.5 ? 'AI Programme' : 'FSD Course',
+      companyType: Math.random() > 0.5 ? 'MNC' : 'Startup',
+      experienceLevel: Math.random() > 0.5 ? 'Fresher' : '2-3 Years',
+      whatLookingFor: 'Upskilling',
+      careerGoal: Math.random() > 0.5 ? 'Career Growth' : 'Switch Domain',
+      enrollmentTimeline: Math.random() > 0.5 ? 'Immediate' : 'Next Month',
+      technicalBackground: Math.random() > 0.5 ? 'Computer Science' : 'Non-IT',
+      leadLifecycleName: 'Standard',
+      leadStage: status,
       id: `L-${String(299 + i + 1).padStart(4, '0')}`,
       name: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
       email: `lead${299 + i + 1}@example.com`,
@@ -281,7 +328,7 @@ const generateLeads = (count: number): Lead[] => {
       source: sources[Math.floor(Math.random() * sources.length)],
       counselor: owner,
       assignedTo: owner,
-      priority: ['High', 'Medium', 'Low'][Math.floor(Math.random() * 3)] as any,
+
       leadScore: Math.floor(Math.random() * 100),
       qualification: qualifications[Math.floor(Math.random() * qualifications.length)],
       createdAt: createdAt,
@@ -291,63 +338,143 @@ const generateLeads = (count: number): Lead[] => {
     });
   }
 
-  return generated;
-};
 
-const generateStudents = (count: number): Student[] => {
-  const explicitStudents: Student[] = [
-    {
-      id: 'STU-0001', name: 'Rahul Sharma', email: 'rahul.s@example.com', phone: '+91 9876543210', photo: 'https://i.pravatar.cc/150?u=STU-0001',
-      dob: '1998-05-15', gender: 'Male', address: '123 Tech Park', city: 'Bangalore', state: 'Karnataka',
-      qualification: 'B.Tech CS', college: 'RV College of Engineering', graduationYear: '2020', cgpa: '8.5',
-      program: 'Full Stack Development', batch: 'FSD-2026-A', mentor: 'Arjun Kumar', enrollmentDate: new Date(Date.now() - 60 * 86400000).toISOString(),
-      status: 'In Progress', paymentStatus: 'Paid', totalFee: 142500, paidAmount: 142500, progress: 45, attendance: 92, placementStatus: 'In Training'
-    },
-    {
-      id: 'STU-0002', name: 'Sneha Reddy', email: 'sneha.r@example.com', phone: '+91 9876543211', photo: 'https://i.pravatar.cc/150?u=STU-0002',
-      dob: '1999-08-22', gender: 'Female', address: '456 IT Corridor', city: 'Hyderabad', state: 'Telangana',
-      qualification: 'BCA', college: 'Loyola Academy', graduationYear: '2021', cgpa: '9.0',
-      program: 'Full Stack Development', batch: 'FSD-2026-B', mentor: 'Priya Sharma', enrollmentDate: new Date(Date.now() - 40 * 86400000).toISOString(),
-      status: 'Pending Payment', paymentStatus: 'Pending', totalFee: 142500, paidAmount: 50000, progress: 20, attendance: 85, placementStatus: 'Not Started'
-    },
-    {
-      id: 'STU-0003', name: 'Arjun Kumar', email: 'arjun.k@example.com', phone: '+91 9876543212', photo: 'https://i.pravatar.cc/150?u=STU-0003',
-      dob: '1997-11-10', gender: 'Male', address: '789 Startup Hub', city: 'Pune', state: 'Maharashtra',
-      qualification: 'MCA', college: 'Pune University', graduationYear: '2019', cgpa: '7.8',
-      program: 'Full Stack Development', batch: 'FSD-2026-C', mentor: 'Rahul Sharma', enrollmentDate: new Date(Date.now() - 15 * 86400000).toISOString(),
-      status: 'Placed', paymentStatus: 'Paid', totalFee: 142500, paidAmount: 142500, progress: 100, attendance: 98, placementStatus: 'Placed', company: 'TechNova', package: '8 LPA'
-    }
+  // --- INJECT DEMO FOLLOW-UP DATA ---
+  let todayCount = 10;
+  let overdueCount = 6;
+  let upcomingCount = 10;
+  let completedCount = 6;
+  let rescheduledCount = 4;
+  
+  const todayStr = new Date().toISOString().split('T')[0];
+  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const nextWeekStr = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+
+  const remarks = [
+    "Follow up regarding AI/ML programme details.",
+    "Lead requested course and pricing information.",
+    "Previous call was unanswered.",
+    "Discussed programme details and answered the lead's questions.",
+    "Lead requested a final discussion before enrollment.",
+    "New enquiry received through website.",
+    "Lead requested another date for discussion."
   ];
 
-  const generated: Student[] = Array.from({ length: count - 3 }, (_, i) => {
-    const statuses: StudentStatus[] = ['Active', 'Enrolled', 'Pending Documents', 'Pending Payment', 'Orientation Scheduled', 'In Progress', 'Internship', 'Placement Ready', 'Placed', 'Alumni', 'On Hold'];
-    const pStatuses: Student['paymentStatus'][] = ['Paid', 'Paid', 'Pending', 'Overdue'];
-    const placementStatuses: PlacementStatus[] = ['Not Started', 'In Training', 'Interviewing', 'Placed', 'Opted Out'];
-    const mentors = ['Rahul Sharma', 'Sneha Reddy', 'Arjun Kumar', 'Priya Sharma'];
+  // Randomize lead array so we don't just assign follow-ups to the first N leads
+  // Wait, we don't want to shuffle the original array in place because it messes up order.
+  // Instead, we just pick random indices.
+  let targetIndices: number[] = [];
+  while(targetIndices.length < (todayCount + overdueCount + upcomingCount + completedCount + rescheduledCount)) {
+    let randIndex = Math.floor(Math.random() * generated.length);
+    if (!targetIndices.includes(randIndex)) targetIndices.push(randIndex);
+  }
+
+  let curIdx = 0;
+  // Today
+  for(let i=0; i<todayCount; i++) {
+     let lead = generated[targetIndices[curIdx++]];
+     lead.nextFollowUp = todayStr;
+     lead.followUpStatus = 'Pending';
+     lead.lastFollowUpRemark = remarks[Math.floor(Math.random()*remarks.length)];
+  }
+  // Overdue
+  for(let i=0; i<overdueCount; i++) {
+     let lead = generated[targetIndices[curIdx++]];
+     lead.nextFollowUp = yesterdayStr;
+     lead.followUpStatus = 'Pending';
+     lead.lastFollowUpRemark = "Previous call was unanswered.";
+  }
+  // Upcoming
+  for(let i=0; i<upcomingCount; i++) {
+     let lead = generated[targetIndices[curIdx++]];
+     lead.nextFollowUp = nextWeekStr;
+     lead.followUpStatus = 'Pending';
+     lead.lastFollowUpRemark = "Lead requested a final discussion before enrollment.";
+  }
+  // Completed
+  for(let i=0; i<completedCount; i++) {
+     let lead = generated[targetIndices[curIdx++]];
+     lead.nextFollowUp = todayStr; // Was due today
+     lead.followUpStatus = 'Completed';
+     lead.lastFollowUpRemark = "Discussed programme details and answered the lead's questions.";
+  }
+  // Rescheduled
+  for(let i=0; i<rescheduledCount; i++) {
+     let lead = generated[targetIndices[curIdx++]];
+     lead.nextFollowUp = tomorrowStr;
+     lead.followUpStatus = 'Pending';
+     lead.lastFollowUpRemark = "Lead requested another date for discussion.";
+  }
+  // ------------------------------------
+
+  return generated;
+
+};
+
+const companies = ['Tech Corp', 'Global Solutions', 'Innovatech', 'DataSystems', 'WebSoft'];
+const generateStudents = (count: number): Student[] => {
+  return Array.from({ length: count }, (_, i) => {
+    const isPlaced = Math.random() > 0.8;
+    const isOngoing = Math.random() > 0.5;
     
+    // Generate realistic activities
+    const activities = [
+      { id: `ACT-${i}-1`, type: 'Admission', title: 'Student admitted', description: `Enrolled in Apex AI Programme`, user: 'System', date: randomDate(new Date(Date.now() - 60 * 86400000), new Date(Date.now() - 50 * 86400000)) },
+      { id: `ACT-${i}-2`, type: 'Payment', title: 'Payment received', description: 'Initial fee payment of ₹20,000 received', user: 'Finance', date: randomDate(new Date(Date.now() - 50 * 86400000), new Date(Date.now() - 40 * 86400000)) },
+      { id: `ACT-${i}-3`, type: 'Batch Allocation', title: 'Allocated to Batch', description: 'Assigned to Batch AI-07', user: 'Admin', date: randomDate(new Date(Date.now() - 40 * 86400000), new Date(Date.now() - 30 * 86400000)) },
+      { id: `ACT-${i}-4`, type: 'Call', title: 'Welcome Call', description: 'Welcome call completed by counselor', user: 'Priya', date: randomDate(new Date(Date.now() - 30 * 86400000), new Date(Date.now() - 20 * 86400000)) },
+      { id: `ACT-${i}-5`, type: 'Assessment', title: 'Assessment completed', description: 'Scored 85% in Python Basics', user: 'System', date: randomDate(new Date(Date.now() - 10 * 86400000), new Date()) }
+    ] as StudentActivity[];
+    activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     return {
-      id: `STU-${String(i + 4).padStart(4, '0')}`,
-      name: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-      email: `student${i + 4}@example.com`,
-      phone: `+91 ${Math.floor(9000000000 + Math.random() * 999999999)}`,
-      photo: `https://i.pravatar.cc/150?u=STU-${String(i + 4).padStart(4, '0')}`,
-      dob: '2000-01-01', gender: Math.random() > 0.5 ? 'Male' : 'Female', city: ['Bangalore', 'Hyderabad', 'Pune', 'Mumbai', 'Delhi'][Math.floor(Math.random() * 5)],
-      qualification: ['B.Tech', 'BCA', 'MCA', 'B.Sc'][Math.floor(Math.random() * 4)],
-      program: 'Full Stack Development',
-      batch: batches[Math.floor(Math.random() * batches.length)],
-      mentor: mentors[Math.floor(Math.random() * mentors.length)],
-      enrollmentDate: randomDate(new Date(Date.now() - 180 * 86400000), new Date()),
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      paymentStatus: pStatuses[Math.floor(Math.random() * pStatuses.length)],
-      totalFee: 142500,
-      paidAmount: Math.floor(Math.random() * 142500),
+      id: `STU-2026-${String(i + 1).padStart(3, '0')}`,
+      name: randomElement(['Sandeep S Jadhav', 'Rahul Sharma', 'Priya Patel', 'Amit Kumar', 'Neha Gupta', 'Vikram Singh', 'Anjali Desai', 'Rohan Mehta', 'Kavita Reddy', 'Arjun Nair']),
+      email: `student${i + 1}@example.com`,
+      phone: `+91 98${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
+      photo: `https://i.pravatar.cc/150?u=${i}`,
+      dob: '1998-05-15',
+      gender: randomElement(['Male', 'Female']),
+      address: '123 Main St',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      emergencyContact: '+91 9900112233',
+      qualification: randomElement(['B.Tech', 'M.Tech', 'BCA', 'MCA', 'B.Sc']),
+      college: 'VTU',
+      graduationYear: randomElement(['2022', '2023', '2024']),
+      cgpa: (Math.random() * 4 + 6).toFixed(1),
+      previousExperience: '6 months intern',
+      technicalSkills: 'Python, React, Node.js',
+      program: randomElement(programs),
+      batch: randomElement(batches),
+      mentor: randomElement(counselors),
+      counselor: 'Priya',
+      enrollmentDate: randomDate(new Date(2023, 0, 1), new Date()),
+      enrollmentId: `ENR-${1000 + i}`,
+      status: randomElement(['Active', 'Active', 'Active', 'Enrolled', 'Internship', 'Placed', 'Alumni']),
+      paymentStatus: randomElement(['Paid', 'Partially Paid', 'Pending']),
+      totalFee: 60000,
+      paidAmount: randomAmount(20000, 60000),
       progress: Math.floor(Math.random() * 100),
-      attendance: 60 + Math.floor(Math.random() * 40),
-      placementStatus: placementStatuses[Math.floor(Math.random() * placementStatuses.length)],
+      attendance: Math.floor(Math.random() * 20 + 80),
+      assignmentsCompleted: 8,
+      assignmentsTotal: 10,
+      assessmentsAvg: 84,
+      placementStatus: isPlaced ? 'Placed' : isOngoing ? 'Interviewing' : 'Not Started',
+      internshipStatus: isOngoing ? 'Ongoing' : 'Not Started',
+      internshipCompany: isOngoing ? 'Tech Corp' : '',
+      certificateStatus: 'Pending',
+      company: isPlaced ? randomElement(companies) : undefined,
+      package: isPlaced ? `${randomElement(['4.5', '6.0', '8.0', '12.0'])} LPA` : undefined,
+      leadId: `L-${1000+i}`,
+      leadName: 'Original Lead Name',
+      leadStage: 'Closed Won',
+      leadSource: 'Website',
+      nextFollowUp: new Date(Date.now() + 86400000).toISOString(),
+      activities
     };
   });
-
-  return [...explicitStudents, ...generated];
 };
 
 
@@ -540,16 +667,52 @@ export const generatedCalls = Array.from({ length: 250 }, (_, i) => {
 
 export const generatedDeals = Array.from({ length: 180 }, (_, i) => {
     const lead = randomElement(generatedLeads);
+    const stages = ['Session Scheduled', 'Session Done', 'Partial Payment Done', 'Learner Onboarded', 'Deal Won', 'Deal Lost'];
+    
+    // Distribute stages logically based on lead status
+    let stage = randomElement(stages);
+    if (lead.status === 'Lost') stage = 'Deal Lost';
+    if (lead.status === 'Enrolled') stage = 'Deal Won';
+    
+    const status = stage === 'Deal Won' ? 'Won' : stage === 'Deal Lost' ? 'Lost' : 'Open';
+    
+    const activityDate = randomDate(new Date(Date.now() - 30 * 86400000), new Date());
+    const remarks = ['Followed up on email', 'Requested callback', 'Sent brochure', 'Discussed pricing', 'Not answering', 'Call disconnected'];
+    
     return {
         id: `DEAL-${1000 + i}`,
+        leadId: lead.id,
         leadName: lead.name,
-        dealOwner: lead.counselor,
-        program: 'Full Stack Development',
+        leadOwner: lead.owner || lead.counselor,
+        dealOwner: lead.owner || lead.counselor, // Very important for My/All toggle
+        program: lead.source === 'Google Ads' ? 'Data Science' : 'Full Stack Development',
         revenue: randomAmount(50000, 200000),
-        stage: randomElement(['Discovery', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost']),
-        status: randomElement(['Open', 'Won', 'Lost']),
+        probability: randomElement([10, 25, 50, 75, 90, 100]),
+        stage: stage,
+        status: status,
         closeDate: randomDate(new Date(Date.now() - 30 * 86400000), new Date(Date.now() + 30 * 86400000)),
-        qualification: 'Unknown'
+        nextFollowUp: lead.nextFollowUp || randomDate(new Date(Date.now() - 2 * 86400000), new Date(Date.now() + 7 * 86400000)),
+        source: lead.source,
+        priority: lead.priority || 'Medium',
+        tags: [randomElement(['Hot', 'Warm', 'Cold']), randomElement(['Decision Pending', 'Follow Up'])],
+        createdAt: new Date(Date.now() - randomAmount(1, 60) * 86400000).toISOString(),
+        updatedAt: activityDate,
+        lastActivityTime: activityDate,
+        lastRemark: randomElement(remarks),
+        recentActions: [
+          { id: Math.random().toString(36).substring(7), action: `Moved to ${stage}`, date: activityDate, by: lead.counselor }
+        ],
+        
+        // Custom fields from Lead
+        interestedIn: lead.interestedIn,
+        companyType: lead.companyType,
+        experienceLevel: lead.experienceLevel,
+        whatLookingFor: lead.whatLookingFor,
+        careerGoal: lead.careerGoal,
+        enrollmentTimeline: lead.enrollmentTimeline,
+        technicalBackground: lead.technicalBackground,
+        leadLifecycleName: lead.leadLifecycleName,
+        leadStage: lead.leadStage,
     };
 });
 
@@ -635,11 +798,27 @@ export interface BusinessLead {
   revenuePotential: number;
   status: string;
   date: string;
+  // Fields for LeadsBusinessView
+  address?: string;
+  website?: string;
+  priority?: string;
+  addedBy?: string;
+  createdOn?: string;
+  mobile?: string;
+  email?: string;
+  notes?: string;
+  associatedLeads?: string[]; // IDs of associated active leads
 }
 
 const businessTypes = ['B2B', 'B2C', 'Enterprise', 'Startup', 'Agency'];
 const industries = ['IT/Software', 'EdTech', 'FinTech', 'E-commerce', 'Manufacturing', 'Healthcare', 'Consulting'];
 const designations = ['HR Manager', 'L&D Head', 'Technical Director', 'CEO', 'Training Coordinator'];
+
+
+const locations = ['Bengaluru, Karnataka', 'Mumbai, Maharashtra', 'Hyderabad, Telangana', 'Chennai, Tamil Nadu', 'Pune, Maharashtra', 'Delhi, India'];
+const addedByList = ['Admin User', 'Sales Team', 'Marketing Team', 'Rahul Sharma', 'Priya Nair'];
+const priorities = ['High', 'Medium', 'Low'];
+const dates = ['Today', 'Yesterday', '2 days ago', '4 days ago', '1 week ago'];
 
 export const generatedBusinessLeads: BusinessLead[] = Array.from({ length: 35 }, (_, i) => {
   const company = `Corp ${String.fromCharCode(65 + (i % 26))}${i}`;
@@ -682,36 +861,107 @@ export const distributionData = {
   }))
 };
 
-export interface Quote {
+export interface QuoteLineItem {
   id: string;
-  student: string;
-  program: string;
-  feeAmount: number;
-  discount: number;
+  product: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
   tax: number;
-  finalAmount: number;
-  createdBy: string;
-  status: 'Draft' | 'Sent' | 'Approved' | 'Expired';
-  validUntil: string;
+  discount: number;
+  lineTotal: number;
 }
 
-export const generatedQuotes: Quote[] = Array.from({ length: 50 }, (_, i) => {
-  const student = randomElement(generatedStudents);
-  const feeAmount = randomAmount(80000, 150000);
-  const discount = Math.random() > 0.5 ? randomAmount(5000, 20000) : 0;
-  const tax = (feeAmount - discount) * 0.18;
-  const finalAmount = feeAmount - discount + tax;
+export interface Quote {
+  id: string;
+  quoteNumber: string;
+  customer: string;
+  leadName: string;
+  leadId: string;
+  leadStage: string;
+  recentAction: string;
+  status: 'Draft' | 'Sent' | 'Paid' | 'Cancelled';
+  quoteAmount: number;
+  paymentAmount: number;
+  paymentMode: string;
+  paymentStatus: string;
+  paymentLink: string;
+  quoteDate: string;
+  expiredDate: string;
+  owner: string;
+  subject: string;
+  subtotal: number;
+  tax: number;
+  discount: number;
+  shipping: number;
+  total: number;
+  lineItems: QuoteLineItem[];
+  notes: string;
+}
+
+export const generatedQuotes: Quote[] = Array.from({ length: 25 }, (_, i) => {
+  const isPaid = Math.random() > 0.7;
+  const isCancelled = !isPaid && Math.random() > 0.8;
+  const isSent = !isPaid && !isCancelled && Math.random() > 0.4;
+  
+  const status = isPaid ? 'Paid' : isCancelled ? 'Cancelled' : isSent ? 'Sent' : 'Draft';
+  
+  const student = randomElement(generatedStudents).name;
+  const stage = randomElement(['New', 'Follow Up', 'Negotiation', 'Closed Won']);
+  
+  const unitPrice = randomAmount(40000, 150000);
+  const qty = 1;
+  const lineDiscount = Math.random() > 0.5 ? randomAmount(5000, 15000) : 0;
+  const lineTax = (unitPrice - lineDiscount) * 0.18;
+  const lineTotal = unitPrice - lineDiscount + lineTax;
+  
+  const lineItems: QuoteLineItem[] = [{
+    id: `QLI-${1000 + i}`,
+    product: 'Full Stack Development Program',
+    description: 'Comprehensive 6-month bootcamp',
+    quantity: qty,
+    unitPrice: unitPrice,
+    tax: 18,
+    discount: lineDiscount,
+    lineTotal: lineTotal
+  }];
+  
+  const subtotal = unitPrice;
+  const totalTax = lineTax;
+  const totalDiscount = lineDiscount;
+  const shipping = 0;
+  const total = subtotal - totalDiscount + totalTax + shipping;
+  
+  const paymentAmount = isPaid ? total : 0;
+  const paymentStatus = isPaid ? 'Paid Already' : isSent ? 'Requested' : 'Unpaid';
+  const paymentMode = isPaid ? randomElement(['Credit Card', 'UPI', 'Bank Transfer']) : '';
+  const paymentLink = (!isPaid && isSent) ? `pay.ftvx.in/QT${1000+i}` : '';
+  
   return {
     id: `QT-${1000 + i}`,
-    student: student.name,
-    program: 'Full Stack Development',
-    feeAmount,
-    discount,
-    tax,
-    finalAmount,
-    createdBy: randomElement(counselors),
-    status: randomElement(['Draft', 'Sent', 'Approved', 'Expired']),
-    validUntil: randomDate(new Date(Date.now()), new Date(Date.now() + 15 * 86400000))
+    quoteNumber: `QT-2026-${1000 + i}`,
+    customer: student,
+    leadName: student,
+    leadId: `L-${1000 + i}`,
+    leadStage: stage,
+    recentAction: isPaid ? 'Payment Received' : isSent ? 'Quote Sent to Customer' : 'Quote Drafted',
+    status: status,
+    quoteAmount: total,
+    paymentAmount: paymentAmount,
+    paymentMode: paymentMode,
+    paymentStatus: paymentStatus,
+    paymentLink: paymentLink,
+    quoteDate: new Date(Date.now() - Math.random() * 15 * 86400000).toISOString().split('T')[0],
+    expiredDate: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+    owner: 'Current User',
+    subject: `Quotation for ${student} - Full Stack Program`,
+    subtotal: subtotal,
+    tax: totalTax,
+    discount: totalDiscount,
+    shipping: shipping,
+    total: total,
+    lineItems: lineItems,
+    notes: 'Standard terms and conditions apply. Validity 15 days.'
   };
 });
 

@@ -44,9 +44,10 @@ interface Props {
   title: string;
   onClose: () => void;
   dashboardData?: any;
+  onLeadClick?: (leadName: string) => void;
 }
 
-export function OverallActivitiesDetailsModal({ title, onClose, dashboardData }: Props) {
+export function OverallActivitiesDetailsModal({ title, onClose, dashboardData, onLeadClick }: Props) {
   const data = useMemo(() => {
     if (!dashboardData) return [];
     

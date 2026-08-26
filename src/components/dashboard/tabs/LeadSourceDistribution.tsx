@@ -3,6 +3,7 @@ import { Target } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface LeadSourceDistributionProps {
+  dashboardData?: any;
     dateFilter: string;
 }
 

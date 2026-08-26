@@ -36,7 +36,7 @@ const INITIAL_INTEGRATIONS_DATA = [
   { id: 'justdial', name: 'Justdial', category: 'Lead Source', status: 'Healthy', description: 'Local business lead API webhook stream.', connected: true, apiKey: 'jd_live_19827' },
   { id: 'razorpay', name: 'Razorpay', category: 'Payments', status: 'Healthy', description: 'Online payment links, subscriptions & fee receipts.', connected: true, apiKey: 'rzp_live_8839201', badge: 'PAID' },
   { id: 'email_parser', name: 'Leads from Email to Salesmax', category: 'Parser', status: 'Healthy', description: 'Parse inbound email inquiries into CRM leads.', connected: true },
-  { id: 'whatsapp', name: 'WhatsApp', category: 'Messaging', status: 'Healthy', description: 'Official WhatsApp Business BSP API integration.', connected: true, apiKey: 'interakt_live_77364512', webhookUrl: 'https://api.fortivex.ai/whatsapp/interakt/webhook' },
+  { id: 'whatsapp_cloud_api', name: 'WhatsApp Cloud API', category: 'Messaging', status: 'Healthy', description: 'Official Meta WhatsApp Cloud API integration.', connected: false, apiKey: '', webhookUrl: '' },
 ];
 function IntegrationBrandLogo({ id, name }: { id: string; name: string }) {
   const logoStyles: Record<string, { bg: string; color: string; label?: string; icon?: React.ReactNode }> = {
@@ -62,7 +62,7 @@ function IntegrationBrandLogo({ id, name }: { id: string; name: string }) {
     'justdial':     { bg: 'linear-gradient(135deg, #ff9900, #003399)', color: '#ffffff', label: 'JD' },
     'razorpay':     { bg: 'linear-gradient(135deg, #0c2340, #0284c7)', color: '#ffffff', label: 'R' },
     'email_parser': { bg: 'linear-gradient(135deg, #1e293b, #3b82f6)', color: '#ffffff', icon: <Mail size={20} /> },
-    'whatsapp':     { bg: 'linear-gradient(135deg, #25d366, #128c7e)', color: '#ffffff', icon: <PhoneCall size={20} /> },
+    'whatsapp_cloud_api': { bg: 'linear-gradient(135deg, #25d366, #128c7e)', color: '#ffffff', icon: <PhoneCall size={20} /> },
   };
 
   const style = logoStyles[id] || { bg: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: '#ffffff', label: name.charAt(0) };
@@ -292,6 +292,15 @@ export default function SettingsPage() {
   const [selectedIntegrationSetup, setSelectedIntegrationSetup] = useState<any | null>(null);
   const [setupApiKey, setSetupApiKey] = useState('');
   const [setupWebhook, setSetupWebhook] = useState('');
+  
+  // WhatsApp Cloud API specific fields
+  const [waMetaAccount, setWaMetaAccount] = useState('');
+  const [waWabaId, setWaWabaId] = useState('');
+  const [waPhoneId, setWaPhoneId] = useState('');
+  const [waAppId, setWaAppId] = useState('');
+  const [waAppSecret, setWaAppSecret] = useState('');
+  const [waVerifyToken, setWaVerifyToken] = useState('fortivex_wa_verify_2026');
+
   const [isTestingIntegration, setIsTestingIntegration] = useState(false);
 
   const tabs = [
@@ -834,6 +843,7 @@ export default function SettingsPage() {
                             setIsTestingIntegration(true);
                             setTimeout(() => {
                               setIsTestingIntegration(false);
+                              if (selectedIntegrationSetup.id === 'whatsapp_cloud_api') localStorage.setItem('wa_connected', 'true');
                               const updated = integrations.map(i => i.id === selectedIntegrationSetup.id ? { ...i, connected: true, status: 'Healthy', apiKey: setupApiKey, webhookUrl: setupWebhook } : i);
                               setIntegrations(updated);
                               setSelectedIntegrationSetup({ ...selectedIntegrationSetup, connected: true, status: 'Healthy' });
@@ -848,6 +858,7 @@ export default function SettingsPage() {
                         {selectedIntegrationSetup.connected && (
                           <button
                             onClick={() => {
+                              if (selectedIntegrationSetup.id === 'whatsapp_cloud_api') localStorage.setItem('wa_connected', 'false');
                               const updated = integrations.map(i => i.id === selectedIntegrationSetup.id ? { ...i, connected: false, status: 'Not connected' } : i);
                               setIntegrations(updated);
                               setSelectedIntegrationSetup(null);
@@ -862,29 +873,88 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Form Inputs */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>API Key / Client Token</label>
-                        <input
-                          type="text"
-                          value={setupApiKey}
-                          onChange={e => setSetupApiKey(e.target.value)}
-                          placeholder={`Enter ${selectedIntegrationSetup.name} API Key...`}
-                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
-                        />
-                      </div>
+                    {selectedIntegrationSetup.id === 'whatsapp_cloud_api' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        
+                        <div style={{ padding: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                           <div>
+                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#065f46', textTransform: 'uppercase' }}>Integration Status</div>
+                             <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#047857' }}>{selectedIntegrationSetup.connected ? 'Active & Receiving Webhooks' : 'Waiting for connection'}</div>
+                           </div>
+                           {selectedIntegrationSetup.connected && (
+                             <div style={{ textAlign: 'right' }}>
+                               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#065f46', textTransform: 'uppercase' }}>Connected Phone</div>
+                               <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#047857' }}>+91 9876543210</div>
+                             </div>
+                           )}
+                        </div>
 
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Webhook Callback URL</label>
-                        <input
-                          type="text"
-                          value={setupWebhook}
-                          onChange={e => setSetupWebhook(e.target.value)}
-                          placeholder={`https://api.fortivex.ai/${selectedIntegrationSetup.id}/webhook`}
-                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
-                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div>
+                            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Meta Business Account ID</label>
+                            <input value={waMetaAccount} onChange={e => setWaMetaAccount(e.target.value)} placeholder="e.g. 10482930291" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>WABA ID</label>
+                            <input value={waWabaId} onChange={e => setWaWabaId(e.target.value)} placeholder="WhatsApp Business Account ID" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Phone Number ID</label>
+                            <input value={waPhoneId} onChange={e => setWaPhoneId(e.target.value)} placeholder="e.g. 10982390234" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>App ID</label>
+                            <input value={waAppId} onChange={e => setWaAppId(e.target.value)} placeholder="Meta App ID" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Permanent Access Token</label>
+                          <input type="password" value={setupApiKey} onChange={e => setSetupApiKey(e.target.value)} placeholder="EAAG... token" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                        </div>
+                        
+                        <div>
+                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>App Secret (Optional)</label>
+                          <input type="password" value={waAppSecret} onChange={e => setWaAppSecret(e.target.value)} placeholder="Required for some verify flows" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div>
+                            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Webhook Verify Token</label>
+                            <input value={waVerifyToken} onChange={e => setWaVerifyToken(e.target.value)} placeholder="Verify Token" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Callback URL (Read Only)</label>
+                            <input value="https://api.fortivex.ai/wa/webhook" readOnly style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#f8fafc', color: '#64748b', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                        </div>
+
                       </div>
-                    </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>API Key / Client Token</label>
+                          <input
+                            type="text"
+                            value={setupApiKey}
+                            onChange={e => setSetupApiKey(e.target.value)}
+                            placeholder={`Enter ${selectedIntegrationSetup.name} API Key...`}
+                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Webhook Callback URL</label>
+                          <input
+                            type="text"
+                            value={setupWebhook}
+                            onChange={e => setSetupWebhook(e.target.value)}
+                            placeholder={`https://api.fortivex.ai/${selectedIntegrationSetup.id}/webhook`}
+                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     {/* Bottom Links */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color)', fontSize: '0.82rem', color: '#64748b' }}>

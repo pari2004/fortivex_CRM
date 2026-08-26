@@ -56,7 +56,9 @@ const navMenus: Record<Role, NavGroup[]> = {
             { name: 'Segments / Lists', href: '/leads?tab=Segments / Lists' },
             { name: 'Uploads', href: '/leads?tab=Uploads' },
             { name: 'Distribution', href: '/leads?tab=Distribution' },
-            { name: 'Follow-ups', href: '/leads?tab=Follow-ups' }
+            { name: 'Follow-ups', href: '/leads?tab=Follow-ups' },
+            { name: 'Data Exports', href: '/leads?tab=Data Exports' },
+            { name: 'Email Leads', href: '/leads?tab=Email Leads' }
           ]
         },
         {

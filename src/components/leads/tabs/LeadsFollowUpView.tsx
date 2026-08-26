@@ -2,8 +2,16 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCRM } from '@/contexts/CRMContext';
-import { Filter, Calendar, Phone, CheckCircle, Search, Edit2, Download, Check, X, FileText, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { Filter, Calendar, Phone, CheckCircle, Search, Edit2, Download, Check, X, FileText, ChevronLeft, ChevronRight, MessageCircle, LayoutGrid, List, Clock, AlertTriangle } from 'lucide-react';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+
+const KANBAN_COLUMNS: { key: string; label: string; icon: React.ReactNode; color: string }[] = [
+  { key: 'Today', label: 'Follow-up Today', icon: <Clock size={14} />, color: '#d97706' },
+  { key: 'Upcoming', label: 'Upcoming', icon: <Calendar size={14} />, color: '#0ea5e9' },
+  { key: 'Overdue', label: 'Overdue', icon: <AlertTriangle size={14} />, color: '#ef4444' },
+  { key: 'Completed', label: 'Done', icon: <CheckCircle size={14} />, color: '#22c55e' },
+];
 
 function ActionModal({ title, onClose, onSave, children }: { title: string, onClose: () => void, onSave: () => void, children: React.ReactNode }) {
   return (
@@ -27,6 +35,9 @@ const CURRENT_USER = 'Rahul Sharma'; // Assuming logged in user for demo
 
 export function LeadsFollowUpView() {
   const { leads, updateLead } = useCRM();
+
+  // View mode
+  const [viewMode, setViewMode] = useState<'Kanban' | 'Table'>('Kanban');
 
   // Filters
   const [ownerFilter, setOwnerFilter] = useState<'All' | 'My'>('My');
@@ -166,6 +177,32 @@ export function LeadsFollowUpView() {
     setActionModal(null);
   };
 
+  // Group leads into Kanban columns by follow-up status
+  const kanbanColumns = useMemo(() => {
+    const groups: Record<string, typeof filteredLeads> = { Today: [], Upcoming: [], Overdue: [], Completed: [] };
+    filteredLeads.forEach(lead => {
+      const status = getFollowUpStatus(lead);
+      if (groups[status]) groups[status].push(lead);
+    });
+    return groups;
+  }, [filteredLeads]);
+
+  // Dragging a card into "Done" completes the follow-up; dragging out of "Done" reopens it.
+  // The date-based columns (Today/Upcoming/Overdue) are computed automatically and aren't manually reorderable.
+  const onDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+    if (!destination || destination.droppableId === source.droppableId) return;
+
+    const lead = leads.find(l => l.id === draggableId);
+    if (!lead) return;
+
+    if (destination.droppableId === 'Completed') {
+      handleAction('complete', lead.id);
+    } else if (source.droppableId === 'Completed') {
+      updateLead({ ...lead, followUpStatus: 'Pending' });
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Action Bar */}
@@ -212,10 +249,91 @@ export function LeadsFollowUpView() {
           <button style={{ padding: '9px 16px', borderRadius: '8px', background: 'white', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 500 }}>
             <Filter size={16} /> Filters
           </button>
+
+          <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+            <button
+              onClick={() => setViewMode('Kanban')}
+              title="Kanban view"
+              style={{ padding: '9px 12px', background: viewMode === 'Kanban' ? 'var(--primary-color)' : 'white', color: viewMode === 'Kanban' ? 'white' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              onClick={() => setViewMode('Table')}
+              title="Table view"
+              style={{ padding: '9px 12px', background: viewMode === 'Table' ? 'var(--primary-color)' : 'white', color: viewMode === 'Table' ? 'white' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <List size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Kanban Board */}
+      {viewMode === 'Kanban' && (
+        <div style={{ flex: 1, overflow: 'auto', background: '#f8fafc', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px' }}>
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div style={{ display: 'flex', gap: '16px', height: '100%', minWidth: 'min-content' }}>
+              {KANBAN_COLUMNS.map(col => {
+                const colLeads = kanbanColumns[col.key] || [];
+                return (
+                  <div key={col.key} style={{ width: '280px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <span style={{ color: col.color, display: 'flex' }}>{col.icon}</span>
+                      <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{col.label}</h3>
+                      <span style={{ background: 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{colLeads.length}</span>
+                    </div>
+
+                    <Droppable droppableId={col.key}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          style={{ flex: 1, background: snapshot.isDraggingOver ? 'rgba(37,99,235,0.05)' : 'transparent', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '150px' }}
+                        >
+                          {colLeads.map((lead, index) => (
+                            <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  style={{
+                                    background: 'white',
+                                    borderRadius: '10px',
+                                    padding: '12px',
+                                    border: '1px solid var(--border-color)',
+                                    boxShadow: snapshot.isDragging ? '0 10px 25px rgba(0,0,0,0.15)' : '0 1px 2px rgba(0,0,0,0.04)',
+                                    ...provided.draggableProps.style
+                                  }}
+                                >
+                                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{lead.name}</div>
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginBottom: '8px' }}>{lead.mobile || 'No Mobile'}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                    <Calendar size={12} /> {lead.nextFollowUp}
+                                  </div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '0.75rem', background: '#f1f5f9', color: 'var(--text-secondary)' }}>{lead.stage || lead.status || 'New'}</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{lead.owner || lead.counselor || 'Unassigned'}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </div>
+                );
+              })}
+            </div>
+          </DragDropContext>
+        </div>
+      )}
+
       {/* Table Area */}
+      {viewMode === 'Table' && (
       <div style={{ flex: 1, background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -347,6 +465,7 @@ export function LeadsFollowUpView() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Action Modals */}
       {actionModal && (

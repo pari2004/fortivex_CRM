@@ -14,6 +14,8 @@ import { LeadsSegmentsView } from '@/components/leads/tabs/LeadsSegmentsView';
 import { LeadsUploadsView } from '@/components/leads/tabs/LeadsUploadsView';
 import { LeadsDistributionView } from '@/components/leads/tabs/LeadsDistributionView';
 import { LeadsFollowUpView } from '@/components/leads/tabs/LeadsFollowUpView';
+import { LeadsDataExportsView } from '@/components/leads/tabs/LeadsDataExportsView';
+import { LeadsEmailLeadsView } from '@/components/leads/tabs/LeadsEmailLeadsView';
 import { useCRM } from '@/contexts/CRMContext';
 // --- Toast Utility ---
 function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -70,6 +72,10 @@ export default function LeadsPage() {
         return <LeadsDistributionView />;
       case 'Follow-ups':
         return <LeadsFollowUpView />;
+      case 'Data Exports':
+        return <LeadsDataExportsView />;
+      case 'Email Leads':
+        return <LeadsEmailLeadsView />;
       default:
         return <LeadsDefaultView activeTab="Active Leads" newLeadEvent={newLeadEvent} />;
     }
@@ -86,13 +92,15 @@ export default function LeadsPage() {
         </div>
         
                 <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={() => setIsUploadModalOpen(true)} 
+          {activeTab !== 'Data Exports' && activeTab !== 'Email Leads' && (
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'white', color: 'var(--primary-color)', fontWeight: 600, border: '1px solid var(--primary-color)', cursor: 'pointer' }}
           >
             <UploadCloud size={18} /> New Upload
           </button>
-          
+          )}
+
           {(activeTab === 'Active Leads' || activeTab === 'All Leads' || activeTab === 'Work Leads') && (
             <button 
               onClick={() => setIsAddModalOpen(true)} 

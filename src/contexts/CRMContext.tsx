@@ -2,10 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { mockUsers, mockLeads, mockDeals, mockTasks, mockCalls, mockVideoCalls, mockLists } from './mockData';
-import { leadsData, studentsData, generatedBusinessLeads, BusinessLead, generatedDeals, generatedQuotes, generatedPayments, Quote, QuoteLineItem, generatedApplications, Application, Student, StudentActivity } from '@/lib/data/mockData';
+import type { BusinessLead, Quote, QuoteLineItem, Application, Student, StudentActivity } from '@/lib/data/mockData';
 import { Reminder } from '@/lib/types/reminder';
-import { usersData, CRMProperty, defaultPropertiesData } from '@/lib/data/systemData';
+import type { CRMProperty } from '@/lib/data/systemData';
 export type { Application, Quote, QuoteLineItem, BusinessLead, Student, StudentActivity };
 
 
@@ -197,7 +196,7 @@ export interface Deal {
   createdAt?: string;
   updatedAt?: string;
   recentActions?: { id: string; action: string; date: string; by: string }[];
-  
+
   interestedIn?: string;
   companyType?: string;
   experienceLevel?: string;
@@ -256,15 +255,15 @@ export interface Payment {
   leadPhone?: string;
   leadEmail?: string;
   amount: number;
-  status: string; 
-  channel: string; 
+  status: string;
+  channel: string;
   createdAt: string;
   paidAt?: string;
   paymentRequestDate?: string;
   collectedBy: string;
   notes?: string;
   relatedDealId?: string;
-  
+
   // Tabular Specific Fields
   currency?: string;
   leadOwner?: string;
@@ -277,185 +276,9 @@ export interface Payment {
   updatedAt?: string;
   finalPaymentOn?: string;
   leadSource?: string;
-  
+
   [key: string]: any;
 }
-
-const NEW_DEMO_PAYMENTS: Payment[] = [
-  {
-    id: 'PAY-1001', leadId: 'L-123456789', leadName: 'Student Performance Prediction lead',
-    amount: 15000, status: 'Paid Already', channel: 'Razorpay',
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    paidAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentRequestDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    collectedBy: 'System', notes: 'Automated Razorpay checkout.', relatedDealId: 'DEAL-1', currency: 'INR', leadOwner: 'Parikshit', requestedBy: 'System', paymentAttempt: 1, paymentAmount: 15000, paymentType: 'Online', paymentLink: 'https://rzp.io/l/1234', credited: true, updatedAt: new Date().toISOString(), finalPaymentOn: new Date().toISOString(), leadSource: 'Website'
-  },
-  {
-    id: 'PAY-1002', leadId: 'L-234567890', leadName: 'Priya Singh', leadPhone: '+91 9876543210',
-    amount: 5000, status: 'Requested', channel: 'Razorpay',
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentRequestDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    collectedBy: 'Pavan S.H', notes: 'Sent link via WhatsApp', relatedDealId: 'DEAL-2', currency: 'INR', leadOwner: 'Pavan S.H', requestedBy: 'Pavan S.H', paymentAttempt: 1, paymentAmount: 5000, paymentType: 'Link', paymentLink: 'https://rzp.io/l/5678', credited: false, updatedAt: new Date().toISOString(), finalPaymentOn: '', leadSource: 'Google Ads'
-  },
-  {
-    id: 'PAY-1003', leadId: 'L-345678901', leadName: 'Dinesh',
-    amount: 10000, status: 'Failed Attempts', channel: 'Razorpay',
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentRequestDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    collectedBy: 'System', notes: 'Card declined.', relatedDealId: 'DEAL-3', currency: 'INR', leadOwner: 'Abhishek', requestedBy: 'System', paymentAttempt: 2, paymentAmount: 10000, paymentType: 'Card', paymentLink: '-', credited: false, updatedAt: new Date().toISOString(), finalPaymentOn: '', leadSource: 'Facebook'
-  },
-  {
-    id: 'PAY-1004', leadId: 'L-456789012', leadName: 'Vaibhav Aggarwal',
-    amount: 50000, status: 'Partially Paid', channel: 'Manual Created',
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    paidAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-    collectedBy: 'Abhishek', notes: 'First tranche received via Bank Transfer.', currency: 'INR', leadOwner: 'Parikshit', requestedBy: 'Parikshit', paymentAttempt: 1, paymentAmount: 25000, paymentType: 'Bank Transfer', paymentLink: '-', credited: true, updatedAt: new Date().toISOString(), finalPaymentOn: new Date().toISOString(), leadSource: 'Referral'
-  },
-  {
-    id: 'PAY-1005', leadId: 'L-567890123', leadName: 'John Doe',
-    amount: 8000, status: 'Open', channel: 'Manual Created',
-    createdAt: new Date(Date.now()).toISOString(),
-    collectedBy: 'Parikshit', notes: 'Pending cash collection.', currency: 'INR', leadOwner: 'Parikshit', requestedBy: 'Parikshit', paymentAttempt: 0, paymentAmount: 8000, paymentType: 'Cash', paymentLink: '-', credited: false, updatedAt: new Date().toISOString(), finalPaymentOn: '', leadSource: 'Walk-in'
-  },
-  {
-    id: 'PAY-1006', leadId: 'L-123456789', leadName: 'Student Performance Prediction lead',
-    amount: 10000, status: 'Request Cancelled', channel: 'Razorpay',
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentRequestDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    collectedBy: 'System', notes: 'Cancelled by admin.', currency: 'INR', leadOwner: 'Pavan S.H', requestedBy: 'System', paymentAttempt: 1, paymentAmount: 10000, paymentType: 'Online', paymentLink: '-', credited: false, updatedAt: new Date().toISOString(), finalPaymentOn: '', leadSource: 'Instagram'
-  }
-];
-
-const INITIAL_REMINDERS: Reminder[] = [
-  {
-    id: 'REM-101',
-    title: 'Call Priya Sharma',
-    description: 'Follow up regarding FSD admission details and fee structure',
-    type: 'Call',
-    priority: 'High',
-    dueDate: '2026-08-12',
-    dueTime: '10:00 AM',
-    status: 'PENDING',
-    isCompleted: false,
-    relatedEntityType: 'Lead',
-    relatedEntityId: '1',
-    relatedEntityName: 'Priya Sharma',
-    assignedTo: 'Current User',
-    createdBy: 'Current User',
-    repeatRule: 'Does not repeat',
-    createdAt: '2026-08-11T09:00:00Z',
-    updatedAt: '2026-08-11T09:00:00Z'
-  },
-  {
-    id: 'REM-102',
-    title: 'Call Rahul Singh',
-    description: 'Payment discussion for Data Science cohort enrollment',
-    type: 'Call',
-    priority: 'High',
-    dueDate: '2026-08-13',
-    dueTime: '10:30 AM',
-    status: 'PENDING',
-    isCompleted: false,
-    relatedEntityType: 'Lead',
-    relatedEntityId: '2',
-    relatedEntityName: 'Rahul Singh',
-    assignedTo: 'Current User',
-    createdBy: 'Current User',
-    repeatRule: 'Does not repeat',
-    createdAt: '2026-08-12T10:00:00Z',
-    updatedAt: '2026-08-12T10:00:00Z'
-  },
-  {
-    id: 'REM-103',
-    title: 'Follow up with Anjali Singh',
-    description: 'Course enquiry and scholarship opportunity details',
-    type: 'Follow-up',
-    priority: 'Medium',
-    dueDate: '2026-08-13',
-    dueTime: '02:00 PM',
-    status: 'PENDING',
-    isCompleted: false,
-    relatedEntityType: 'Lead',
-    relatedEntityId: '3',
-    relatedEntityName: 'Anjali Singh',
-    assignedTo: 'Current User',
-    createdBy: 'Current User',
-    repeatRule: 'Does not repeat',
-    createdAt: '2026-08-12T11:00:00Z',
-    updatedAt: '2026-08-12T11:00:00Z'
-  },
-  {
-    id: 'REM-104',
-    title: 'Follow up with Vijay Johar',
-    description: 'Course enquiry for Cyber Security advanced batch',
-    type: 'Follow-up',
-    priority: 'Medium',
-    dueDate: '2026-08-14',
-    dueTime: '11:00 AM',
-    status: 'PENDING',
-    isCompleted: false,
-    relatedEntityType: 'Lead',
-    relatedEntityId: '4',
-    relatedEntityName: 'Vijay Johar',
-    assignedTo: 'Current User',
-    createdBy: 'Current User',
-    repeatRule: 'Does not repeat',
-    createdAt: '2026-08-12T14:00:00Z',
-    updatedAt: '2026-08-12T14:00:00Z'
-  },
-  {
-    id: 'REM-105',
-    title: 'Check pending documents',
-    description: 'Verify 10th and 12th certificates for student Aarav Patel',
-    type: 'Document',
-    priority: 'Low',
-    dueDate: '2026-08-15',
-    dueTime: '03:00 PM',
-    status: 'PENDING',
-    isCompleted: false,
-    relatedEntityType: 'Student',
-    relatedEntityId: 'STU-001',
-    relatedEntityName: 'Aarav Patel',
-    assignedTo: 'Current User',
-    createdBy: 'Current User',
-    repeatRule: 'Does not repeat',
-    createdAt: '2026-08-10T16:00:00Z',
-    updatedAt: '2026-08-10T16:00:00Z'
-  },
-  {
-    id: 'REM-106',
-    title: 'Collect pending semester fee',
-    description: 'Follow up with David Chen regarding pending balance payment',
-    type: 'Payment',
-    priority: 'High',
-    dueDate: '2026-08-10',
-    dueTime: '05:00 PM',
-    status: 'COMPLETED',
-    isCompleted: true,
-    completedAt: '2026-08-10T17:15:00Z',
-    relatedEntityType: 'Student',
-    relatedEntityId: 'STU-002',
-    relatedEntityName: 'David Chen',
-    assignedTo: 'Current User',
-    createdBy: 'Current User',
-    repeatRule: 'Does not repeat',
-    createdAt: '2026-08-08T09:00:00Z',
-    updatedAt: '2026-08-10T17:15:00Z'
-  }
-];
-
-const INITIAL_DONOTTRACK_RECORDS: DoNotTrackRecord[] = [
-  { id: 'DNT-001', number: '+91 9876543210', sentById: 'USR-001', createdAt: '2026-08-15T10:00:00Z' },
-  { id: 'DNT-002', number: '+91 9876543211', sentById: 'USR-002', createdAt: '2026-08-16T11:30:00Z' },
-  { id: 'DNT-003', number: '+91 9876543212', sentById: 'USR-001', createdAt: '2026-08-17T14:45:00Z' },
-  { id: 'DNT-004', number: '+91 9876543213', sentById: 'USR-003', createdAt: '2026-08-18T09:15:00Z' },
-];
-
-const INITIAL_SUPPORT_TICKETS: SupportTicket[] = [
-  { id: 'TKT-001', title: 'Login Issue', description: 'User cannot login to portal.', categoryId: 'TC-1', stageId: 'TS-1', assignedTo: 'USR-001', createdBy: 'System', createdAt: '2026-08-20T10:00:00Z', updatedAt: '2026-08-20T10:00:00Z' },
-  { id: 'TKT-002', title: 'Payment Failed', description: 'Credit card charge rejected.', categoryId: 'TC-2', stageId: 'TS-2', assignedTo: 'USR-002', createdBy: 'System', createdAt: '2026-08-21T11:30:00Z', updatedAt: '2026-08-21T11:30:00Z' }
-];
-
 
 export interface QuotationDefaults {
   isConfigured: boolean;
@@ -549,7 +372,7 @@ interface CRMContextType {
   demos: Demo[];
   doNotTrackRecords: DoNotTrackRecord[];
   removeDoNotTrackRecords: (ids: string[]) => void;
-  
+
   leadLifecycleStages: LeadLifecycleStage[]; updateLeadLifecycleStages: (stages: LeadLifecycleStage[]) => void;
   prospectingCriteria: ProspectingCriteria; updateProspectingCriteria: (criteria: ProspectingCriteria) => void;
   dealMode: DealModeConfig; updateDealMode: (mode: DealModeConfig) => void;
@@ -559,13 +382,13 @@ interface CRMContextType {
   visitOutcomes: VisitOutcome[]; updateVisitOutcomes: (outcomes: VisitOutcome[]) => void;
   ticketStages: TicketStage[]; updateTicketStages: (stages: TicketStage[]) => void;
   ticketCategories: TicketCategory[]; updateTicketCategories: (categories: TicketCategory[]) => void;
-  supportTickets: SupportTicket[]; 
+  supportTickets: SupportTicket[];
   addSupportTicket: (ticket: SupportTicket) => void;
   updateSupportTicket: (ticket: SupportTicket) => void;
   deleteSupportTicket: (id: string) => void;
   documentCategoriesTree: DocumentCategoryNode[]; updateDocumentCategoriesTree: (tree: DocumentCategoryNode[]) => void;
 
-  
+
 
   documents: Document[];
   businessLeads: BusinessLead[];
@@ -636,6 +459,83 @@ export const useCRM = () => {
   return context;
 };
 
+// ---------- API helpers ----------
+
+async function apiGet<T = any>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`GET ${url} failed: ${res.status}`);
+  return res.json();
+}
+
+async function apiPost<T = any>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`POST ${url} failed: ${res.status}`);
+  return res.json();
+}
+
+async function apiPatch<T = any>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`PATCH ${url} failed: ${res.status}`);
+  return res.json();
+}
+
+async function apiDelete(url: string): Promise<void> {
+  const res = await fetch(url, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`DELETE ${url} failed: ${res.status}`);
+}
+
+async function apiPut<T = any>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`PUT ${url} failed: ${res.status}`);
+  return res.json();
+}
+
+/** Flattens a hybrid API row's `extra` JSON blob back onto the object so components
+ * can keep reading loosely-typed legacy fields directly (e.g. lead.lastCallOutcome). */
+function hydrate<T extends Record<string, any>>(row: T): T {
+  if (!row || typeof row !== 'object') return row;
+  const { extra, ...rest } = row as Record<string, any>;
+  return (extra && typeof extra === 'object' ? { ...rest, ...extra } : rest) as T;
+}
+
+function hydrateList<T extends Record<string, any>>(rows: T[]): T[] {
+  return Array.isArray(rows) ? rows.map(hydrate) : [];
+}
+
+/** Reconciles a locally-edited "replace whole list" array against the server by
+ * diffing against the previous list and issuing create/update/delete calls. */
+async function syncList<T extends { id: string }>(endpoint: string, oldList: T[], newList: T[]) {
+  const oldIds = new Set(oldList.map((o) => o.id));
+  const newIds = new Set(newList.map((n) => n.id));
+  await Promise.all([
+    ...oldList.filter((o) => !newIds.has(o.id)).map((o) => apiDelete(`${endpoint}/${o.id}`)),
+    ...newList.filter((n) => !oldIds.has(n.id)).map((n) => apiPost(endpoint, n)),
+    ...newList.filter((n) => oldIds.has(n.id)).map((n) => apiPatch(`${endpoint}/${n.id}`, n)),
+  ]);
+}
+
+function flattenCategoryTree(nodes: DocumentCategoryNode[], parentId: string | null = null): { id: string; name: string; order: number; parentId: string | null }[] {
+  let out: { id: string; name: string; order: number; parentId: string | null }[] = [];
+  for (const n of nodes) {
+    out.push({ id: n.id, name: n.name, order: n.order, parentId });
+    if (n.subCategories?.length) out = out.concat(flattenCategoryTree(n.subCategories, n.id));
+  }
+  return out;
+}
+
+function unflattenCategoryTree(flat: { id: string; name: string; order: number; parentId: string | null }[]): DocumentCategoryNode[] {
+  const byId = new Map(flat.map((f) => [f.id, { id: f.id, name: f.name, order: f.order, subCategories: [] as DocumentCategoryNode[] }]));
+  const roots: DocumentCategoryNode[] = [];
+  for (const f of flat) {
+    const node = byId.get(f.id)!;
+    if (f.parentId && byId.has(f.parentId)) byId.get(f.parentId)!.subCategories.push(node);
+    else roots.push(node);
+  }
+  return roots;
+}
+
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
 export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lists, setLists] = useState<ListSegment[]>([]);
   const [distributions, setDistributions] = useState<Distribution[]>([]);
@@ -650,7 +550,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [doNotTrackRecords, setDoNotTrackRecords] = useState<DoNotTrackRecord[]>([]);
 
   const { canViewUser } = useAuth();
-  
+
   const [leadLifecycleStages, setLeadLifecycleStages] = useState<LeadLifecycleStage[]>([]);
   const [prospectingCriteria, setProspectingCriteria] = useState<ProspectingCriteria>({ maxFollowUps: 5, sequence: ['Call', 'Email'], intervalHours: 24, positiveAction: 'Create Deal', negativeAction: 'Close Lead', timeoutAction: 'Close Lead' });
   const [dealMode, setDealMode] = useState<DealModeConfig>({ mode: 'Flexible' });
@@ -663,325 +563,164 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [documentCategoriesTree, setDocumentCategoriesTree] = useState<DocumentCategoryNode[]>([]);
 
-  
-
   const [documents, setDocuments] = useState<Document[]>([]);
   const [businessLeads, setBusinessLeads] = useState<BusinessLead[]>([]);
-  const [
-      deals, setDeals] = useState<Deal[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [dealStages, setDealStages] = useState<string[]>(['Discovery', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost']);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [quotationDefaults, setQuotationDefaults] = useState<QuotationDefaults>(INITIAL_QUOTATION_DEFAULTS);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-
-  // CRM Properties State
+  const [systemUsers, setSystemUsers] = useState<User[]>([]);
   const [properties, setProperties] = useState<CRMProperty[]>([]);
-
-  useEffect(() => {
-    const loadedProperties = localStorage.getItem('crmProperties');
-    if (loadedProperties) {
-      const parsed = JSON.parse(loadedProperties);
-      if (parsed && parsed.length > 0) {
-        setProperties(parsed);
-      } else {
-        setProperties(defaultPropertiesData);
-        localStorage.setItem('crmProperties', JSON.stringify(defaultPropertiesData));
-      }
-    } else {
-      setProperties(defaultPropertiesData);
-      localStorage.setItem('crmProperties', JSON.stringify(defaultPropertiesData));
-    }
-  }, []);
-
-  const addProperty = (property: CRMProperty) => {
-    const updated = [...properties, property];
-    setProperties(updated);
-    localStorage.setItem('crmProperties', JSON.stringify(updated));
-  };
-
-  const updateProperty = (property: CRMProperty) => {
-    const updated = properties.map(p => p.id === property.id ? property : p);
-    setProperties(updated);
-    localStorage.setItem('crmProperties', JSON.stringify(updated));
-  };
-
-  const deleteProperty = (propertyId: string) => {
-    const updated = properties.map(p => p.id === propertyId ? {...p, deleted: true} : p);
-    setProperties(updated);
-    localStorage.setItem('crmProperties', JSON.stringify(updated));
-  };
-
-  const reorderProperties = (orderedProperties: CRMProperty[]) => {
-    setProperties(orderedProperties);
-    localStorage.setItem('crmProperties', JSON.stringify(orderedProperties));
-  };
-
-  
-  const [systemRoles, setSystemRoles] = useState<any[]>([
-    { id: 'ROL-001', name: 'Super Admin', userCount: 1, status: 'Active', description: 'Complete system access', users: ['USR-005'], permissions: {} },
-    { id: 'ROL-002', name: 'Admin', userCount: 5, status: 'Active', description: 'Broad operational access', users: ['USR-006', 'USR-005', 'USR-008', 'USR-004', 'USR-003'], permissions: {} },
-    { id: 'ROL-003', name: 'Manager', userCount: 2, status: 'Active', description: 'Manage teams and operations', users: ['USR-002', 'USR-003'], permissions: {} },
-    { id: 'ROL-005', name: 'Admission Counselor', userCount: 0, status: 'Active', description: 'Handle leads and admissions', users: [], permissions: {} },
-    { id: 'ROL-006', name: 'Marketing', userCount: 0, status: 'Active', description: 'Manage campaigns', users: [], permissions: {} },
-    { id: 'ROL-007', name: 'Member', userCount: 0, status: 'Active', description: 'Basic member access', users: [], permissions: {} },
-    { id: 'ROL-008', name: 'Everyone', userCount: 8, status: 'Active', description: 'Common access for all users', users: ['USR-001', 'USR-002', 'USR-003', 'USR-004', 'USR-005', 'USR-006', 'USR-007', 'USR-008'], permissions: {} }
-  ]);
-
-  const assignUsersToRole = (roleId: string, userIds: string[]) => {
-    setSystemRoles(prev => prev.map(r => r.id === roleId ? { ...r, users: userIds, userCount: userIds.length } : r));
-    if (typeof window !== 'undefined') {
-      const saved = JSON.parse(localStorage.getItem('crm_roles') || '[]');
-      const updated = saved.length ? saved.map((r: any) => r.id === roleId ? { ...r, users: userIds, userCount: userIds.length } : r) : systemRoles.map(r => r.id === roleId ? { ...r, users: userIds, userCount: userIds.length } : r);
-      localStorage.setItem('crm_roles', JSON.stringify(updated));
-    }
-  };
-
-  const updateRolePermissions = (roleId: string, permissions: any) => {
-    setSystemRoles(prev => prev.map(r => r.id === roleId ? { ...r, permissions } : r));
-    if (typeof window !== 'undefined') {
-      const saved = JSON.parse(localStorage.getItem('crm_roles') || '[]');
-      const updated = saved.length ? saved.map((r: any) => r.id === roleId ? { ...r, permissions } : r) : systemRoles.map(r => r.id === roleId ? { ...r, permissions } : r);
-      localStorage.setItem('crm_roles', JSON.stringify(updated));
-    }
-  };
-
-  const updateSystemRole = (role: any) => {
-    setSystemRoles(prev => prev.map(r => r.id === role.id ? role : r));
-    if (typeof window !== 'undefined') {
-      const saved = JSON.parse(localStorage.getItem('crm_roles') || '[]');
-      const updated = saved.length ? saved.map((r: any) => r.id === role.id ? role : r) : systemRoles.map(r => r.id === role.id ? role : r);
-      localStorage.setItem('crm_roles', JSON.stringify(updated));
-    }
-  };
-
-  const addSystemRole = (role: any) => {
-    setSystemRoles(prev => [...prev, role]);
-    if (typeof window !== 'undefined') {
-      const saved = JSON.parse(localStorage.getItem('crm_roles') || '[]');
-      const updated = saved.length ? [...saved, role] : [...systemRoles, role];
-      localStorage.setItem('crm_roles', JSON.stringify(updated));
-    }
-  };
-
-  const [systemUsers, setSystemUsers] = useState<User[]>(mockUsers as any);
-
-  const updateSystemUser = (updatedUser: User) => {
-    setSystemUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
-  };
   const [reports, setReports] = useState<Report[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from local storage
+  // Load everything from the API on mount (replaces the old localStorage-backed seed).
   useEffect(() => {
-    const isSeeded = localStorage.getItem('crm_seeded_abhay_v1') === 'true';
-    if (!isSeeded) {
-      localStorage.removeItem('crm_leads');
-      localStorage.removeItem('crm_deals');
-      localStorage.removeItem('crm_tasks');
-      localStorage.removeItem('crm_calls');
-      localStorage.removeItem('crm_videoCalls');
-      localStorage.removeItem('crm_lists');
-      localStorage.setItem('crm_seeded_abhay_v1', 'true');
-    }
-
-    const loadData = (key: string, defaultData: any) => {
-      const saved = localStorage.getItem(`crm_${key}`);
-      const loadedRoles = localStorage.getItem('crm_roles');
-      if (loadedRoles) setSystemRoles(JSON.parse(loadedRoles));
-
-      return saved ? JSON.parse(saved) : defaultData;
-    };
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    
-const initialLists: ListSegment[] = [
-  {
-    id: 'L-001',
-    name: 'New Inquiry Leads',
-    sourceCategory: 'External Lead Sources',
-    allowDuplicates: false,
-    disallowAutoRechain: false,
-    description: 'New inquiry leads collected from website and campaigns',
-    owner: 'Admin User',
-    contains: 1250,
-    distribution: 'Assigned',
-    createdDate: '2024-05-01',
-    lastUpdated: '2024-05-10',
-    listType: 'Marketing',
-    listCreationType: 'API',
-    bulkUploadSource: 'N/A',
-    listStatus: 'Active',
-    createdOn: '2024-05-01'
-  },
-  {
-    id: 'L-002',
-    name: 'High Priority Leads',
-    sourceCategory: 'Others - Created By Users',
-    allowDuplicates: true,
-    disallowAutoRechain: false,
-    description: 'High-priority leads requiring immediate follow-up',
-    owner: 'Rahul Sharma',
-    contains: 325,
-    distribution: 'Assigned',
-    createdDate: '2024-04-15',
-    lastUpdated: '2024-05-09'
-  }
-];
-
-const initialDistributions: Distribution[] = [
-  { id: 'D-001', name: 'Website Lead Distribution', summary: 'Route website inquiries.', entityType: 'Lead', type: 'Round Robin', createdOn: '2024-05-01', totalLeads: 450, status: 'Active' },
-  { id: 'D-002', name: 'New Inquiry Distribution', summary: 'Distribute regional inquiries.', entityType: 'Lead', type: 'Weighted', createdOn: '2024-04-15', totalLeads: 320, status: 'Active' }
-];
-
-    setLists(loadData('lists', mockLists));
-    setDistributions(loadData('distributions', initialDistributions));
-    setUploads(loadData('uploads', []));
-    
-    // Auto-migrate cached leads to include the new mockData follow-ups if missing
-    let loadedLeads = loadData('leads', mockLeads);
-    if (!loadedLeads.some((l: any) => !!l.nextFollowUp)) {
-      loadedLeads = leadsData;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('crm_leads', JSON.stringify(loadedLeads));
-      }
-    }
-    setLeads(loadedLeads);
-    
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setApplications(loadData('applications', generatedApplications));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStudents(loadData('students', studentsData));
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVideoCalls(loadData('videoCalls', mockVideoCalls));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTicketCategories(loadData('ticketCategoriesV2', []));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSupportTickets(loadData('supportTickets', INITIAL_SUPPORT_TICKETS));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCalls(loadData('calls', mockCalls));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDemos(loadData('demos', []));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDoNotTrackRecords(loadData('doNotTrackRecords', INITIAL_DONOTTRACK_RECORDS));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    
-    setLeadLifecycleStages(loadData('leadLifecycleStages', [
-      { id: '1', name: 'New Lead', description: 'Leads that have not been contacted yet.', substages: ['New Inquiry Lead'], order: 1 },
-      { id: '2', name: 'Prospecting Lead', description: 'Leads your reps have started working on and are trying to find if they are interested in your product/service.', substages: ['Call Attempted Lead'], order: 2 },
-      { id: '3', name: 'Opportunity Lead', description: 'Leads who are interested in your product/service and require closer monitoring through deal stages.', substages: ['Interested Lead'], order: 3 },
-      { id: '4', name: 'Closed Lead', description: 'Leads no longer active. Either they were not interested or the deal was lost.', substages: ['Closed Lead'], order: 4 },
-      { id: '5', name: 'Rechurned Lead', description: 'Leads that were closed earlier and have been rechurned again as new to be worked again.', substages: ['Re-engaged Lead'], order: 5 }
-    ]));
-    setProspectingCriteria(loadData('prospectingCriteria', { maxFollowUps: 5, sequence: ['Call', 'Email', 'WhatsApp'], intervalHours: 24, positiveAction: 'Create Deal', negativeAction: 'Close Lead', timeoutAction: 'Close Lead' }));
-    setDealMode(loadData('dealMode', { mode: 'Flexible' }));
-    setLeadTagsList(loadData('leadTagsList', [
-      { id: '1', name: 'Warm', order: 1 }, { id: '2', name: 'Hot', order: 2 }, { id: '3', name: 'Cold', order: 3 }
-    ]));
-    setLeadSourceList(loadData('leadSourceList', [
-      { id: '1', name: 'Website', description: 'Incoming from website', order: 1 },
-      { id: '2', name: 'LinkedIn', description: 'LinkedIn outreach', order: 2 }
-    ]));
-    setCallOutcomes(loadData('callOutcomes', [
-      { id: '1', name: 'Session Scheduled', type: 'Positive', description: 'Meeting booked', order: 1 },
-      { id: '2', name: 'Call Back Later', type: 'Neutral', description: 'Requested call back', order: 2 },
-      { id: '3', name: 'Not Interested', type: 'Negative', description: 'Declined offer', order: 3 }
-    ]));
-    setVisitOutcomes(loadData('visitOutcomes', [
-      { id: '1', name: 'Walk-in Done', type: 'Positive', description: 'Client visited office', order: 1 }
-    ]));
-    setTicketStages(loadData('ticketStagesV2', []));
-    setDocumentCategoriesTree(loadData('documentCategoriesTree', [
-      { id: '1', name: 'Documents', order: 1, subCategories: [
-        { id: '1-1', name: 'Contracts', order: 1, subCategories: [] },
-        { id: '1-2', name: 'Invoices', order: 2, subCategories: [] }
-      ]}
-    ]));
-
-    setDocuments(loadData('documents', []));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBusinessLeads(loadData('businessLeads', generatedBusinessLeads));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDeals(loadData('deals', mockDeals));
-    setDealStages(loadData('dealStages', ['Session Scheduled', 'Session Done', 'Partial Payment Done', 'Learner Onboarded', 'Deal Won', 'Deal Lost']));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setQuotes(loadData('quotes', generatedQuotes));
-    const storedDefaults = localStorage.getItem('crm_quotation_defaults');
-    if (storedDefaults) {
+    let cancelled = false;
+    (async () => {
       try {
-        setQuotationDefaults(JSON.parse(storedDefaults));
-      } catch (e) {}
-    }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPayments(loadData('payments', NEW_DEMO_PAYMENTS));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTasks(loadData('tasks', mockTasks));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUsers(loadData('users', usersData));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setReports(loadData('reports', []));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setReminders(loadData('reminders', INITIAL_REMINDERS));
+        const [
+          leadsRes, businessLeadsRes, dealsRes, quotesRes, paymentsRes, applicationsRes, studentsRes,
+          documentsRes, tasksRes, callsRes, videoCallsRes, demosRes, ticketCategoriesRes, ticketStagesRes,
+          supportTicketsRes, remindersRes, doNotTrackRes, listsRes, distributionsRes, uploadsRes, reportsRes,
+          leadLifecycleStagesRes, leadSourcesRes, leadTagsRes, callOutcomesRes, visitOutcomesRes,
+          documentCategoriesRes, propertiesRes, usersRes,
+          dealModeRes, prospectingCriteriaRes, quotationDefaultsRes, dealStagesRes,
+        ] = await Promise.all([
+          apiGet('/api/leads'), apiGet('/api/business-leads'), apiGet('/api/deals'), apiGet('/api/quotes'),
+          apiGet('/api/payments'), apiGet('/api/applications'), apiGet('/api/students'), apiGet('/api/documents'),
+          apiGet('/api/tasks'), apiGet('/api/calls'), apiGet('/api/video-calls'), apiGet('/api/demos'),
+          apiGet('/api/ticket-categories'), apiGet('/api/ticket-stages'), apiGet('/api/support-tickets'),
+          apiGet('/api/reminders'), apiGet('/api/do-not-track'), apiGet('/api/lists'), apiGet('/api/distributions'),
+          apiGet('/api/uploads'), apiGet('/api/reports'), apiGet('/api/lead-lifecycle-stages'),
+          apiGet('/api/lead-sources'), apiGet('/api/lead-tags'), apiGet('/api/call-outcomes'),
+          apiGet('/api/visit-outcomes'), apiGet('/api/document-categories'), apiGet('/api/properties'),
+          apiGet('/api/users'),
+          apiGet('/api/settings/dealMode'), apiGet('/api/settings/prospectingCriteria'),
+          apiGet('/api/settings/quotationDefaults'), apiGet('/api/settings/dealStages'),
+        ]);
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsLoaded(true);
+        if (cancelled) return;
+
+        setLeads(hydrateList(leadsRes));
+        setBusinessLeads(hydrateList(businessLeadsRes));
+        setDeals(hydrateList(dealsRes));
+        setQuotes(hydrateList(quotesRes));
+        setPayments(hydrateList(paymentsRes));
+        setApplications(hydrateList(applicationsRes));
+        setStudents(hydrateList(studentsRes));
+        setDocuments(hydrateList(documentsRes));
+        setTasks(hydrateList(tasksRes));
+        setCalls(hydrateList(callsRes));
+        setVideoCalls(hydrateList(videoCallsRes));
+        setDemos(hydrateList(demosRes));
+        setTicketCategories(ticketCategoriesRes);
+        setTicketStages(ticketStagesRes);
+        setSupportTickets(hydrateList(supportTicketsRes));
+        setReminders(hydrateList(remindersRes));
+        setDoNotTrackRecords(hydrateList(doNotTrackRes));
+        setLists(listsRes);
+        setDistributions(hydrateList(distributionsRes));
+        setUploads(hydrateList(uploadsRes));
+        setReports(hydrateList(reportsRes));
+        setLeadLifecycleStages(leadLifecycleStagesRes);
+        setLeadSourceList(leadSourcesRes);
+        setLeadTagsList(leadTagsRes);
+        setCallOutcomes(callOutcomesRes);
+        setVisitOutcomes(visitOutcomesRes);
+        setDocumentCategoriesTree(unflattenCategoryTree(documentCategoriesRes));
+        setProperties(propertiesRes);
+        const hydratedUsers = hydrateList<User>(usersRes);
+        setUsers(hydratedUsers);
+        setSystemUsers(hydratedUsers);
+        if (dealModeRes) setDealMode(dealModeRes);
+        if (prospectingCriteriaRes) setProspectingCriteria(prospectingCriteriaRes);
+        if (quotationDefaultsRes) setQuotationDefaults(quotationDefaultsRes);
+        if (dealStagesRes) setDealStages(dealStagesRes);
+      } catch (e) {
+        console.error('Failed to load CRM data from API', e);
+      } finally {
+        if (!cancelled) setIsLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
-  // Save to local storage whenever data changes
-  useEffect(() => {
-    if (isLoaded) {
-            localStorage.setItem('crm_lists', JSON.stringify(lists));
-      localStorage.setItem('crm_distributions', JSON.stringify(distributions));
-      localStorage.setItem('crm_uploads', JSON.stringify(uploads));
-      localStorage.setItem('crm_leads', JSON.stringify(leads));
-      localStorage.setItem('crm_applications', JSON.stringify(applications));
-      localStorage.setItem('crm_students', JSON.stringify(students));
-      localStorage.setItem('crm_videoCalls', JSON.stringify(videoCalls));
-      localStorage.setItem('crm_calls', JSON.stringify(calls));
-      localStorage.setItem('crm_demos', JSON.stringify(demos));
-      localStorage.setItem('crm_documents', JSON.stringify(documents));
-      localStorage.setItem('crm_businessLeads', JSON.stringify(businessLeads));
-      localStorage.setItem('crm_deals', JSON.stringify(deals));
-      localStorage.setItem('crm_quotes', JSON.stringify(quotes));
-      localStorage.setItem('crm_quotation_defaults', JSON.stringify(quotationDefaults));
-      localStorage.setItem('crm_payments', JSON.stringify(payments));
-      localStorage.setItem('crm_tasks', JSON.stringify(tasks));
-      localStorage.setItem('crm_users', JSON.stringify(users));
-      localStorage.setItem('crm_reports', JSON.stringify(reports));
-      localStorage.setItem('crm_reminders', JSON.stringify(reminders));
-    }
-  }, [lists, distributions, uploads, leads, applications, students, videoCalls, calls, demos, documents, businessLeads, 
-      deals, properties, quotes, quotationDefaults, payments, tasks, users, systemUsers, reports, reminders, isLoaded]);
+  const addTask = (task: Omit<Task, 'id'>) => {
+    const newTask = { ...task, id: generateId() } as Task;
+    setTasks(prev => [newTask, ...prev]);
+    apiPost('/api/tasks', newTask).catch(console.error);
+  };
+  const updateTask = (taskId: string, task: Task) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? task : t));
+    apiPatch(`/api/tasks/${taskId}`, task).catch(console.error);
+  };
+  const deleteTask = (taskId: string) => {
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+    apiDelete(`/api/tasks/${taskId}`).catch(console.error);
+  };
+  const addUser = (user: Omit<User, 'id'>) => {
+    const newUser = { ...user, id: generateId() } as User;
+    setUsers(prev => [newUser, ...prev]);
+    setSystemUsers(prev => [newUser, ...prev]);
+    apiPost('/api/users', newUser).catch(console.error);
+  };
+  const addReport = (report: Omit<Report, 'id'>) => {
+    const newReport = { ...report, id: generateId() } as Report;
+    setReports(prev => [newReport, ...prev]);
+    apiPost('/api/reports', newReport).catch(console.error);
+  };
 
-  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const addList = (list: Omit<ListSegment, 'id'>) => {
+    const newList = { ...list, id: `L-${generateId().toUpperCase()}` } as ListSegment;
+    setLists(prev => [newList, ...prev]);
+    apiPost('/api/lists', newList).catch(console.error);
+  };
+  const updateList = (list: ListSegment) => {
+    setLists(prev => prev.map(l => l.id === list.id ? list : l));
+    apiPatch(`/api/lists/${list.id}`, list).catch(console.error);
+  };
+  const deleteList = (ids: string[]) => {
+    setLists(prev => prev.filter(l => !ids.includes(l.id)));
+    Promise.all(ids.map(id => apiDelete(`/api/lists/${id}`))).catch(console.error);
+  };
 
-  const addTask = (task: Omit<Task, 'id'>) => setTasks(prev => [{ ...task, id: generateId() } as Task, ...prev]);
-  const updateTask = (taskId: string, task: Task) => setTasks(prev => prev.map(t => t.id === taskId ? task : t));
-  const deleteTask = (taskId: string) => setTasks(prev => prev.filter(t => t.id !== taskId));
-  const addUser = (user: Omit<User, 'id'>) => setUsers(prev => [{ ...user, id: generateId() } as User, ...prev]);
-  const addReport = (report: Omit<Report, 'id'>) => setReports(prev => [{ ...report, id: generateId() } as Report, ...prev]);
+  const addDistribution = (dist: Omit<Distribution, 'id'>) => {
+    const newDist = { ...dist, id: `D-${generateId().toUpperCase()}` } as Distribution;
+    setDistributions(prev => [newDist, ...prev]);
+    apiPost('/api/distributions', newDist).catch(console.error);
+  };
+  const updateDistribution = (dist: Distribution) => {
+    setDistributions(prev => prev.map(d => d.id === dist.id ? dist : d));
+    apiPatch(`/api/distributions/${dist.id}`, dist).catch(console.error);
+  };
+  const deleteDistribution = (id: string) => {
+    setDistributions(prev => prev.filter(d => d.id !== id));
+    apiDelete(`/api/distributions/${id}`).catch(console.error);
+  };
 
-  
-  const addList = (list: Omit<ListSegment, 'id'>) => setLists(prev => [{ ...list, id: `L-${generateId().toUpperCase()}` } as ListSegment, ...prev]);
-  const updateList = (list: ListSegment) => setLists(prev => prev.map(l => l.id === list.id ? list : l));
-  const deleteList = (ids: string[]) => setLists(prev => prev.filter(l => !ids.includes(l.id)));
-  
-  const addDistribution = (dist: Omit<Distribution, 'id'>) => setDistributions(prev => [{ ...dist, id: `D-${generateId().toUpperCase()}` } as Distribution, ...prev]);
-  const updateDistribution = (dist: Distribution) => setDistributions(prev => prev.map(d => d.id === dist.id ? dist : d));
-  const deleteDistribution = (id: string) => setDistributions(prev => prev.filter(d => d.id !== id));
+  const addUpload = (upload: Omit<UploadRecord, 'id'>) => {
+    const newUpload = { ...upload, id: `UP-${generateId().toUpperCase()}` } as UploadRecord;
+    setUploads(prev => [newUpload, ...prev]);
+    apiPost('/api/uploads', newUpload).catch(console.error);
+  };
+  const updateUpload = (upload: UploadRecord) => {
+    setUploads(prev => prev.map(u => u.id === upload.id ? upload : u));
+    apiPatch(`/api/uploads/${upload.id}`, upload).catch(console.error);
+  };
+  const deleteUpload = (id: string) => {
+    setUploads(prev => prev.filter(u => u.id !== id));
+    apiDelete(`/api/uploads/${id}`).catch(console.error);
+  };
 
-  const addUpload = (upload: Omit<UploadRecord, 'id'>) => setUploads(prev => [{ ...upload, id: `UP-${generateId().toUpperCase()}` } as UploadRecord, ...prev]);
-  const updateUpload = (upload: UploadRecord) => setUploads(prev => prev.map(u => u.id === upload.id ? upload : u));
-  const deleteUpload = (id: string) => setUploads(prev => prev.filter(u => u.id !== id));
-  
   const processUpload = (uploadData: Omit<UploadRecord, 'id'>, parsedLeads: any[]) => {
     const newUploadId = `UP-${generateId().toUpperCase()}`;
     const fullUploadRecord = { ...uploadData, id: newUploadId } as UploadRecord;
-    
-    // Convert parsed leads into CRM leads and map to uploadId
+
     const newCRMLeads: Lead[] = parsedLeads.map(pl => {
       const leadId = `L-${generateId().toUpperCase()}`;
       return {
@@ -992,105 +731,215 @@ const initialDistributions: Distribution[] = [
       };
     });
 
-    // Update global state
     setUploads(prev => [fullUploadRecord, ...prev]);
     setLeads(prev => [...newCRMLeads, ...prev]);
+
+    apiPost('/api/uploads', fullUploadRecord).catch(console.error);
+    Promise.all(newCRMLeads.map(l => apiPost('/api/leads', l))).catch(console.error);
   };
 
-  const addLead = (lead: Omit<Lead, 'id'>) => setLeads(prev => [{ ...lead, id: generateId() } as Lead, ...prev]);
-  const updateLead = (lead: Lead) => setLeads(prev => prev.map(l => l.id === lead.id ? lead : l));
-  const deleteLead = (ids: string[]) => setLeads(prev => prev.filter(l => !ids.includes(l.id)));
-  const addApplication = (app: Omit<Application, 'id'>) => setApplications(prev => [{ ...app, id: `APP-${generateId().toUpperCase()}` } as Application, ...prev]);
-  const updateApplication = (app: Application) => setApplications(prev => prev.map(a => a.id === app.id ? app : a));
-  const addStudent = (student: Omit<Student, 'id'>) => setStudents(prev => [{ ...student, id: generateId() } as Student, ...prev]);
-  const updateStudent = (updatedStudent: Student) => setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+  const addLead = (lead: Omit<Lead, 'id'>) => {
+    const newLead = { ...lead, id: generateId() } as Lead;
+    setLeads(prev => [newLead, ...prev]);
+    apiPost('/api/leads', newLead).catch(console.error);
+  };
+  const updateLead = (lead: Lead) => {
+    setLeads(prev => prev.map(l => l.id === lead.id ? lead : l));
+    apiPatch(`/api/leads/${lead.id}`, lead).catch(console.error);
+  };
+  const deleteLead = (ids: string[]) => {
+    setLeads(prev => prev.filter(l => !ids.includes(l.id)));
+    Promise.all(ids.map(id => apiDelete(`/api/leads/${id}`))).catch(console.error);
+  };
+  const addApplication = (app: Omit<Application, 'id'>) => {
+    const newApp = { ...app, id: `APP-${generateId().toUpperCase()}` } as Application;
+    setApplications(prev => [newApp, ...prev]);
+    apiPost('/api/applications', newApp).catch(console.error);
+  };
+  const updateApplication = (app: Application) => {
+    setApplications(prev => prev.map(a => a.id === app.id ? app : a));
+    apiPatch(`/api/applications/${app.id}`, app).catch(console.error);
+  };
+  const addStudent = (student: Omit<Student, 'id'>) => {
+    const newStudent = { ...student, id: generateId() } as Student;
+    setStudents(prev => [newStudent, ...prev]);
+    apiPost('/api/students', newStudent).catch(console.error);
+  };
+  const updateStudent = (updatedStudent: Student) => {
+    setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+    apiPatch(`/api/students/${updatedStudent.id}`, updatedStudent).catch(console.error);
+  };
 
-  const addVideoCall = (call: Omit<VideoCall, 'id'>) => setVideoCalls(prev => [{ ...call, id: `VC-${generateId().toUpperCase()}` } as VideoCall, ...prev]);
-  const updateVideoCall = (call: VideoCall) => setVideoCalls(prev => prev.map(c => c.id === call.id ? call : c));
-  const deleteVideoCall = (id: string) => setVideoCalls(prev => prev.filter(c => c.id !== id));
-  const logCall = (call: Omit<Call, 'id'>) => setCalls(prev => [{ ...call, id: generateId() } as Call, ...prev]);
-  const scheduleDemo = (demo: Omit<Demo, 'id'>) => setDemos(prev => [{ ...demo, id: generateId() } as Demo, ...prev]);
-  
-  const updateLeadLifecycleStages = (d: LeadLifecycleStage[]) => { setLeadLifecycleStages(d); if (typeof window !== 'undefined') localStorage.setItem('crm_leadLifecycleStages', JSON.stringify(d)); };
-  const updateProspectingCriteria = (d: ProspectingCriteria) => { setProspectingCriteria(d); if (typeof window !== 'undefined') localStorage.setItem('crm_prospectingCriteria', JSON.stringify(d)); };
-  const updateDealMode = (d: DealModeConfig) => { setDealMode(d); if (typeof window !== 'undefined') localStorage.setItem('crm_dealMode', JSON.stringify(d)); };
-  const updateLeadTagsList = (d: LeadTag[]) => { setLeadTagsList(d); if (typeof window !== 'undefined') localStorage.setItem('crm_leadTagsList', JSON.stringify(d)); };
-  const updateLeadSourceList = (d: LeadSourceItem[]) => { setLeadSourceList(d); if (typeof window !== 'undefined') localStorage.setItem('crm_leadSourceList', JSON.stringify(d)); };
-  const updateCallOutcomes = (d: CallOutcome[]) => { setCallOutcomes(d); if (typeof window !== 'undefined') localStorage.setItem('crm_callOutcomes', JSON.stringify(d)); };
-  const updateVisitOutcomes = (d: VisitOutcome[]) => { setVisitOutcomes(d); if (typeof window !== 'undefined') localStorage.setItem('crm_visitOutcomes', JSON.stringify(d)); };
-  const updateTicketStages = (d: TicketStage[]) => { setTicketStages(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketStagesV2', JSON.stringify(d)); };
-  const updateTicketCategories = (d: TicketCategory[]) => { setTicketCategories(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketCategoriesV2', JSON.stringify(d)); };
+  const addVideoCall = (call: Omit<VideoCall, 'id'>) => {
+    const newCall = { ...call, id: `VC-${generateId().toUpperCase()}` } as VideoCall;
+    setVideoCalls(prev => [newCall, ...prev]);
+    apiPost('/api/video-calls', newCall).catch(console.error);
+  };
+  const updateVideoCall = (call: VideoCall) => {
+    setVideoCalls(prev => prev.map(c => c.id === call.id ? call : c));
+    apiPatch(`/api/video-calls/${call.id}`, call).catch(console.error);
+  };
+  const deleteVideoCall = (id: string) => {
+    setVideoCalls(prev => prev.filter(c => c.id !== id));
+    apiDelete(`/api/video-calls/${id}`).catch(console.error);
+  };
+  const logCall = (call: Omit<Call, 'id'>) => {
+    const newCall = { ...call, id: generateId() } as Call;
+    setCalls(prev => [newCall, ...prev]);
+    apiPost('/api/calls', newCall).catch(console.error);
+  };
+  const scheduleDemo = (demo: Omit<Demo, 'id'>) => {
+    const newDemo = { ...demo, id: generateId() } as Demo;
+    setDemos(prev => [newDemo, ...prev]);
+    apiPost('/api/demos', newDemo).catch(console.error);
+  };
+
+  const updateLeadLifecycleStages = (d: LeadLifecycleStage[]) => {
+    syncList('/api/lead-lifecycle-stages', leadLifecycleStages, d).catch(console.error);
+    setLeadLifecycleStages(d);
+  };
+  const updateProspectingCriteria = (d: ProspectingCriteria) => {
+    setProspectingCriteria(d);
+    apiPut('/api/settings/prospectingCriteria', d).catch(console.error);
+  };
+  const updateDealMode = (d: DealModeConfig) => {
+    setDealMode(d);
+    apiPut('/api/settings/dealMode', d).catch(console.error);
+  };
+  const updateLeadTagsList = (d: LeadTag[]) => {
+    syncList('/api/lead-tags', leadTagsList, d).catch(console.error);
+    setLeadTagsList(d);
+  };
+  const updateLeadSourceList = (d: LeadSourceItem[]) => {
+    syncList('/api/lead-sources', leadSourceList, d).catch(console.error);
+    setLeadSourceList(d);
+  };
+  const updateCallOutcomes = (d: CallOutcome[]) => {
+    syncList('/api/call-outcomes', callOutcomes, d).catch(console.error);
+    setCallOutcomes(d);
+  };
+  const updateVisitOutcomes = (d: VisitOutcome[]) => {
+    syncList('/api/visit-outcomes', visitOutcomes, d).catch(console.error);
+    setVisitOutcomes(d);
+  };
+  const updateTicketStages = (d: TicketStage[]) => {
+    syncList('/api/ticket-stages', ticketStages, d).catch(console.error);
+    setTicketStages(d);
+  };
+  const updateTicketCategories = (d: TicketCategory[]) => {
+    syncList('/api/ticket-categories', ticketCategories, d).catch(console.error);
+    setTicketCategories(d);
+  };
 
   const addSupportTicket = (t: SupportTicket) => {
     setSupportTickets(prev => [...prev, t]);
-    if (typeof window !== 'undefined') localStorage.setItem('crm_supportTickets', JSON.stringify([...supportTickets, t]));
+    apiPost('/api/support-tickets', t).catch(console.error);
   };
   const updateSupportTicket = (t: SupportTicket) => {
     setSupportTickets(prev => prev.map(x => x.id === t.id ? t : x));
-    if (typeof window !== 'undefined') localStorage.setItem('crm_supportTickets', JSON.stringify(supportTickets.map(x => x.id === t.id ? t : x)));
+    apiPatch(`/api/support-tickets/${t.id}`, t).catch(console.error);
   };
   const deleteSupportTicket = (id: string) => {
     setSupportTickets(prev => prev.filter(x => x.id !== id));
-    if (typeof window !== 'undefined') localStorage.setItem('crm_supportTickets', JSON.stringify(supportTickets.filter(x => x.id !== id)));
+    apiDelete(`/api/support-tickets/${id}`).catch(console.error);
   };
 
-  const updateDocumentCategoriesTree = (d: DocumentCategoryNode[]) => { setDocumentCategoriesTree(d); if (typeof window !== 'undefined') localStorage.setItem('crm_documentCategoriesTree', JSON.stringify(d)); };
+  const updateDocumentCategoriesTree = (d: DocumentCategoryNode[]) => {
+    const oldFlat = flattenCategoryTree(documentCategoriesTree);
+    const newFlat = flattenCategoryTree(d);
+    syncList('/api/document-categories', oldFlat, newFlat).catch(console.error);
+    setDocumentCategoriesTree(d);
+  };
 
   const uploadDocument = (doc: Omit<Document, 'id' | 'name' | 'date' | 'uploadedBy' | 'status'>) => {
-    setDocuments(prev => [{
+    const newDoc = {
       ...doc,
       id: generateId(),
       name: `${doc.type}_${doc.student.split(' ')[0]}.pdf`,
       date: new Date().toISOString().split('T')[0],
       uploadedBy: 'Current User',
       status: 'Verified'
-    } as Document, ...prev]);
+    } as Document;
+    setDocuments(prev => [newDoc, ...prev]);
+    apiPost('/api/documents', newDoc).catch(console.error);
   };
 
-  const addBusinessLead = (lead: Omit<BusinessLead, 'id'>) => setBusinessLeads(prev => [{ ...lead, id: `B-${1000 + prev.length}` } as BusinessLead, ...prev]);
-  const updateBusinessLead = (lead: BusinessLead) => setBusinessLeads(prev => prev.map(b => b.id === lead.id ? lead : b));
-  const deleteBusinessLeads = (ids: string[]) => setBusinessLeads(prev => prev.filter(b => !ids.includes(b.id)));
+  const addBusinessLead = (lead: Omit<BusinessLead, 'id'>) => {
+    setBusinessLeads(prev => {
+      const newLead = { ...lead, id: `B-${1000 + prev.length}` } as BusinessLead;
+      apiPost('/api/business-leads', newLead).catch(console.error);
+      return [newLead, ...prev];
+    });
+  };
+  const updateBusinessLead = (lead: BusinessLead) => {
+    setBusinessLeads(prev => prev.map(b => b.id === lead.id ? lead : b));
+    apiPatch(`/api/business-leads/${lead.id}`, lead).catch(console.error);
+  };
+  const deleteBusinessLeads = (ids: string[]) => {
+    setBusinessLeads(prev => prev.filter(b => !ids.includes(b.id)));
+    Promise.all(ids.map(id => apiDelete(`/api/business-leads/${id}`))).catch(console.error);
+  };
   const linkLeadsToBusiness = (businessId: string, leadIds: string[]) => {
     setBusinessLeads(prev => prev.map(b => {
       if (b.id === businessId) {
         const currentLinks = b.associatedLeads || [];
         const newLinks = Array.from(new Set([...currentLinks, ...leadIds]));
-        return { ...b, associatedLeads: newLinks };
+        const updated = { ...b, associatedLeads: newLinks };
+        apiPatch(`/api/business-leads/${businessId}`, { associatedLeads: newLinks }).catch(console.error);
+        return updated;
       }
       return b;
     }));
   };
 
   const addDeal = (deal: Omit<Deal, 'id'>) => {
-    const newDeal = { ...deal, id: `DEAL-${generateId().toUpperCase()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    setDeals(prev => {
-      const updated = [newDeal as Deal, ...prev];
-      if (typeof window !== 'undefined') localStorage.setItem('crm_deals', JSON.stringify(updated));
-      return updated;
-    });
+    const newDeal = { ...deal, id: `DEAL-${generateId().toUpperCase()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Deal;
+    setDeals(prev => [newDeal, ...prev]);
+    apiPost('/api/deals', newDeal).catch(console.error);
   };
-  
+
   const updateDeal = (deal: Deal) => {
-    setDeals(prev => {
-      const updated = prev.map(d => d.id === deal.id ? { ...deal, updatedAt: new Date().toISOString() } : d);
-      if (typeof window !== 'undefined') localStorage.setItem('crm_deals', JSON.stringify(updated));
-      return updated;
-    });
+    const updatedDeal = { ...deal, updatedAt: new Date().toISOString() };
+    setDeals(prev => prev.map(d => d.id === deal.id ? updatedDeal : d));
+    apiPatch(`/api/deals/${deal.id}`, updatedDeal).catch(console.error);
   };
 
   const updateDealStages = (stages: string[]) => {
     setDealStages(stages);
-    if (typeof window !== 'undefined') localStorage.setItem('crm_dealStages', JSON.stringify(stages));
+    apiPut('/api/settings/dealStages', stages).catch(console.error);
   };
 
-  const addQuote = (quote: Omit<Quote, 'id'>) => setQuotes(prev => [{ ...quote, id: `QT-${generateId().toUpperCase()}` } as Quote, ...prev]);
-  const updateQuote = (quote: Quote) => setQuotes(prev => prev.map(q => q.id === quote.id ? quote : q));
-  const deleteQuote = (id: string) => setQuotes(prev => prev.filter(q => q.id !== id));
-  const updateQuotationDefaults = (defaults: QuotationDefaults) => setQuotationDefaults(defaults);
+  const addQuote = (quote: Omit<Quote, 'id'>) => {
+    const newQuote = { ...quote, id: `QT-${generateId().toUpperCase()}` } as Quote;
+    setQuotes(prev => [newQuote, ...prev]);
+    apiPost('/api/quotes', newQuote).catch(console.error);
+  };
+  const updateQuote = (quote: Quote) => {
+    setQuotes(prev => prev.map(q => q.id === quote.id ? quote : q));
+    apiPatch(`/api/quotes/${quote.id}`, quote).catch(console.error);
+  };
+  const deleteQuote = (id: string) => {
+    setQuotes(prev => prev.filter(q => q.id !== id));
+    apiDelete(`/api/quotes/${id}`).catch(console.error);
+  };
+  const updateQuotationDefaults = (defaults: QuotationDefaults) => {
+    setQuotationDefaults(defaults);
+    apiPut('/api/settings/quotationDefaults', defaults).catch(console.error);
+  };
 
-  const addPayment = (payment: Omit<Payment, 'id'>) => setPayments(prev => [{ ...payment, id: `PAY-${generateId().toUpperCase()}` } as Payment, ...prev]);
-  const updatePayment = (payment: Payment) => setPayments(prev => prev.map(p => p.id === payment.id ? payment : p));
-  const deletePayment = (id: string) => setPayments(prev => prev.filter(p => p.id !== id));
+  const addPayment = (payment: Omit<Payment, 'id'>) => {
+    const newPayment = { ...payment, id: `PAY-${generateId().toUpperCase()}` } as Payment;
+    setPayments(prev => [newPayment, ...prev]);
+    apiPost('/api/payments', newPayment).catch(console.error);
+  };
+  const updatePayment = (payment: Payment) => {
+    setPayments(prev => prev.map(p => p.id === payment.id ? payment : p));
+    apiPatch(`/api/payments/${payment.id}`, payment).catch(console.error);
+  };
+  const deletePayment = (id: string) => {
+    setPayments(prev => prev.filter(p => p.id !== id));
+    apiDelete(`/api/payments/${id}`).catch(console.error);
+  };
 
   const addReminder = (data: Omit<Reminder, 'id' | 'createdAt' | 'updatedAt' | 'isCompleted' | 'status'> & { status?: Reminder['status']; isCompleted?: boolean }) => {
     const now = new Date().toISOString();
@@ -1103,6 +952,7 @@ const initialDistributions: Distribution[] = [
       updatedAt: now
     };
     setReminders(prev => [newReminder, ...prev]);
+    apiPost('/api/reminders', newReminder).catch(console.error);
   };
 
   const updateReminder = (id: string, updates: Partial<Reminder>) => {
@@ -1113,6 +963,7 @@ const initialDistributions: Distribution[] = [
           updated.status = updates.isCompleted ? 'COMPLETED' : 'PENDING';
           updated.completedAt = updates.isCompleted ? new Date().toISOString() : undefined;
         }
+        apiPatch(`/api/reminders/${id}`, updated).catch(console.error);
         return updated;
       }
       return r;
@@ -1121,62 +972,94 @@ const initialDistributions: Distribution[] = [
 
   const deleteReminder = (id: string) => {
     setReminders(prev => prev.filter(r => r.id !== id));
+    apiDelete(`/api/reminders/${id}`).catch(console.error);
   };
 
   const toggleCompleteReminder = (id: string) => {
     setReminders(prev => prev.map(r => {
       if (r.id === id) {
         const isCompleted = !r.isCompleted;
-        return {
+        const updated = {
           ...r,
           isCompleted,
           status: isCompleted ? 'COMPLETED' : 'PENDING',
           completedAt: isCompleted ? new Date().toISOString() : undefined,
           updatedAt: new Date().toISOString()
-        };
+        } as Reminder;
+        apiPatch(`/api/reminders/${id}`, updated).catch(console.error);
+        return updated;
       }
       return r;
     }));
   };
 
   const removeDoNotTrackRecords = (ids: string[]) => {
-    const updated = doNotTrackRecords.filter(r => !ids.includes(r.id));
-    setDoNotTrackRecords(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('crm_doNotTrackRecords', JSON.stringify(updated));
-    }
+    setDoNotTrackRecords(prev => prev.filter(r => !ids.includes(r.id)));
+    Promise.all(ids.map(id => apiDelete(`/api/do-not-track/${id}`))).catch(console.error);
   };
 
   const snoozeReminder = (id: string, newDueDate: string, newDueTime: string) => {
     setReminders(prev => prev.map(r => {
       if (r.id === id) {
-        return {
+        const updated = {
           ...r,
           dueDate: newDueDate,
           dueTime: newDueTime,
           status: 'SNOOZED',
           snoozedUntil: `${newDueDate} ${newDueTime}`,
           updatedAt: new Date().toISOString()
-        };
+        } as Reminder;
+        apiPatch(`/api/reminders/${id}`, updated).catch(console.error);
+        return updated;
       }
       return r;
     }));
   };
 
+  const addProperty = (property: CRMProperty) => {
+    setProperties(prev => [...prev, property]);
+    apiPost('/api/properties', property).catch(console.error);
+  };
+
+  const updateProperty = (property: CRMProperty) => {
+    setProperties(prev => prev.map(p => p.id === property.id ? property : p));
+    apiPatch(`/api/properties/${property.id}`, property).catch(console.error);
+  };
+
+  const deleteProperty = (propertyId: string) => {
+    setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, deleted: true } : p));
+    apiPatch(`/api/properties/${propertyId}`, { deleted: true }).catch(console.error);
+  };
+
+  const reorderProperties = (orderedProperties: CRMProperty[]) => {
+    setProperties(orderedProperties);
+    Promise.all(orderedProperties.map((p, i) => apiPatch(`/api/properties/${p.id}`, { ...p, displayOrder: i }))).catch(console.error);
+  };
 
   const updateUser = (updatedUser: User) => {
-    setUsers(users.map(u => (u.id === updatedUser.id ? updatedUser : u)));
+    setUsers(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
+    setSystemUsers(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
+    apiPatch(`/api/users/${updatedUser.id}`, updatedUser).catch(console.error);
   };
-    const scopedLeads = useMemo(() => leads.filter(l => canViewUser(l.counselor) || canViewUser(l.owner)), [leads, canViewUser]);
+
+  const updateSystemUser = (updatedUser: User) => {
+    setSystemUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    setUsers(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
+    apiPatch(`/api/users/${updatedUser.id}`, updatedUser).catch(console.error);
+  };
+
+  const scopedLeads = useMemo(() => leads.filter(l => canViewUser(l.counselor) || canViewUser(l.owner)), [leads, canViewUser]);
   const scopedTasks = useMemo(() => tasks.filter(t => canViewUser(t.assignedTo) || canViewUser(t.owner)), [tasks, canViewUser]);
   const scopedCalls = useMemo(() => calls.filter(c => canViewUser(c.caller) || canViewUser(c.handledBy) || canViewUser(c.counselor)), [calls, canViewUser]);
   const scopedDeals = useMemo(() => deals.filter(d => canViewUser(d.owner)), [deals, canViewUser]);
 
+  void isLoaded;
+
   return (
     <CRMContext.Provider value={{
       videoCalls, lists, distributions, uploads, leads: scopedLeads, applications, students, calls: scopedCalls, demos, documents, businessLeads,
-      
-      
+
+
       leadLifecycleStages, updateLeadLifecycleStages,
       prospectingCriteria, updateProspectingCriteria,
       dealMode, updateDealMode,

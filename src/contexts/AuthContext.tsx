@@ -31,7 +31,7 @@ interface AuthContextType {
   hasPermission: (module: string, action?: string) => boolean;
   canViewUser: (targetUserId?: string) => boolean;
   canManageUser: (targetUserId?: string) => boolean;
-  login: (user: User) => void;
+  login: (mobile: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   setRole: (role: Role) => void;
   updateUser: (updates: Partial<User>) => void;
@@ -116,38 +116,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
 
-  // Persist session in localStorage if running in browser
+  // Validate the real session against the server on mount (httpOnly cookie is the source of truth).
   useEffect(() => {
-    const savedSession = localStorage.getItem('empowers_session');
-    if (savedSession) {
+    (async () => {
       try {
-        const parsed = JSON.parse(savedSession) as User;
-        if (parsed && parsed.role) {
-          setUser(parsed);
-          setRoleState(parsed.role);
-          updatePermissionsForRole(parsed.role);
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.user && data.user.role) {
+          setUser(data.user);
+          setRoleState(data.user.role);
+          updatePermissionsForRole(data.user.role);
           setIsAuthenticated(true);
         }
       } catch (e) {
-        console.error('Failed to parse session', e);
+        console.error('Failed to validate session', e);
+      } finally {
+        setIsInitializing(false);
       }
-    }
-    setIsInitializing(false);
+    })();
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    setRoleState(userData.role);
-    updatePermissionsForRole(userData.role);
-    setIsAuthenticated(true);
-    localStorage.setItem('empowers_session', JSON.stringify(userData));
-    router.push('/dashboard');
+  const login = async (mobile: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Login failed.' };
+      }
+      setUser(data.user);
+      setRoleState(data.user.role);
+      updatePermissionsForRole(data.user.role);
+      setIsAuthenticated(true);
+      router.push('/dashboard');
+      return { success: true };
+    } catch (e) {
+      console.error('Login failed', e);
+      return { success: false, error: 'Unable to reach the server.' };
+    }
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('empowers_session');
+    fetch('/api/auth/logout', { method: 'POST' }).catch(console.error);
     router.push('/login');
   };
 
@@ -157,7 +172,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const updatedUser = { ...user, role: newRole };
       setUser(updatedUser);
-      localStorage.setItem('empowers_session', JSON.stringify(updatedUser));
+      fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      }).catch(console.error);
     }
   };
 
@@ -165,7 +184,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
-      localStorage.setItem('empowers_session', JSON.stringify(updatedUser));
+      fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      }).catch(console.error);
     }
   };
 

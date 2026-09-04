@@ -41,21 +41,15 @@ export default function AuthScreen({ initialMode = 'login' }: { initialMode?: 'l
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    const account = getDynamicAccounts().find((a) => a.mobile === loginMobile.trim());
-    if (!account) { 
-      setLoginError('No account found with this mobile number.'); 
-      return; 
-    }
-    if (loginPassword !== (getDynamicPasswords()[account.name.toLowerCase()] || getDynamicPasswords()[account.role])) { 
-      setLoginError('Incorrect password. Use the demo credentials below.'); 
-      return; 
-    }
     setIsLoading(true);
-    // Small delay to show loading screen
-    setTimeout(() => { login(account); }, 1400);
+    const result = await login(loginMobile.trim(), loginPassword);
+    if (!result.success) {
+      setIsLoading(false);
+      setLoginError(result.error || 'Login failed.');
+    }
   };
 
   const handleQuickLogin = (acc: User) => {

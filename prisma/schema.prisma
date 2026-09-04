@@ -1,0 +1,495 @@
+// Prisma schema for Fortivex CRM.
+// Design: core queryable/filterable columns are real typed columns; the long tail of
+// loosely-typed, denormalized, or embedded fields from the legacy mock data model are
+// kept in an `extra` Json column per model so no data is lost during migration.
+// Status/role/stage "enum-like" fields are plain String (not Prisma enum) because the
+// legacy mock data is inconsistent about casing/values across call sites.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Users & Roles ----------
+
+model User {
+  id           String    @id
+  name         String
+  mobile       String    @unique
+  email        String?
+  passwordHash String?
+  role         String // 'it' | 'admin' | 'counselor' | 'manager' | 'marketing' | 'member'
+  department   String?
+  designation  String?
+  address      String?
+  city         String?
+  state        String?
+  country      String?
+  status       String    @default("Active")
+  photo        String?
+  avatar       String?
+  managerId    String?
+  manager      User?     @relation("UserManager", fields: [managerId], references: [id])
+  reports      User[]    @relation("UserManager")
+  teamId       String?
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  extra        Json?
+}
+
+model Role {
+  id          String   @id
+  name        String
+  userCount   Int      @default(0)
+  status      String   @default("Active")
+  description String?
+  users       String[] @default([])
+  permissions Json?
+  lastUpdated DateTime @default(now())
+}
+
+// ---------- Leads / Sales pipeline ----------
+
+model Lead {
+  id            String        @id
+  name          String
+  phone         String?
+  mobile        String?
+  email         String?
+  city          String?
+  state         String?
+  qualification String?
+  program       String?
+  course        String?
+  source        String?
+  counselor     String?
+  assignedTo    String?
+  owner         String?
+  status        String?
+  subStage      String?
+  priority      String?
+  leadScore     Int?
+  notes         String?
+  tags          String[]      @default([])
+  lastFollowUp  String?
+  nextFollowUp  String?
+  createdAt     DateTime      @default(now())
+  closedOn      String?
+  uploadId      String?
+  upload        UploadRecord? @relation(fields: [uploadId], references: [id])
+  extra         Json?
+
+  deals      Deal[]
+  payments   Payment[]
+  students   Student[]
+  quotes     Quote[]
+  videoCalls VideoCall[]
+}
+
+model BusinessLead {
+  id                 String   @id
+  name               String
+  companyName        String?
+  contactPerson      String?
+  designation        String?
+  businessType       String?
+  industry           String?
+  employees          String?
+  expectedAdmissions Int?
+  assignedManager    String?
+  revenuePotential   Float?
+  status             String?
+  priority           String?
+  addedBy            String?
+  mobile             String?
+  email              String?
+  website            String?
+  address            String?
+  notes              String?
+  associatedLeads    String[] @default([])
+  date               String?
+  createdOn          DateTime @default(now())
+  extra              Json?
+}
+
+model Deal {
+  id           String   @id
+  leadId       String?
+  lead         Lead?    @relation(fields: [leadId], references: [id])
+  leadName     String?
+  leadOwner    String?
+  dealOwner    String?
+  owner        String?
+  program      String?
+  revenue      Float?
+  probability  Int?
+  stage        String?
+  status       String?
+  source       String?
+  priority     String?
+  tags         String[] @default([])
+  closeDate    String?
+  nextFollowUp String?
+  lastRemark   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  extra        Json?
+
+  payments Payment[]
+}
+
+model Quote {
+  id            String  @id
+  quoteNumber   String?
+  customer      String?
+  leadId        String?
+  lead          Lead?   @relation(fields: [leadId], references: [id])
+  leadName      String?
+  status        String?
+  quoteAmount   Float?
+  paymentAmount Float?
+  paymentMode   String?
+  paymentStatus String?
+  paymentLink   String?
+  quoteDate     String?
+  expiredDate   String?
+  owner         String?
+  subject       String?
+  subtotal      Float?
+  tax           Float?
+  discount      Float?
+  shipping      Float?
+  total         Float?
+  notes         String?
+  extra         Json?
+
+  lineItems QuoteLineItem[]
+}
+
+model QuoteLineItem {
+  id          String  @id
+  quoteId     String
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product     String
+  description String?
+  quantity    Int     @default(1)
+  unitPrice   Float   @default(0)
+  tax         Float   @default(0)
+  discount    Float   @default(0)
+  lineTotal   Float   @default(0)
+}
+
+model Payment {
+  id            String  @id
+  invoiceNumber String?
+  amount        Float
+  status        String?
+  method        String?
+  date          String?
+  leadId        String?
+  lead          Lead?   @relation(fields: [leadId], references: [id])
+  leadName      String?
+  leadOwner     String?
+  relatedDealId String?
+  relatedDeal   Deal?   @relation(fields: [relatedDealId], references: [id])
+  studentName   String?
+  collectedBy   String?
+  requestedBy   String?
+  extra         Json?
+}
+
+// ---------- Applications / Students ----------
+
+model Application {
+  id                 String  @id
+  name               String
+  mobile             String?
+  email              String?
+  program            String?
+  qualification      String?
+  date               String?
+  counselor          String?
+  member             String?
+  status             String?
+  documentStatus     String?
+  paymentStatus      String?
+  verificationStatus String?
+  notes              String?
+  extra              Json?
+}
+
+model Student {
+  id              String  @id
+  name            String
+  email           String?
+  phone           String?
+  program         String?
+  batch           String?
+  mentor          String?
+  counselor       String?
+  enrollmentDate  String?
+  status          String?
+  paymentStatus   String?
+  totalFee        Float?
+  paidAmount      Float?
+  progress        Int?
+  attendance      Int?
+  placementStatus String?
+  leadId          String?
+  lead            Lead?   @relation(fields: [leadId], references: [id])
+  nextFollowUp    String?
+  extra           Json?
+
+  documents Document[]
+}
+
+model Document {
+  id          String   @id
+  name        String
+  type        String?
+  studentId   String?
+  student     Student? @relation(fields: [studentId], references: [id])
+  studentName String?
+  uploadedBy  String?
+  date        String?
+  status      String?
+  extra       Json?
+}
+
+// ---------- Tasks / Calls / Meetings ----------
+
+model Task {
+  id          String   @id
+  title       String
+  description String?
+  priority    String?
+  status      String?
+  progress    Int?
+  program     String?
+  owner       String?
+  assignTo    String?
+  assignedTo  String?
+  assignedBy  String?
+  dueDate     String?
+  dueTime     String?
+  createdDate DateTime @default(now())
+  extra       Json?
+}
+
+model Call {
+  id        String  @id
+  counselor String?
+  caller    String?
+  handledBy String?
+  to        String?
+  duration  String?
+  date      String?
+  outcome   String?
+  notes     String?
+  extra     Json?
+}
+
+model VideoCall {
+  id           String  @id
+  topic        String?
+  participant  String?
+  date         String?
+  duration     String?
+  status       String?
+  platform     String?
+  meetingLink  String?
+  scheduledBy  String?
+  assignedUser String?
+  leadId       String?
+  lead         Lead?   @relation(fields: [leadId], references: [id])
+  leadName     String?
+  extra        Json?
+}
+
+model Demo {
+  id     String  @id
+  title  String?
+  date   String?
+  type   String?
+  host   String?
+  status String?
+  extra  Json?
+}
+
+// ---------- Support tickets ----------
+
+model TicketCategory {
+  id    String @id
+  name  String
+  order Int    @default(0)
+
+  tickets SupportTicket[]
+}
+
+model TicketStage {
+  id    String @id
+  name  String
+  order Int    @default(0)
+
+  tickets SupportTicket[]
+}
+
+model SupportTicket {
+  id         String          @id
+  subject    String?
+  categoryId String?
+  category   TicketCategory? @relation(fields: [categoryId], references: [id])
+  stageId    String?
+  stage      TicketStage?    @relation(fields: [stageId], references: [id])
+  assignedTo String?
+  createdBy  String?
+  contactId  String?
+  priority   String?
+  createdAt  DateTime        @default(now())
+  extra      Json?
+}
+
+// ---------- Reminders / Do-not-track ----------
+
+model Reminder {
+  id                String    @id
+  title             String?
+  dueDate           String?
+  dueTime           String?
+  status            String    @default("PENDING")
+  isCompleted       Boolean   @default(false)
+  completedAt       DateTime?
+  snoozedUntil      String?
+  relatedEntityType String?
+  relatedEntityId   String?
+  relatedEntityName String?
+  assignedTo        String?
+  createdBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  extra             Json?
+}
+
+model DoNotTrackRecord {
+  id       String  @id
+  name     String?
+  mobile   String?
+  email    String?
+  reason   String?
+  sentById String?
+  date     String?
+  extra    Json?
+}
+
+// ---------- Lists / Distributions / Uploads ----------
+
+model ListSegment {
+  id          String   @id
+  name        String
+  description String?
+  criteria    String?
+  leadsCount  Int      @default(0)
+  createdBy   String?
+  createdDate DateTime @default(now())
+}
+
+model Distribution {
+  id             String    @id
+  sourceListId   String?
+  assignedBy     String?
+  lastAssignment DateTime?
+  extra          Json?
+}
+
+model UploadRecord {
+  id         String   @id
+  fileName   String?
+  uploadedBy String?
+  tags       String[] @default([])
+  date       DateTime @default(now())
+  extra      Json?
+
+  leads Lead[]
+}
+
+model Report {
+  id       String  @id
+  name     String
+  category String?
+  extra    Json?
+}
+
+// ---------- Configurable lookup / lifecycle lists ----------
+
+model LeadLifecycleStage {
+  id    String  @id
+  name  String
+  order Int     @default(0)
+  color String?
+}
+
+model LeadSourceItem {
+  id    String @id
+  name  String
+  order Int    @default(0)
+}
+
+model LeadTag {
+  id    String  @id
+  name  String
+  color String?
+  order Int     @default(0)
+}
+
+model CallOutcome {
+  id    String @id
+  name  String
+  order Int    @default(0)
+}
+
+model VisitOutcome {
+  id    String @id
+  name  String
+  order Int    @default(0)
+}
+
+model DocumentCategoryNode {
+  id       String                 @id
+  name     String
+  parentId String?
+  parent   DocumentCategoryNode?  @relation("DocCategoryTree", fields: [parentId], references: [id])
+  children DocumentCategoryNode[] @relation("DocCategoryTree")
+  order    Int                    @default(0)
+}
+
+model CRMProperty {
+  id               String        @id
+  name             String
+  description      String?
+  relatedTo        String?
+  type             String?
+  isSystem         Boolean       @default(false)
+  multipleValues   Boolean       @default(false)
+  searchable       Boolean       @default(false)
+  deleted          Boolean       @default(false)
+  options          String[]      @default([])
+  displayOrder     Int           @default(0)
+  parentPropertyId String?
+  parentProperty   CRMProperty?  @relation("PropertyCascade", fields: [parentPropertyId], references: [id])
+  children         CRMProperty[] @relation("PropertyCascade")
+  cascadeConfig    Json?
+  createdAt        DateTime      @default(now())
+}
+
+// ---------- Singleton config values (dealMode, prospectingCriteria, quotationDefaults, dealStages...) ----------
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

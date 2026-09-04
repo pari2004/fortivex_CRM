@@ -122,7 +122,7 @@ export function EditBusinessModal({ businessId, onClose, onSuccess }: EditBusine
       updateData.website = '';
     }
 
-    updateBusinessLead(businessId, updateData);
+    updateBusinessLead(updateData as BusinessLead);
     onSuccess();
     onClose();
   };

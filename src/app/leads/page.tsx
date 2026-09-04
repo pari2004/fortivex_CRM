@@ -86,31 +86,59 @@ export default function LeadsPage() {
       
       {/* Dynamic Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>{activeTab}</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Manage your leads and data efficiently.</p>
-        </div>
+        {activeTab === 'Active Leads' ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0f172a' }}>{activeTab}</h1>
+            </div>
+            <p style={{ color: '#475569', marginTop: '4px', fontSize: '1.05rem' }}>Manage and track your sales leads efficiently.</p>
+          </div>
+        ) : (
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>{activeTab}</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>Manage your leads and data efficiently.</p>
+          </div>
+        )}
         
-                <div style={{ display: 'flex', gap: '12px' }}>
-          {activeTab !== 'Data Exports' && activeTab !== 'Email Leads' && (
-          <button
-            onClick={() => setIsUploadModalOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'white', color: 'var(--primary-color)', fontWeight: 600, border: '1px solid var(--primary-color)', cursor: 'pointer' }}
-          >
-            <UploadCloud size={18} /> New Upload
-          </button>
-          )}
-
-          {(activeTab === 'Active Leads' || activeTab === 'All Leads' || activeTab === 'Work Leads') && (
+        {activeTab === 'Active Leads' ? (
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '12px', background: 'white', color: '#4f46e5', fontWeight: 600, border: '1px solid #e0e7ff', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'background 0.2s' }}
+              className="hover-bg-secondary"
+            >
+              <UploadCloud size={18} /> New Upload
+            </button>
             <button 
               onClick={() => setIsAddModalOpen(true)} 
-              className="primary-btn" 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '12px', background: '#4f46e5', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)', transition: 'transform 0.1s' }}
+              className="hover-scale"
             >
               <Plus size={18} /> Add New Lead
             </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {activeTab !== 'Data Exports' && activeTab !== 'Email Leads' && (
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'white', color: 'var(--primary-color)', fontWeight: 600, border: '1px solid var(--primary-color)', cursor: 'pointer' }}
+            >
+              <UploadCloud size={18} /> New Upload
+            </button>
+            )}
+
+            {(activeTab === 'All Leads' || activeTab === 'Work Leads') && (
+              <button 
+                onClick={() => setIsAddModalOpen(true)} 
+                className="primary-btn" 
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+              >
+                <Plus size={18} /> Add New Lead
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tab Content Rendering */}

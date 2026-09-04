@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { HelpGuidanceModal } from './HelpGuidanceModal';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ExternalLink, Lightbulb } from 'lucide-react';
@@ -12,10 +14,10 @@ import styles from './layout.module.css';
 
 export function Header() {
   const pathname = usePathname();
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   
   // Define paths that have their own dedicated search component
   const hasOwnSearch = [
-    '/leads',
     '/users',
     '/reports',
     '/documents',
@@ -47,10 +49,10 @@ export function Header() {
       </div>
       
       <div className={styles.headerRight} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <Link 
-          href="/customize" 
+        <button 
+          onClick={() => setIsHelpOpen(true)}
           className={styles.iconButton}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer' }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5a6 6 0 0 0-12 0c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/>
@@ -62,12 +64,13 @@ export function Header() {
             <line x1="2" y1="11" x2="4" y2="11"/>
             <line x1="20" y1="11" x2="22" y2="11"/>
           </svg>
-        </Link>
+        </button>
         <QuickActions />
         <NotificationsDropdown />
         <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border-color)', margin: '0 8px' }}></div>
         <ProfileDropdown />
       </div>
+      <HelpGuidanceModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </motion.header>
   );
 }

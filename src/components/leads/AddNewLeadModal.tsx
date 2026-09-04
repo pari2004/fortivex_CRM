@@ -1,8 +1,6 @@
-'use client';
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ChevronDown } from 'lucide-react';
 import { useCRM } from '@/contexts/CRMContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
@@ -10,31 +8,29 @@ import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 interface AddNewLeadModalProps {
   onClose: () => void;
   onSuccess: (leadData: any) => void;
+  isQuickPhoneAdd?: boolean;
 }
 
-
-
-const TEAMS = [
-  "FA Sales Team"
+const COUNTRIES = [
+  { code: 'IN', dial: '+91', flag: '🇮🇳', name: 'India' },
+  { code: 'US', dial: '+1', flag: '🇺🇸', name: 'USA' },
+  { code: 'GB', dial: '+44', flag: '🇬🇧', name: 'UK' },
+  { code: 'AU', dial: '+61', flag: '🇦🇺', name: 'Australia' },
+  { code: 'AE', dial: '+971', flag: '🇦🇪', name: 'UAE' },
+  { code: 'CA', dial: '+1', flag: '🇨🇦', name: 'Canada' },
+  { code: 'SG', dial: '+65', flag: '🇸🇬', name: 'Singapore' }
 ];
 
-const STAGES = [
-  "New Lead",
-  "Attempted",
-  "Contacted",
-  "Interested",
-  "Demo Scheduled",
-  "Lost",
-  "Converted"
-];
+const TEAMS = ["FA Sales Team"];
+const STAGES = ["New Lead", "Attempted", "Contacted", "Interested", "Demo Scheduled", "Lost", "Converted"];
 
-export function AddNewLeadModal({ onClose, onSuccess }: AddNewLeadModalProps) {
+export function AddNewLeadModal({ onClose, onSuccess, isQuickPhoneAdd = false }: AddNewLeadModalProps) {
   const { addLead } = useCRM();
   const { user } = useAuth();
   
   const initialFormState = {
     // Basic Info
-    name: '',
+    name: isQuickPhoneAdd ? 'Unknown Lead' : '', // Fallback name if only phone is provided
     mobile: '',
     email: '',
     business: '',
@@ -96,11 +92,26 @@ export function AddNewLeadModal({ onClose, onSuccess }: AddNewLeadModalProps) {
 
   const [formData, setFormData] = useState<Record<string, any>>(initialFormState);
   const [activeTab, setActiveTab] = useState('Basic Info');
-
   const tabs = ['Basic Info', 'Sourcing', 'Address', 'Background', 'Sales Activity'];
 
+  // Quick Phone Add state
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCountryDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    // Sync owner and counselor
+    if (e.target.name === 'mobile') setPhoneError('');
     if (e.target.name === 'owner') {
       setFormData({ ...formData, owner: e.target.value, counselor: e.target.value });
     } else {
@@ -108,9 +119,23 @@ export function AddNewLeadModal({ onClose, onSuccess }: AddNewLeadModalProps) {
     }
   };
 
-  const handleReset = () => setFormData(initialFormState);
+  const handleReset = () => {
+    setFormData(initialFormState);
+    if (isQuickPhoneAdd) {
+      setSelectedCountry(COUNTRIES[0]);
+      setPhoneError('');
+    }
+  };
 
   const validate = () => {
+    if (isQuickPhoneAdd) {
+      if (!formData.mobile.trim()) {
+        setPhoneError('Field is required');
+        return false;
+      }
+      return true;
+    }
+
     if (!formData.name.trim()) { alert("Lead Name is required!"); return false; }
     if (!formData.mobile.trim()) { alert("Mobile Number is required!"); return false; }
     if (formData.owner === 'Select Owner') { alert("Please select a Lead Owner!"); return false; }
@@ -121,21 +146,17 @@ export function AddNewLeadModal({ onClose, onSuccess }: AddNewLeadModalProps) {
     const now = new Date().toISOString();
     return {
       ...formData,
-      // System Fields explicitly required
+      mobile: isQuickPhoneAdd ? `${selectedCountry.dial} ${formData.mobile}` : formData.mobile,
       createdAt: now,
       createdDate: now,
       updatedAt: now,
       lastUpdated: now,
       leadAddedBy: user?.name || 'System',
       assignedOn: now,
-      
-      // Standardize mappings used heavily by table
-      phone: formData.mobile,
+      phone: isQuickPhoneAdd ? `${selectedCountry.dial} ${formData.mobile}` : formData.mobile,
       leadStage: formData.stage,
       leadPriority: formData.priority,
       leadSource: formData.source,
-      
-      // Initialize system activity trackers to empty
       lastCalledBy: '',
       lastCallTime: '',
       lastCallOutcome: '',
@@ -164,6 +185,101 @@ export function AddNewLeadModal({ onClose, onSuccess }: AddNewLeadModalProps) {
   };
 
   useGlobalEscape(true, () => { onClose() });
+
+  if (isQuickPhoneAdd) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0 }} 
+          animate={{ scale: 1, opacity: 1 }} 
+          exit={{ scale: 0.95, opacity: 0 }} 
+          style={{ 
+            background: 'var(--bg-primary)', 
+            padding: '0', 
+            borderRadius: '16px', 
+            width: '100%', 
+            maxWidth: '500px',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            overflow: 'visible'
+          }}
+        >
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Adding Lead Detail</h2>
+            <button onClick={onClose} style={{ background: 'transparent', border: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div style={{ padding: '32px 24px', minHeight: '150px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', border: phoneError ? '1px solid #ef4444' : '1px solid var(--border-color)', borderRadius: '8px', overflow: 'visible', background: 'var(--bg-primary)', position: 'relative' }}>
+              
+              {/* Country Selector */}
+              <div ref={dropdownRef} style={{ position: 'relative' }}>
+                <div 
+                  onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '12px 16px', cursor: 'pointer', borderRight: '1px solid var(--border-color)', background: 'var(--bg-secondary)', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}
+                >
+                  <span style={{ fontSize: '1.1rem' }}>{selectedCountry.flag}</span>
+                  <ChevronDown size={14} color="var(--text-secondary)" />
+                </div>
+                
+                <AnimatePresence>
+                  {isCountryDropdownOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }}
+                      style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, width: '200px', maxHeight: '250px', overflowY: 'auto' }}
+                    >
+                      {COUNTRIES.map(country => (
+                        <div 
+                          key={country.code}
+                          onClick={() => { setSelectedCountry(country); setIsCountryDropdownOpen(false); }}
+                          className="hover-bg-secondary"
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--glass-border)' }}
+                        >
+                          <span style={{ fontSize: '1.1rem' }}>{country.flag}</span>
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{country.name} ({country.dial})</span>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Phone Input */}
+              <input 
+                type="tel" 
+                name="mobile" 
+                value={formData.mobile} 
+                onChange={handleChange}
+                placeholder="+91XXXXXXXXXX"
+                style={{ flex: 1, border: 'none', background: 'transparent', padding: '12px 16px', fontSize: '0.95rem', color: 'var(--text-primary)', outline: 'none' }}
+              />
+            </div>
+            
+            {/* Validation Message */}
+            <AnimatePresence>
+              {phoneError && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '6px', fontWeight: 500 }}>
+                  {phoneError}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          <div style={{ padding: '20px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', borderRadius: '0 0 16px 16px' }}>
+            <button onClick={handleReset} style={{ padding: '10px 24px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', cursor: 'pointer', fontWeight: 600, color: 'var(--text-primary)' }} className="hover-bg-secondary">
+              Reset
+            </button>
+            <button onClick={handleSave} style={{ padding: '10px 32px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: 'white', cursor: 'pointer', fontWeight: 600, boxShadow: '0 4px 10px rgba(59,130,246,0.3)' }}>
+              Submit
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>

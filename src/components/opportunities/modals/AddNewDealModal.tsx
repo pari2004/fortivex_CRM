@@ -10,7 +10,7 @@ interface Props {
 export function AddNewDealModal({ onClose, onSuccess }: Props) {
   const { addDeal, dealStages, leads, users } = useCRM();
   
-  const CURRENT_USER = 'Pavan S.H';
+  const CURRENT_USER = 'Abhay';
 
   const [formData, setFormData] = useState({
     leadId: '',

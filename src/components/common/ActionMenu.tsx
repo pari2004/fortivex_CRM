@@ -14,7 +14,6 @@ export interface ActionMenuItem {
 
 interface ActionMenuProps {
   items: ActionMenuItem[];
-  // These props are optional — if omitted, ActionMenu self-manages open/close state
   isOpen?: boolean;
   onToggle?: (e: React.MouseEvent) => void;
   onClose?: () => void;
@@ -22,11 +21,60 @@ interface ActionMenuProps {
 
 export function ActionMenu({ items, isOpen: isOpenProp, onToggle, onClose }: ActionMenuProps) {
   const [selfOpen, setSelfOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: string | number, bottom: string | number, left: string | number, right: string | number }>({ top: '100%', bottom: 'auto', left: 'auto', right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Determine whether we're in controlled or self-managed mode
   const isControlled = isOpenProp !== undefined;
   const isOpen = isControlled ? isOpenProp : selfOpen;
+
+  const updatePosition = () => {
+    if (buttonRef.current && isOpen) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const menuWidth = 220;
+      const menuHeight = items.length * 40 + 10;
+      
+      let newPos = { top: '100%' as string | number, bottom: 'auto' as string | number, left: 'auto' as string | number, right: 0 as string | number };
+      
+      // Vertical adjustment
+      if (rect.bottom + menuHeight > windowHeight && rect.top - menuHeight > 0) {
+        // Open upwards
+        newPos.top = 'auto';
+        newPos.bottom = '100%';
+      } else {
+        // Default downwards
+        newPos.top = '100%';
+        newPos.bottom = 'auto';
+      }
+      
+      // Horizontal adjustment
+      // The default is right: 0 (which means it aligns its right edge with the button's right edge)
+      // This is usually fine if the button is on the right.
+      // Let's check if the left edge of the menu would go offscreen.
+      const estimatedLeftEdge = rect.right - menuWidth;
+      if (estimatedLeftEdge < 10) {
+        // Align left edge with button's left edge
+        newPos.right = 'auto';
+        newPos.left = 0;
+      }
+      
+      setPosition(newPos);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      // Optional: add resize listener
+      window.addEventListener('resize', updatePosition);
+    }
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen, items.length]);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,10 +93,13 @@ export function ActionMenu({ items, isOpen: isOpenProp, onToggle, onClose }: Act
     }
   };
 
-  // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        menuRef.current && !menuRef.current.contains(target) &&
+        buttonRef.current && !buttonRef.current.contains(target)
+      ) {
         handleClose();
       }
     };
@@ -60,13 +111,14 @@ export function ActionMenu({ items, isOpen: isOpenProp, onToggle, onClose }: Act
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, isControlled]);
 
   useGlobalEscape(isOpen, handleClose);
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }} ref={menuRef}>
+    <div style={{ position: 'relative', display: 'inline-block' }} ref={containerRef}>
       <button 
+        ref={buttonRef}
         onClick={handleToggle} 
         style={{ 
           background: isOpen ? 'var(--bg-secondary)' : 'transparent', 
@@ -88,15 +140,19 @@ export function ActionMenu({ items, isOpen: isOpenProp, onToggle, onClose }: Act
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: -10 }} 
+            ref={menuRef}
+            initial={{ opacity: 0, scale: 0.95, y: position.top === 'auto' ? 10 : -10 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            exit={{ opacity: 0, scale: 0.95, y: position.top === 'auto' ? 10 : -10 }}
             transition={{ duration: 0.15 }}
             style={{ 
               position: 'absolute', 
-              right: 0, 
-              top: '100%', 
-              marginTop: '4px',
+              top: position.top,
+              bottom: position.bottom,
+              left: position.left,
+              right: position.right,
+              marginTop: position.top === '100%' ? '4px' : '0',
+              marginBottom: position.bottom === '100%' ? '4px' : '0',
               background: 'var(--bg-primary)', 
               border: '1px solid var(--glass-border)', 
               borderRadius: '12px', 

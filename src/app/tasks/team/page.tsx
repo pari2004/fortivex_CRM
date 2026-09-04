@@ -18,7 +18,7 @@ const stats = [
 const INITIAL_TEAM_TASKS = [
   { id: 'TTSK-401', name: 'Finalize Marketing Assets', member: 'Pooja Verma', role: 'Marketing Lead', priority: 'High', progress: 85, status: 'In Progress' },
   { id: 'TTSK-402', name: 'Develop API Endpoints', member: 'Karan Mehta', role: 'Backend Engineer', priority: 'Critical', progress: 100, status: 'Completed' },
-  { id: 'TTSK-403', name: 'Draft Counselor Scripts', member: 'Rajesh Kumar', role: 'Sales Manager', priority: 'Medium', progress: 40, status: 'In Progress' },
+  { id: 'TTSK-403', name: 'Draft Counselor Scripts', member: 'Rajesh Kumar', role: 'Team Lead', priority: 'Medium', progress: 40, status: 'In Progress' },
   { id: 'TTSK-404', name: 'Design Admission Portal UI', member: 'Neha Singh', role: 'UI/UX Designer', priority: 'High', progress: 0, status: 'Pending' },
   { id: 'TTSK-405', name: 'Run Payroll for August', member: 'Anita Desai', role: 'Finance Head', priority: 'Medium', progress: 100, status: 'Completed' },
   { id: 'TTSK-406', name: 'Update Placement Database', member: 'Suresh Iyer', role: 'Placement Officer', priority: 'High', progress: 20, status: 'In Progress' },

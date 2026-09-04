@@ -2,8 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getDynamicAccounts } from '@/lib/data/mockUsers';
 import { Logo } from '@/components/common/Logo';
-export type Role = 'admin' | 'counselor' | 'manager' | 'marketing' | 'member';
+export type Role = 'it' | 'admin' | 'counselor' | 'manager' | 'marketing' | 'member';
 
 export interface User {
   id: string;
@@ -17,6 +18,8 @@ export interface User {
   state?: string;
   country?: string;
   role: Role;
+  managerId?: string;
+  teamId?: string;
   avatar?: string;
 }
 
@@ -24,6 +27,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   role: Role;
+  rolePermissions: Record<string, Record<string, boolean>>;
+  hasPermission: (module: string, action?: string) => boolean;
+  canViewUser: (targetUserId?: string) => boolean;
+  canManageUser: (targetUserId?: string) => boolean;
   login: (user: User) => void;
   logout: () => void;
   setRole: (role: Role) => void;
@@ -36,7 +43,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRoleState] = useState<Role>('admin');
+  const [rolePermissions, setRolePermissions] = useState<Record<string, Record<string, boolean>>>({});
   const [isInitializing, setIsInitializing] = useState(true);
+
+  const updatePermissionsForRole = (currentRole: string) => {
+    try {
+      const storedRoles = localStorage.getItem('crm_custom_roles');
+      if (storedRoles) {
+        const parsedRoles = JSON.parse(storedRoles);
+        // Map AuthContext role to RolesPage role names
+        const roleMap: Record<string, string> = {
+          'it': 'IT',
+          'admin': 'Admin',
+          'manager': 'Manager',
+          'counselor': 'Admission Counselor',
+          'marketing': 'Marketing Manager',
+          'member': 'Member'
+        };
+        const mappedName = roleMap[currentRole] || 'Admin';
+        
+        const matchedRole = parsedRoles.find((r: any) => r.name === mappedName);
+        if (matchedRole && matchedRole.permissions) {
+          setRolePermissions(matchedRole.permissions);
+          return;
+        }
+      }
+    } catch(e) {
+      console.error('Error loading custom roles', e);
+    }
+    
+    // Default fallback if not found in custom storage
+    setRolePermissions({});
+  };
+
+  const hasPermission = (module: string, action: string = 'View'): boolean => {
+    if (role === 'it') return true; // IT is the ultimate super admin
+    if (Object.keys(rolePermissions).length === 0) {
+       // fallback for uninitialized
+       return true; 
+    }
+    return !!rolePermissions[module]?.[action];
+  };
+
+  const canViewUser = (targetUserId?: string): boolean => {
+    if (role === 'it') return true;
+    if (!user) return false;
+    if (!targetUserId) return true; // If no owner is specified, assume global
+    if (targetUserId === user.id) return true;
+    if (targetUserId === user.name) return true; // Handling mock string names
+
+    if (role === 'manager') {
+      const targetUser = getDynamicAccounts().find(u => u.id === targetUserId || u.name === targetUserId);
+      if (targetUser && targetUser.managerId === user.id) return true;
+    }
+    
+    return false;
+  };
+
+  const canManageUser = (targetUserId?: string): boolean => {
+    if (role === 'it') return true;
+    if (!user) return false;
+    if (targetUserId === user.id) return false; // Usually can't manage self's permissions
+    if (targetUserId === user.name) return false;
+
+    if (role === 'manager') {
+      const targetUser = getDynamicAccounts().find(u => u.id === targetUserId || u.name === targetUserId);
+      if (targetUser && targetUser.managerId === user.id) return true;
+    }
+    
+    return false;
+  };
+
   const router = useRouter();
 
   // Persist session in localStorage if running in browser
@@ -48,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (parsed && parsed.role) {
           setUser(parsed);
           setRoleState(parsed.role);
+          updatePermissionsForRole(parsed.role);
           setIsAuthenticated(true);
         }
       } catch (e) {
@@ -60,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (userData: User) => {
     setUser(userData);
     setRoleState(userData.role);
+    updatePermissionsForRole(userData.role);
     setIsAuthenticated(true);
     localStorage.setItem('empowers_session', JSON.stringify(userData));
     router.push('/dashboard');
@@ -74,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setRole = (newRole: Role) => {
     setRoleState(newRole);
+    updatePermissionsForRole(newRole);
     if (user) {
       const updatedUser = { ...user, role: newRole };
       setUser(updatedUser);
@@ -103,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, role, login, logout, setRole, updateUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, role, rolePermissions, hasPermission, canViewUser, canManageUser, login, logout, setRole, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

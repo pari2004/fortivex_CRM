@@ -181,7 +181,7 @@ export function OverallActivitiesDetailsModal({ title, onClose, dashboardData, o
         </div>
 
         {/* Toolbar */}
-        <div style={{ padding: '16px 24px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-card)' }}>
+        <div style={{ padding: '16px 24px', display: 'flex', gap: '16px', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-card)', position: 'relative', zIndex: 30 }}>
           <div style={{ flex: 1, display: 'flex', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '8px 16px', borderRadius: '8px', width: '280px', border: '1px solid var(--border-color)' }}>
               <Search size={18} color="var(--text-tertiary)" />
@@ -202,7 +202,7 @@ export function OverallActivitiesDetailsModal({ title, onClose, dashboardData, o
                 <Filter size={16} /> Filter
               </button>
               {filterOpen && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '16px', width: '250px', zIndex: 10, boxShadow: 'var(--shadow-lg)' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '16px', width: '250px', zIndex: 50, boxShadow: 'var(--shadow-lg)' }}>
                   <h4 style={{ marginBottom: '12px', fontWeight: 'bold' }}>Filter {title}</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <select 
@@ -226,7 +226,7 @@ export function OverallActivitiesDetailsModal({ title, onClose, dashboardData, o
                 <LayoutTemplate size={16} /> Customize Columns
               </button>
               {showCustomize && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '16px', width: '300px', maxHeight: '400px', overflowY: 'auto', zIndex: 10, boxShadow: 'var(--shadow-lg)' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '16px', width: '300px', maxHeight: '400px', overflowY: 'auto', zIndex: 50, boxShadow: 'var(--shadow-lg)' }}>
                   <h4 style={{ marginBottom: '12px', fontWeight: 'bold' }}>Visible Columns</h4>
                   {ALL_COLUMNS.map(col => (
                     <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', cursor: 'pointer' }}>

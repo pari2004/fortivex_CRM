@@ -290,7 +290,20 @@ const generateLeads = (count: number): Lead[] => {
       qualification: qualifications[Math.floor(Math.random() * qualifications.length)],
       createdAt: randomDate(sevenDaysAgo, oneDayAgo),
       activities: [
-        { id: Math.random().toString(36).substr(2,9), activityTime: randomDate(sevenDaysAgo, oneDayAgo), lifecycle: status, activityType: 'Lead Assigned', category: 'Contact', description: 'Assigned to sales rep', activityBy: owner }
+        { id: Math.random().toString(36).substr(2,9), activityTime: '2h ago', lifecycle: status, activityType: 'Call', isImportant: false, description: 'placed a call', activityBy: 'Ram Kiran', duration: '0h:02m:27s', audioPlayer: true, direction: 'outgoing' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '27 Aug', lifecycle: status, activityType: 'Lifecycle', isImportant: false, description: 'to New Inquiry Lead · Call Attempted Lead', title: 'Lifecycle changed' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '4h ago', lifecycle: status, activityType: 'Call', isImportant: false, description: 'received a call', activityBy: 'Ram Kiran', duration: '0h:01m:45s', audioPlayer: true, direction: 'incoming' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '19 Aug', lifecycle: status, activityType: 'Followup', isImportant: true, title: 'Next follow-up scheduled', description: 'Tomorrow, 29 Aug 2025 at 10:30 AM' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '18 Aug', lifecycle: status, activityType: 'Note', isImportant: false, title: `Note added by Abhishek`, description: 'Discussed about product pricing and customization requirements.' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '18 Aug', lifecycle: status, activityType: 'Email', isImportant: false, title: `Email sent to ${`lead${i + 1}@example.com`}`, description: 'Subject: Proposal for your business' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '17 Aug', lifecycle: status, activityType: 'Video Call', isImportant: false, title: `Google Meet scheduled by Abhishek`, description: `Meeting with ${cName}`, date: '21 Aug 2025, 04:00 PM', hasJoinLink: true },
+        { id: Math.random().toString(36).substr(2,9), activityTime: randomDate(sevenDaysAgo, oneDayAgo), lifecycle: status, activityType: 'Lead Assigned', category: 'Contact', description: 'Assigned to sales rep', activityBy: owner },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '16 Aug', lifecycle: status, activityType: 'WhatsApp', isImportant: true, title: 'WhatsApp Template Sent', description: 'Welcome Message' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '15 Aug', lifecycle: status, activityType: 'WhatsApp', isImportant: false, title: 'WhatsApp Template Sent', description: 'Pricing Document' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '14 Aug', lifecycle: status, activityType: 'Broadcast', isImportant: false, title: 'Broadcast Sent', description: 'August Newsletter' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '13 Aug', lifecycle: status, activityType: 'Visit', isImportant: false, title: 'Visit logged', description: 'Client visited office' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '12 Aug', lifecycle: status, activityType: 'Quote', isImportant: false, title: 'Quote sent', description: 'Quote #1024 for $5,000' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '11 Aug', lifecycle: status, activityType: 'Payment', isImportant: false, title: 'Payment received', description: '$5,000 paid via credit card' },
       ],
       interactions: [],
       tasks: [
@@ -332,7 +345,22 @@ const generateLeads = (count: number): Lead[] => {
       leadScore: Math.floor(Math.random() * 100),
       qualification: qualifications[Math.floor(Math.random() * qualifications.length)],
       createdAt: createdAt,
-      activities: [],
+      activities: [
+        { id: Math.random().toString(36).substr(2,9), activityTime: '2h ago', lifecycle: status, activityType: 'Call', isImportant: false, description: 'placed a call', activityBy: 'Ram Kiran', duration: '0h:02m:27s', audioPlayer: true, direction: 'outgoing' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '27 Aug', lifecycle: status, activityType: 'Lifecycle', isImportant: false, description: 'to New Inquiry Lead · Call Attempted Lead', title: 'Lifecycle changed' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '4h ago', lifecycle: status, activityType: 'Call', isImportant: false, description: 'received a call', activityBy: 'Ram Kiran', duration: '0h:01m:45s', audioPlayer: true, direction: 'incoming' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '19 Aug', lifecycle: status, activityType: 'Followup', isImportant: true, title: 'Next follow-up scheduled', description: 'Tomorrow, 29 Aug 2025 at 10:30 AM' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '18 Aug', lifecycle: status, activityType: 'Note', isImportant: false, title: `Note added by Abhishek`, description: 'Discussed about product pricing and customization requirements.' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '18 Aug', lifecycle: status, activityType: 'Email', isImportant: false, title: `Email sent to lead@example.com`, description: 'Subject: Proposal for your business' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '17 Aug', lifecycle: status, activityType: 'Video Call', isImportant: false, title: `Google Meet scheduled by Abhishek`, description: `Meeting with Lead`, date: '21 Aug 2025, 04:00 PM', hasJoinLink: true },
+        { id: Math.random().toString(36).substr(2,9), activityTime: createdAt, lifecycle: status, activityType: 'Lead Assigned', category: 'Contact', description: 'Assigned to sales rep', activityBy: owner },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '16 Aug', lifecycle: status, activityType: 'WhatsApp', isImportant: true, title: 'WhatsApp Template Sent', description: 'Welcome Message' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '15 Aug', lifecycle: status, activityType: 'WhatsApp', isImportant: false, title: 'WhatsApp Template Sent', description: 'Pricing Document' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '14 Aug', lifecycle: status, activityType: 'Broadcast', isImportant: false, title: 'Broadcast Sent', description: 'August Newsletter' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '13 Aug', lifecycle: status, activityType: 'Visit', isImportant: false, title: 'Visit logged', description: 'Client visited office' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '12 Aug', lifecycle: status, activityType: 'Quote', isImportant: false, title: 'Quote sent', description: 'Quote #1024 for $5,000' },
+        { id: Math.random().toString(36).substr(2,9), activityTime: '11 Aug', lifecycle: status, activityType: 'Payment', isImportant: false, title: 'Payment received', description: '$5,000 paid via credit card' },
+      ],
       interactions: [],
       tasks: []
     });
@@ -749,7 +777,7 @@ export const sourceMonthlyTrend = [
 export const activeUsersData = Array.from({ length: 45 }, (_, i) => ({
   id: `USR-${1000 + i}`,
   name: randomElement(['Rahul Sharma', 'Sneha Patel', 'Amit Kumar', 'Priya Singh', 'Vikram Malhotra', 'Neha Gupta']),
-  role: randomElement(['Admin', 'Sales Manager', 'Counselor', 'Marketing', 'Support']),
+  role: randomElement(['Admin', 'Counselor', 'Marketing', 'Support']),
   status: randomElement(['Online', 'Offline', 'In a Meeting', 'On Break']),
   lastActive: randomElement(['Just now', '5m ago', '1h ago', 'Yesterday']),
   performanceScore: randomAmount(65, 98),
@@ -816,7 +844,7 @@ const designations = ['HR Manager', 'L&D Head', 'Technical Director', 'CEO', 'Tr
 
 
 const locations = ['Bengaluru, Karnataka', 'Mumbai, Maharashtra', 'Hyderabad, Telangana', 'Chennai, Tamil Nadu', 'Pune, Maharashtra', 'Delhi, India'];
-const addedByList = ['Admin User', 'Sales Team', 'Marketing Team', 'Rahul Sharma', 'Priya Nair'];
+const addedByList = ['Admin', 'Pavan', 'Counselor', 'Member'];
 const priorities = ['High', 'Medium', 'Low'];
 const dates = ['Today', 'Yesterday', '2 days ago', '4 days ago', '1 week ago'];
 

@@ -37,7 +37,7 @@ const LENSES = ['Communications', 'Tasks', 'Deals', 'Payments', 'People', 'Syste
 export default function AllActivitiesTimelinePage() {
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   const { leads } = useCRM();
-  const CURRENT_USER = 'Pavan S.H';
+  const CURRENT_USER = 'Abhay';
 
   // ---------------------------------
   // STATE

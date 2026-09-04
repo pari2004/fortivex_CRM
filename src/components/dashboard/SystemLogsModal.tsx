@@ -32,7 +32,7 @@ const MODULES = ['Authentication', 'Leads', 'Students', 'Applications', 'Payment
 const USERS = [
   { name: 'Admin User', role: 'Super Admin', email: 'admin@empowers.com' },
   { name: 'John Counselor', role: 'Counselor', email: 'john@empowers.com' },
-  { name: 'Sarah Sales', role: 'Sales Manager', email: 'sarah@empowers.com' },
+  { name: 'Sarah Sales', role: 'Manager', email: 'sarah@empowers.com' },
   { name: 'Mike Marketing', role: 'Marketing', email: 'mike@empowers.com' }
 ];
 

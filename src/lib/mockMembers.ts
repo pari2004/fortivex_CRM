@@ -20,7 +20,7 @@ export const mockMembers: DemoMember[] = [
   { id: 'MEM-007', name: 'Harsh Gupta', role: 'HR Executive', department: 'HR', email: 'harsh.g@fortivex.ai', mobile: '+91 9876543216', status: 'On Leave', joiningDate: '2023-06-18', avatar: 'H' },
   { id: 'MEM-008', name: 'Ananya Rao', role: 'Student Success Manager', department: 'Student Success', email: 'ananya.r@fortivex.ai', mobile: '+91 9876543217', status: 'Active', joiningDate: '2022-12-10', avatar: 'A' },
   { id: 'MEM-009', name: 'Vikram Singh', role: 'Admission Manager', department: 'Admissions', email: 'vikram.s@fortivex.ai', mobile: '+91 9876543218', status: 'Active', joiningDate: '2022-08-15', avatar: 'V' },
-  { id: 'MEM-010', name: 'Neha Kapoor', role: 'Sales Manager', department: 'Sales', email: 'neha.k@fortivex.ai', mobile: '+91 9876543219', status: 'Active', joiningDate: '2022-09-20', avatar: 'N' },
+  { id: 'MEM-010', name: 'Neha Kapoor', role: 'Team Lead', department: 'Sales', email: 'neha.k@fortivex.ai', mobile: '+91 9876543219', status: 'Active', joiningDate: '2022-09-20', avatar: 'N' },
   { id: 'MEM-011', name: 'Aditya Desai', role: 'Digital Marketing Executive', department: 'Marketing', email: 'aditya.d@fortivex.ai', mobile: '+91 9876543220', status: 'Active', joiningDate: '2023-07-05', avatar: 'A' },
   { id: 'MEM-012', name: 'Meera Iyer', role: 'Accounts Executive', department: 'Finance', email: 'meera.i@fortivex.ai', mobile: '+91 9876543221', status: 'Active', joiningDate: '2023-08-12', avatar: 'M' },
   { id: 'MEM-013', name: 'Sanjay Menon', role: 'Trainer / Faculty', department: 'Academics', email: 'sanjay.m@fortivex.ai', mobile: '+91 9876543222', status: 'Active', joiningDate: '2022-05-10', avatar: 'S' },

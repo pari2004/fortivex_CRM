@@ -288,7 +288,7 @@ export function AiAssistantOrb() {
           )}
         </AnimatePresence>
         
-        <div style={{ width: '100px', height: '100px', cursor: 'pointer', borderRadius: '50%', boxShadow: hovered ? '0 0 40px rgba(37, 99, 235, 0.4)' : '0 0 20px rgba(37, 99, 235, 0.2)', transition: 'box-shadow 0.3s' }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={() => setIsOpen(!isOpen)}>
+        <div style={{ width: '60px', height: '60px', cursor: 'pointer', borderRadius: '50%', boxShadow: hovered ? '0 0 40px rgba(37, 99, 235, 0.4)' : '0 0 20px rgba(37, 99, 235, 0.2)', transition: 'box-shadow 0.3s', overflow: 'hidden' }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={() => setIsOpen(!isOpen)}>
           <Canvas camera={{ position: [0, 0, 5] }}>
             <ambientLight intensity={1.5} />
             <pointLight position={[10, 10, 10]} intensity={3} color="#ffffff" />

@@ -13,6 +13,21 @@ import { useCRM } from '@/contexts/CRMContext';
 import { useInbox } from '@/contexts/InboxContext';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 import { EditLeadModal } from './EditLeadModal';
+import { AddTagDrawer } from './AddTagDrawer';
+import { AddToListDrawer } from './AddToListDrawer';
+import { ChangeCategoryModal } from './ChangeCategoryModal';
+import { LogCallOutcomeDrawer } from './LogCallOutcomeDrawer';
+import { AddNoteModal } from './AddNoteModal';
+import { LogVisitDrawer } from './LogVisitDrawer';
+import { VideoCallDrawer } from './VideoCallDrawer';
+import { AddDocumentDrawer } from './AddDocumentDrawer';
+import { ViewPaymentsDrawer } from './ViewPaymentsDrawer';
+import { CreateAdHocTaskModal } from './CreateAdHocTaskModal';
+import { CreateUpdateDealModal } from './CreateUpdateDealModal';
+import { CreateUpdateTicketModal } from './CreateUpdateTicketModal';
+import { SetupWarningModal } from './SetupWarningModal';
+import { QuotationDefaultsWorkspaceModal } from './QuotationDefaultsWorkspaceModal';
+import { RequestPaymentModal } from './RequestPaymentModal';
 
 interface Props {
   isOpen: boolean;
@@ -21,17 +36,32 @@ interface Props {
 }
 
 export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
-  const { leads, updateLead, deals, updateDeal, tasks, businessLeads, documents, uploadDocument, dealStages } = useCRM();
+  const { leads, updateLead, deleteLead, deals, updateDeal, tasks, businessLeads, documents, uploadDocument, dealStages , quotationDefaults } = useCRM();
   const { openSharedInbox } = useInbox();
-  const CURRENT_USER = 'Pavan S.H';
+  const CURRENT_USER = 'Abhay';
   
   // Use the active lead from context so it stays updated
   const currentLead = leads.find(l => l.id === lead?.id) || lead;
 
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const [showEditLead, setShowEditLead] = useState(false);
+  const [showAddTag, setShowAddTag] = useState(false);
+  const [showAddToList, setShowAddToList] = useState(false);
+  const [showChangeCategory, setShowChangeCategory] = useState(false);
+  const [showLogCallOutcome, setShowLogCallOutcome] = useState(false);
   const [showMoveStage, setShowMoveStage] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
+  const [showLogVisit, setShowLogVisit] = useState(false);
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [showAddDocument, setShowAddDocument] = useState(false);
+  const [showViewPayments, setShowViewPayments] = useState(false);
+  const [showCreateAdHocTask, setShowCreateAdHocTask] = useState(false);
+  const [showDealModal, setShowDealModal] = useState(false);
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [showSetupWarning, setShowSetupWarning] = useState(false);
+  const [showQuotationDefaults, setShowQuotationDefaults] = useState(false);
+  const [showQuotationDraft, setShowQuotationDraft] = useState(false);
+  const [showRequestPayment, setShowRequestPayment] = useState(false);
   
   // Modals for associations
   const [showLinkBusiness, setShowLinkBusiness] = useState(false);
@@ -42,19 +72,20 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
   const [contactType, setContactType] = useState('Client');
   const [contactRel, setContactRel] = useState('Primary');
   
-  const [showAddToList, setShowAddToList] = useState(false);
   const [listName, setListName] = useState('');
 
   const [noteText, setNoteText] = useState('');
   const [expandedActivity, setExpandedActivity] = useState(false);
 
-  useGlobalEscape(!!isOpen && !actionMenuOpen && !showEditLead && !showMoveStage && !showAddNote && !showLinkBusiness && !showLinkContact && !showAddToList, () => { onClose() });
+  useGlobalEscape(!!isOpen && !actionMenuOpen && !showEditLead && !showLinkBusiness && !showLinkContact && !showAddToList && !showChangeCategory && !showMoveStage && !showAddNote, () => { onClose() });
   useGlobalEscape(!!actionMenuOpen, () => { setActionMenuOpen(false) });
-  useGlobalEscape(!!showMoveStage, () => { setShowMoveStage(false) });
-  useGlobalEscape(!!showAddNote, () => { setShowAddNote(false) });
+  useGlobalEscape(!!showEditLead, () => { setShowEditLead(false) });
   useGlobalEscape(!!showLinkBusiness, () => { setShowLinkBusiness(false) });
   useGlobalEscape(!!showLinkContact, () => { setShowLinkContact(false) });
   useGlobalEscape(!!showAddToList, () => { setShowAddToList(false) });
+  useGlobalEscape(!!showChangeCategory, () => { setShowChangeCategory(false) });
+  useGlobalEscape(!!showMoveStage, () => { setShowMoveStage(false) });
+  useGlobalEscape(!!showAddNote, () => { setShowAddNote(false) });
 
   if (!isOpen || !currentLead) return null;
 
@@ -71,15 +102,36 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
     setActionMenuOpen(false);
     switch (actionName) {
         case 'Edit Lead': setShowEditLead(true); break;
+        case 'Add Tag': setShowAddTag(true); break;
         case 'Add Business': setShowLinkBusiness(true); break;
         case 'Link Contact': setShowLinkContact(true); break;
         case 'Add To List': setShowAddToList(true); break;
+        case 'Change Category': setShowChangeCategory(true); break;
+        case 'Move Stage': setShowMoveStage(true); break;
         case 'Add Note': setShowAddNote(true); break;
-        case 'Log Call': handleCall(); break;
+        case 'Log Call': setShowLogCallOutcome(true); break;
+        case 'Log Call Outcome': setShowLogCallOutcome(true); break;
+        case 'Log Visit': setShowLogVisit(true); break;
+        case 'Video Call': setShowVideoCall(true); break;
+        case 'Add Document': setShowAddDocument(true); break;
+        case 'View Payments': setShowViewPayments(true); break;
+        case 'Create Ad-hoc Task': setShowCreateAdHocTask(true); break;
+        case 'Create/Update Deal':
+        case 'Update Deal': setShowDealModal(true); break;
+        case 'Create/Update Ticket': setShowTicketModal(true); break;
+        case 'Request Payment': setShowRequestPayment(true); break;
+        case 'Send Quote':
+          if (!quotationDefaults.isConfigured) {
+            setShowSetupWarning(true);
+          } else {
+            setShowQuotationDraft(true); // TODO: actual quote drafting modal
+            alert('Quotation Draft flow opens here!');
+          }
+          break;
         case 'WhatsApp': handleWhatsApp(); break;
         case 'Delete Lead':
             if (confirm(`Are you sure you want to delete ${currentLead.name}?`)) {
-                alert('Delete logic to be implemented via context.');
+                deleteLead([currentLead.id]);
                 onClose();
             }
             break;
@@ -148,14 +200,13 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
     setShowLinkBusiness(false);
   };
 
-  const handleCreateList = () => {
+  const handleCreateList = (listName: string) => {
     if(!listName.trim()) return;
     const updated = { ...currentLead };
     updated.lists = [...(updated.lists || []), listName];
     updateLead(updated);
     addActivity('Added to List', `Added to list: ${listName}`);
     setShowAddToList(false);
-    setListName('');
   };
 
   const handleLinkContact = () => {
@@ -287,7 +338,7 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
                     
                     <div style={{ height: '1px', background: '#e2e8f0', margin: '8px 0' }} />
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', padding: '8px 12px', textTransform: 'uppercase' }}>Activity</div>
-                    <div className="dropdown-item-hover" onClick={() => handleActionClick('Log Call')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', fontWeight: 500, color: '#334155' }}><Phone size={16} /> Log Call</div>
+                    <div className="dropdown-item-hover" onClick={() => handleActionClick('Log Call Outcome')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', fontWeight: 500, color: '#334155' }}><Phone size={16} /> Log Call Outcome</div>
                     <div className="dropdown-item-hover" onClick={() => handleActionClick('Add Note')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', fontWeight: 500, color: '#334155' }}><File size={16} /> Add Note</div>
                     <div className="dropdown-item-hover" onClick={() => handleActionClick('Log Visit')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', fontWeight: 500, color: '#334155' }}><MapPin size={16} /> Log Visit</div>
                     <div className="dropdown-item-hover" onClick={() => handleActionClick('WhatsApp')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', fontWeight: 500, color: '#334155' }}><MessageSquare size={16} /> WhatsApp</div>
@@ -568,7 +619,27 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
 
       {/* MODALS & DRAWERS */}
       
-      {/* Edit Lead */}
+      {showAddTag && (
+        <AddTagDrawer 
+          isOpen={showAddTag}
+          onClose={() => setShowAddTag(false)} 
+          lead={currentLead}
+          onSave={(data: any, changes: string[]) => { 
+            const updated = { ...data };
+            if (changes && changes.length > 0) {
+              const changeDesc = changes.join(', ');
+              updated.activities = [
+                { id: Math.random().toString(36).substr(2, 9), activityTime: new Date().toISOString(), lifecycle: data.status, activityType: 'Tags Updated', category: 'Update', title: 'Lead tags updated', description: changeDesc, activityBy: CURRENT_USER },
+                ...(updated.activities || [])
+              ];
+            }
+            updateLead(updated);
+            setShowAddTag(false); 
+          }} 
+        />
+      )}
+
+      {/* Drawers */}
       {showEditLead && <EditLeadModal lead={currentLead} onClose={() => setShowEditLead(false)} onSave={(updatedLead: any) => { updateLead(updatedLead); setShowEditLead(false); }} />}
 
       {/* Move Stage Modal */}
@@ -595,23 +666,7 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
 
       {/* Add Note Modal */}
       <AnimatePresence>
-        {showAddNote && (
-          <div key="note-modal" style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ width: '500px', background: 'white', borderRadius: '16px', overflow: 'hidden' }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Add Note</h3>
-                  <button onClick={() => setShowAddNote(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-                </div>
-                <div style={{ padding: '24px' }}>
-                  <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Type your note here..." style={{ width: '100%', minHeight: '120px', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px', fontSize: '0.95rem', resize: 'vertical' }} />
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                    <button onClick={() => setShowAddNote(false)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: '8px', fontWeight: 600 }}>Cancel</button>
-                    <button onClick={handleSaveNote} style={{ padding: '10px 20px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600 }}>Save Note</button>
-                  </div>
-                </div>
-             </motion.div>
-          </div>
-        )}
+        <AddNoteModal isOpen={showAddNote} onClose={() => setShowAddNote(false)} lead={currentLead} />
       </AnimatePresence>
 
       {/* Right side Drawers (Business, Contact, List) */}
@@ -678,23 +733,82 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
         )}
 
         {showAddToList && (
-          <div key="add-to-list-drawer" style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
-             <motion.div initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'tween'}} style={{ width: '400px', background: 'white', height: '100%', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e2e8f0' }}>
-                <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Add To List</h3>
-                  <button onClick={() => { setShowAddToList(false); setListName(''); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-                </div>
-                <div style={{ padding: '24px', flex: 1, overflowY: 'auto' }}>
-                  <div style={{ marginBottom: '24px' }}>
-                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '8px', color: '#64748b' }}>Select Existing List or Type New</label>
-                     <input value={listName} onChange={e=>setListName(e.target.value)} placeholder="E.g. VIP Customers" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '16px' }} />
-                  </div>
-                  <button onClick={handleCreateList} style={{ width: '100%', padding: '12px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Save to List</button>
-                </div>
-             </motion.div>
-          </div>
-        )}
+        <AddToListDrawer 
+          isOpen={showAddToList}
+          onClose={() => setShowAddToList(false)} 
+          lead={currentLead}
+          onSave={(listName: string) => handleCreateList(listName)} 
+        />
+      )}
+
+      {showChangeCategory && (
+        <ChangeCategoryModal 
+          isOpen={showChangeCategory}
+          onClose={() => setShowChangeCategory(false)}
+          lead={currentLead}
+          onSave={(updatedLead: any, changes: string[]) => {
+            const toSave = { ...updatedLead };
+            if (changes && changes.length > 0) {
+              const changeDesc = changes.join(', ');
+              toSave.activities = [
+                { id: Math.random().toString(36).substr(2, 9), activityTime: new Date().toISOString(), lifecycle: toSave.status, activityType: 'Category Changed', category: 'Update', title: 'Lead category changed', description: changeDesc, activityBy: CURRENT_USER },
+                ...(toSave.activities || [])
+              ];
+            }
+            updateLead(toSave);
+            setShowChangeCategory(false);
+          }}
+        />
+      )}
+
       </AnimatePresence>
+
+      <RequestPaymentModal isOpen={showRequestPayment} onClose={() => setShowRequestPayment(false)} lead={currentLead} />
+
+      <SetupWarningModal isOpen={showSetupWarning} onClose={() => setShowSetupWarning(false)} onProceed={() => { setShowSetupWarning(false); setShowQuotationDefaults(true); }} />
+      <QuotationDefaultsWorkspaceModal isOpen={showQuotationDefaults} onClose={() => setShowQuotationDefaults(false)} onProceedAfterSave={() => { setShowQuotationDefaults(false); setShowQuotationDraft(true); alert('Quotation Draft flow opens here!'); }} />
+
+      <CreateUpdateTicketModal
+        isOpen={showTicketModal}
+        onClose={() => setShowTicketModal(false)}
+        lead={currentLead}
+      />
+
+      <CreateUpdateDealModal
+        isOpen={showDealModal}
+        onClose={() => setShowDealModal(false)}
+        lead={currentLead}
+      />
+
+      <CreateAdHocTaskModal
+        isOpen={showCreateAdHocTask}
+        onClose={() => setShowCreateAdHocTask(false)}
+        lead={currentLead}
+      />
+
+      <ViewPaymentsDrawer
+        isOpen={showViewPayments}
+        onClose={() => setShowViewPayments(false)}
+        lead={currentLead}
+      />
+
+      <AddDocumentDrawer
+        isOpen={showAddDocument}
+        onClose={() => setShowAddDocument(false)}
+        lead={currentLead}
+      />
+
+      <VideoCallDrawer
+        isOpen={showVideoCall}
+        onClose={() => setShowVideoCall(false)}
+        lead={currentLead}
+      />
+
+      <LogVisitDrawer
+        isOpen={showLogVisit}
+        onClose={() => setShowLogVisit(false)}
+        lead={currentLead}
+      />
     </div>
   );
 }

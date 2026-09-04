@@ -390,7 +390,7 @@ export default function TargetsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
                 <div style={{ position: 'absolute', left: '11px', top: '5px', bottom: '5px', width: '2px', background: 'var(--border-color)' }} />
                 {[
-                  { text: 'Target assigned by Sales Manager', date: '01 Aug 2026' },
+                  { text: 'Target assigned by Manager', date: '01 Aug 2026' },
                   { text: 'Achieved 25% of Revenue Target', date: '10 Aug 2026' },
                   { text: 'Converted high value enterprise lead', date: '15 Aug 2026' },
                 ].map((act, i) => (

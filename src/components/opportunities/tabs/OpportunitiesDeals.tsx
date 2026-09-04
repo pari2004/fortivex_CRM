@@ -10,7 +10,7 @@ import { AddNewDealModal } from '../modals/AddNewDealModal';
 import { LeadProfileModal } from '@/components/dashboard/modals/LeadProfileModal';
 import { LeadPreviewModal } from '@/components/dashboard/modals/LeadPreviewModal';
 
-const CURRENT_USER = 'Pavan S.H';
+const CURRENT_USER = 'Abhay';
 
 // Configurable Fields for "Customize Table"
 const CUSTOM_FIELDS = [

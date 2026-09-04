@@ -25,7 +25,7 @@ const DEFAULT_COLUMNS = [
 export default function CallsPage() {
   const { systemUsers, leads, updateLead } = useCRM();
   const { openSharedInbox } = useInbox();
-  const CURRENT_USER = 'Pavan S H';
+  const CURRENT_USER = 'Abhay';
 
   // Core State
   const [activeFilter, setActiveFilter] = useState<'All' | 'My'>('All');

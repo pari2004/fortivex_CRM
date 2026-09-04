@@ -84,7 +84,7 @@ export default function MemberLeadsPage() {
   const [localLeads, setLocalLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   
-  const CURRENT_USER = 'Me'; 
+  const CURRENT_USER = 'Abhay'; 
   const [demoInjected, setDemoInjected] = useState(false);
 
   useEffect(() => {

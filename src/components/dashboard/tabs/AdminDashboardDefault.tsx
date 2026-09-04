@@ -31,14 +31,17 @@ import { QuickCreateModalManager } from '../modals/QuickCreateModalManager';
 import { CustomDateRangeModal } from '../modals/CustomDateRangeModal';
 import { useCRM } from '@/contexts/CRMContext';
 
+type DateFilterState = 'Today' | 'Yesterday' | 'Last 7 Days' | 'Last 30 Days' | 'This Month' | 'Last Month' | 'Last Year' | 'Custom Range';
 const dateOptions = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month', 'Last Year', 'Custom Range'];
 
 export function AdminDashboardDefault() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [showCustomDateModal, setShowCustomDateModal] = useState(false);
-  const [dateFilter, setDateFilter] = useState('Last 7 Days'); // Default as per requirements to show 299 leads
+  const [dateFilter, setDateFilter] = useState<DateFilterState>('Today');
   const [activePipeline, setActivePipeline] = useState('All');
+  const [adHocTaskFilter, setAdHocTaskFilter] = useState<'Today' | 'Yesterday' | 'Last 7 Days' | 'All'>('Today');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeModal, setActiveModal] = useState<{title: string, type: string} | null>(null);
   const [activeUserProfile, setActiveUserProfile] = useState<any>(null);
   const [selectedLeadForProfile, setSelectedLeadForProfile] = useState<any | null>(null);
@@ -59,6 +62,38 @@ export function AdminDashboardDefault() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedSearchResult, setSelectedSearchResult] = useState<any | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setIsRefreshing(false);
+  };
+
+  const filteredAdHocTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const last7Days = new Date(today);
+    last7Days.setDate(last7Days.getDate() - 7);
+
+    return tasks.filter(t => {
+      if (t.status === 'Completed') return false;
+      const taskDate = new Date(t.dueDate);
+      taskDate.setHours(0,0,0,0);
+
+      if (adHocTaskFilter === 'Today') {
+        return taskDate.getTime() === today.getTime();
+      } else if (adHocTaskFilter === 'Yesterday') {
+        return taskDate.getTime() === yesterday.getTime();
+      } else if (adHocTaskFilter === 'Last 7 Days') {
+        return taskDate.getTime() >= last7Days.getTime();
+      }
+      return true; // All
+    });
+  }, [tasks, adHocTaskFilter]);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem('fortivex_dashboard_prefs');
@@ -459,7 +494,7 @@ export function AdminDashboardDefault() {
         isOpen={showCustomDateModal}
         onClose={() => setShowCustomDateModal(false)}
         onApply={(start, end) => {
-          setDateFilter(`${start} to ${end}`);
+          setDateFilter(`${start} to ${end}` as any);
           setShowCustomDateModal(false);
           showToast(`Dashboard refreshed for ${start} to ${end}`);
           setLastRefreshed('Updated Just Now');
@@ -543,7 +578,7 @@ export function AdminDashboardDefault() {
                       setShowCustomDateModal(true);
                       setShowDateDropdown(false);
                     } else {
-                      setDateFilter(opt); 
+                      setDateFilter(opt as DateFilterState); 
                       setShowDateDropdown(false); 
                       showToast(`Dashboard refreshed for ${opt}`); 
                       setLastRefreshed('Updated Just Now'); 
@@ -638,11 +673,37 @@ export function AdminDashboardDefault() {
                   <button onClick={() => setAdHocTasksOpen(true)} style={{ color: 'var(--primary-color)', fontSize: '13px', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>+ Add</button>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <button style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '4px 12px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>Today</button>
+                  <select 
+                    value={adHocTaskFilter}
+                    onChange={(e) => setAdHocTaskFilter(e.target.value as any)}
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '4px 12px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', outline: 'none', color: 'var(--text-primary)' }}
+                  >
+                    <option value="Today">Today</option>
+                    <option value="Yesterday">Yesterday</option>
+                    <option value="Last 7 Days">Last 7 Days</option>
+                    <option value="All">All Time</option>
+                  </select>
                 </div>
-                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '14px', fontWeight: 500 }}>
-                  No tasks for today
-                </div>
+                
+                {filteredAdHocTasks.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                    {filteredAdHocTasks.map(task => (
+                      <div key={task.id} style={{ padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border-color)' }}>
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{task.title}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{task.status}</div>
+                        </div>
+                        <button onClick={() => setAdHocTasksOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer' }}>
+                          <CheckSquare size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '14px', fontWeight: 500 }}>
+                    No tasks for {adHocTaskFilter.toLowerCase()}
+                  </div>
+                )}
               </div>
 
               {[
@@ -728,14 +789,37 @@ export function AdminDashboardDefault() {
                     dynamicUserActivities.filter(u => u.name.toLowerCase().includes(userActivitySearch.toLowerCase())).map((user, idx) => (
                     <div 
                       key={idx} 
-                      style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }}
                       className="hover-bg-secondary"
-                      onClick={() => setActiveUserProfile(user)}
+                      style={{ display: 'flex', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }}
+                      onClick={() => {
+                        // Try to find the specific lead mentioned
+                        let target = leads.find(l => l.owner === user.name && l.name === user.leadName);
+                        
+                        // Fallback 1: Any lead assigned to this user
+                        if (!target) {
+                          target = leads.find(l => l.owner === user.name);
+                        }
+                        
+                        // Fallback 2: Any lead with this name (even if owner doesn't match)
+                        if (!target) {
+                          target = leads.find(l => l.name === user.leadName);
+                        }
+                        
+                        // Fallback 3: The very first lead in the CRM
+                        if (!target && leads.length > 0) {
+                          target = leads[0];
+                        }
+                        
+                        // Force opening the direct Lead Details page
+                        if (target) {
+                          setFullSelectedLeadForProfile(target);
+                        }
+                      }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '140px', flexShrink: 0 }}>
+                      <div style={{ width: '120px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                         <div style={{ position: 'relative' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>
-                            {user.name.charAt(0)}
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=36`} alt={user.name} />
                           </div>
                           <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '12px', height: '12px', borderRadius: '50%', background: user.status === 'active' ? '#10b981' : '#cbd5e1', border: '2px solid white' }} />
                         </div>
@@ -766,9 +850,15 @@ export function AdminDashboardDefault() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
                     <tr>
-                      <th style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)' }}>Lead Details</th>
-                      <th style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)' }}>Stage & Status</th>
-                      <th style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--glass-border)' }}>Follow-up</th>
+                      <th style={{ padding: 0, borderBottom: '1px solid var(--glass-border)' }}>
+                        <div style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, resize: 'horizontal', overflow: 'hidden', minWidth: '120px', maxWidth: '100%', boxSizing: 'border-box' }}>Lead Details</div>
+                      </th>
+                      <th style={{ padding: 0, borderBottom: '1px solid var(--glass-border)' }}>
+                        <div style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, resize: 'horizontal', overflow: 'hidden', minWidth: '120px', maxWidth: '100%', boxSizing: 'border-box' }}>Stage & Status</div>
+                      </th>
+                      <th style={{ padding: 0, borderBottom: '1px solid var(--glass-border)' }}>
+                        <div style={{ padding: '12px 24px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, resize: 'horizontal', overflow: 'hidden', minWidth: '120px', maxWidth: '100%', boxSizing: 'border-box' }}>Follow-up</div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -838,8 +928,12 @@ export function AdminDashboardDefault() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 1 }}>
                   <tr style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', borderBottom: '1px solid var(--glass-border)' }}>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, width: '50%' }}>METRIC</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, width: '25%' }}>COUNT</th>
+                    <th style={{ padding: 0, width: '50%' }}>
+                      <div style={{ padding: '12px 16px', fontWeight: 600, resize: 'horizontal', overflow: 'hidden', minWidth: '100px', maxWidth: '100%', boxSizing: 'border-box' }}>METRIC</div>
+                    </th>
+                    <th style={{ padding: 0, width: '25%' }}>
+                      <div style={{ padding: '12px 16px', fontWeight: 600, resize: 'horizontal', overflow: 'hidden', minWidth: '100px', maxWidth: '100%', boxSizing: 'border-box' }}>COUNT</div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

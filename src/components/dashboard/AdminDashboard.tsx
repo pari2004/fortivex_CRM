@@ -35,7 +35,7 @@ export function AdminDashboard() {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', paddingBottom: '24px' }}>
         
         {/* Header */}
-        {activeTab !== 'Custom' && (
+        {activeTab !== 'Custom' && activeTab !== 'Activity Metrics' && activeTab !== 'Source Report' && activeTab !== 'User Leads' && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Dashboard</h1>

@@ -1,0 +1,156 @@
+Created At: 2026-08-29T07:07:11Z
+Completed At: 2026-08-29T07:07:51Z
+
+				The command completed successfully.
+				Output:
+				     1	'use client';
+     2	
+     3	import { useState, useEffect } from 'react';
+     4	import { useRouter } from 'next/navigation';
+     5	import { rolesData, Role } from '@/lib/data/systemData';
+     6	import { ActionMenu } from '@/components/common/ActionMenu';
+     7	import { SlidePanel, PremiumModal } from '@/components/common/PremiumModal';
+     8	import { PremiumInput, PremiumSelect, PremiumCard, PremiumTextArea } from '@/components/common/PremiumForm';
+     9	import { Shield, ShieldCheck, Users, Edit, Copy, CheckSquare, Trash2, Plus, Clock, User, CheckCircle, Save, X, Search, Link as LinkIcon, RefreshCw } from 'lucide-react';
+    10	import { motion } from 'framer-motion';
+    11	import { StatusBadge } from '@/components/common/StatusBadge';
+    12	
+    13	// Helper function
+    14	function showToast(message: string, type: 'success' | 'error' = 'success') {
+    15	  const toast = document.createElement('div');
+    16	  toast.innerText = message;
+    17	  toast.style.position = 'fixed';
+    18	  toast.style.bottom = '20px';
+    19	  toast.style.right = '20px';
+    20	  toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+    21	  toast.style.color = 'white';
+    22	  toast.style.padding = '12px 24px';
+    23	  toast.style.borderRadius = '8px';
+    24	  toast.style.zIndex = '9999';
+    25	  toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+    26	  document.body.appendChild(toast);
+    27	  setTimeout(() => {
+    28	    toast.style.opacity = '0';
+    29	    toast.style.transition = 'opacity 0.5s';
+    30	    setTimeout(() => document.body.removeChild(toast), 500);
+    31	  }, 3000);
+    32	}
+    33	
+    34	// Extended Role type for local component
+    35	export interface ExtendedRole extends Role {
+    36	  displayName?: string;
+    37	  department?: string;
+    38	  dashboardAccess?: string;
+    39	  sidebarAccess?: string;
+    40	  defaultLandingPage?: string;
+    41	  roleColor?: string;
+    42	  priority?: string;
+    43	  permissions?: Record<string, Record<string, boolean>>;
+    44	  users?: any[];
+    45	}
+    46	
+    47	const MODULES = [
+    48	  'Dashboard', 'Leads', 'Pipeline', 'Applications', 'Students', 'Tasks', 
+    49	  'Calendar', 'Calls', 'WhatsApp', 'Email', 'Documents', 'Payments', 
+    50	  'Reports', 'Analytics', 'Users', 'Roles', 'Automation', 'Settings',
+    51	  'Campaigns', 'Social Media', 'Lead Sources', 'Ads', 'Employees', 'Attendance',
+    52	  'Leave', 'Recruitment', 'Payroll', 'Performance', 'Invoices', 'Receipts',
+    53	  'Revenue', 'Support Tickets', 'Progress', 'Feedback', 'Visitors', 'Batches',
+    54	  'Assignments', 'Assessments', 'Certificates', 'Placements', 'Companies',
+    55	  'Interviews', 'Offers', 'Website Content', 'Blogs', 'Media Library', 'System Logs',
+    56	  'Security', 'Servers', 'API Keys', 'Integrations'
+    57	];
+    58	
+    59	const PERMISSIONS = [
+    60	  'View', 'Create', 'Edit', 'Delete', 'Approve', 'Export', 'Import', 'Assign', 'Manage', 'Configure'
+    61	];
+    62	
+    63	// Mapping roles to their allowed modules
+    64	const ROLE_DASHBOARD_MAP: Record<string, string[]> = {
+    65	  'Super Admin': MODULES, // All modules
+    66	  'Admin': ['Dashboard', 'Users', 'Roles', 'Settings', 'Security', 'System Logs', 'Employees', 'Integrations'],
+    67	  'Sales Manager': ['Dashboard', 'Pipeline', 'Targets', 'Reports', 'Analytics', 'Team Performance', 'Leads', 'Calls'],
+    68	  'Admission Counselor': ['Leads', 'Applications', 'Students', 'Follow-ups', 'Admissions', 'Calendar', 'Documents'],
+    69	  'Marketing Manager': ['Campaigns', 'Social Media', 'Reports', 'Analytics', 'Lead Sources', 'Ads', 'Website Content'],
+    70	  'Member': ['Dashboard', 'My Tasks', 'My Schedule', 'Attendance', 'Documents', 'Help & Support', 'Profile', 'Settings']
+    71	};
+    72	
+    73	const SYSTEM_USERS = [
+    74	  { id: 'USR-01', name: 'John Smith', photo: 'https://i.pravatar.cc/150?u=1', department: 'Sales', email: 'john@fortivex.com', phone: '+1 234 567 890', status: 'Active' },
+    75	  { id: 'USR-02', name: 'Sarah Connor', photo: 'https://i.pravatar.cc/150?u=2', department: 'Marketing', email: 'sarah@fortivex.com', phone: '+1 234 567 891', status: 'Active' },
+    76	  { id: 'USR-03', name: 'Mike Ross', photo: 'https://i.pravatar.cc/150?u=3', department: 'Admissions', email: 'mike@fortivex.com', phone: '+1 234 567 892', status: 'Active' },
+    77	  { id: 'USR-04', name: 'Rachel Zane', photo: 'https://i.pravatar.cc/150?u=4', department: 'HR', email: 'rachel@fortivex.com', phone: '+1 234 567 893', status: 'Active' },
+    78	  { id: 'USR-05', name: 'Harvey Specter', photo: 'https://i.pravatar.cc/150?u=5', department: 'Management', email: 'harvey@fortivex.com', phone: '+1 234 567 894', status: 'Active' },
+    79	];
+    80	
+    81	export default function RolesPage() {
+    82	  const router = useRouter();
+    83	  
+    84	  // Initialize data with extended fields if missing
+    85	  const initialData: ExtendedRole[] = rolesData.map(r => ({
+    86	    ...r,
+    87	    displayName: r.name,
+    88	    department: 'General',
+    89	    dashboardAccess: r.name,
+    90	    sidebarAccess: 'Full',
+    91	    defaultLandingPage: '/dashboard',
+    92	    roleColor: '#2563EB',
+    93	    priority: 'Normal',
+    94	    permissions: {},
+    95	    users: r.name === 'Super Admin' ? [SYSTEM_USERS[4]] : (r.name === 'Sales Manager' ? [SYSTEM_USERS[0]] : [])
+    96	  }));
+    97	
+    98	  const [localData, setLocalData] = useState<ExtendedRole[]>(initialData);
+    99	  const [activeModal, setActiveModal] = useState<string | null>(null);
+   100	  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+   101	  const [selectedRole, setSelectedRole] = useState<ExtendedRole | null>(null);
+   102	  const [formData, setFormData] = useState<Partial<ExtendedRole>>({});
+   103	  
+   104	  // Specific states for permissions and users
+   105	  const [tempPermissions, setTempPermissions] = useState<Record<string, Record<string, boolean>>>({});
+   106	  const [searchUser, setSearchUser] = useState('');
+   107	  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+   108	
+   109	  const openModal = (modal: string, role?: ExtendedRole) => {
+   110	    if (role) {
+   111	      setSelectedRole(role);
+   112	      setFormData({...role});
+   113	      setTempPermissions(role.permissions ? JSON.parse(JSON.stringify(role.permissions)) : {});
+   114	      setSelectedUsers(role.users ? role.users.map(u => u.id) : []);
+   115	    } else {
+   116	      setSelectedRole(null);
+   117	      setFormData({
+   118	        status: 'Active',
+   119	        priority: 'Normal',
+   120	        roleColor: '#2563eb',
+   121	        defaultLandingPage: '/dashboard'
+   122	      });
+   123	      setTempPermissions({});
+   124	      setSelectedUsers([]);
+   125	    }
+   126	    setActiveModal(modal);
+   127	  };
+   128	
+   129	  const closeModal = () => {
+   130	    setActiveModal(null);
+   131	    setSelectedRole(null);
+   132	    setFormData({});
+   133	  };
+   134	
+   135	  const handleSave = () => {
+   136	    if (selectedRole) {
+   137	      setLocalData(prev => prev.map(r => r.id === selectedRole.id ? { ...r, ...formData } as ExtendedRole : r));
+   138	      showToast('Role updated successfully');
+   139	    } else {
+   140	      const newRole: ExtendedRole = {
+   141	        id: `ROL-0${localData.length + 1}`,
+   142	        name: formData.name || 'New Role',
+   143	        displayName: formData.displayName || formData.name || 'New Role',
+   144	        description: formData.description || '',
+   145	        status: formData.status as any || 'Active',
+   146	        department: formData.department || 'General',
+   147	        dashboardAccess: formData.dashboardAccess || 'Default',
+   148	        sidebarAccess: formData.sidebarAccess || 'Default',
+   149	        defaultLandingPage: formData.defaultLandingPage || '/dashboard',
+   150	        roleColor: formData.roleColor || '#2563eb',
+

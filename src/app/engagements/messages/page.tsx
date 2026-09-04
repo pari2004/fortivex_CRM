@@ -40,7 +40,7 @@ export default function MessagesPage() {
   const { leads, updateLead, systemUsers } = useCRM();
   const { openSharedInbox } = useInbox();
   
-  const CURRENT_USER = 'Pavan S H';
+  const CURRENT_USER = 'Abhay';
   
   const [activeFilter, setActiveFilter] = useState<'All' | 'My'>('All');
   const [modeFilter, setModeFilter] = useState<'All' | 'WhatsApp' | 'Email'>('All');

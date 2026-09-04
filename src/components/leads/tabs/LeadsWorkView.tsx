@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { DataToolbar } from '@/components/common/DataToolbar';
-import { ChevronLeft, ListPlus, Copy, Send, Mail as MailIcon, ChevronRight, ChevronDown, X, Phone, Mail, MessageCircle, Calendar, CheckSquare, Trash2, Edit2, CheckCircle, Clock, UploadCloud, RefreshCw, MoreVertical, Search, Bot } from 'lucide-react';
+import { ChevronLeft, ListPlus, Copy, Send, Mail as MailIcon, ChevronRight, ChevronDown, X, Phone, Mail, MessageCircle, Calendar, CheckSquare, Trash2, Edit2, CheckCircle, Clock, UploadCloud, RefreshCw, MoreVertical, Search, Bot, Mic, Eye, MoreHorizontal, Briefcase, ArrowRightLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIAgentModal } from '../modals/AIAgentModal';
 import { CustomizeColumnsModal } from '../modals/CustomizeColumnsModal';
@@ -11,10 +11,14 @@ import { LeadFiltersPanel } from '../modals/LeadFiltersPanel';
 import { ALL_LEADS_COLUMNS, DEFAULT_VISIBLE_COLUMNS } from '@/lib/data/leadsColumns';
 import { Settings, Sparkles, Filter, Tag, UserPlus, Trash2 as TrashIcon } from 'lucide-react';
 import { ActionMenu } from '@/components/common/ActionMenu';
+import { AssignLeadsModal } from '@/components/dashboard/modals/AssignLeadsModal';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 import { LeadProfileModal } from '@/components/dashboard/modals/LeadProfileModal';
 import { LeadPreviewModal } from '@/components/dashboard/modals/LeadPreviewModal';
 import { EditLeadModal } from '@/components/dashboard/modals/EditLeadModal';
+import { CreateUpdateDealModal } from '@/components/dashboard/modals/CreateUpdateDealModal';
+import { AddToListDrawer } from '@/components/dashboard/modals/AddToListDrawer';
+import { ChangeCategoryModal } from '@/components/dashboard/modals/ChangeCategoryModal';
 import { useCRM } from '@/contexts/CRMContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -81,6 +85,12 @@ export function LeadsWorkView({ newLeadEvent }: any) {
   const [showBulkTag, setShowBulkTag] = useState(false);
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
+  const [campaignExpanded, setCampaignExpanded] = useState(false);
+  
+  // Real Modal States
+  const [createDealLead, setCreateDealLead] = useState<any>(null);
+  const [showAddToList, setShowAddToList] = useState(false);
+  const [changeCategoryLead, setChangeCategoryLead] = useState<any>(null);
   const [activeRowMenu, setActiveRowMenu] = useState<string | null>(null);
   const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
   const [currentSystemView, setCurrentSystemView] = useState('All Work Leads');
@@ -263,13 +273,61 @@ return result;
             </div>
             
             {viewDropdownOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '220px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, padding: '8px' }}>
-                <div style={{ padding: '4px 8px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>System Views</div>
-                <div className="action-item" onClick={() => { setCurrentSystemView('All Work Leads'); setViewDropdownOpen(false); }}>All Work Leads</div>
-                <div className="action-item" onClick={() => { setCurrentSystemView('My Work Leads'); setViewDropdownOpen(false); }}>My Work Leads</div>
-                <div className="action-item" onClick={() => { setCurrentSystemView('Priority Work Leads'); setViewDropdownOpen(false); }}>Priority Work Leads</div>
-                <div className="action-item" onClick={() => { setCurrentSystemView('Follow-up Due'); setViewDropdownOpen(false); }}>Follow-up Due</div>
-                <div className="action-item" onClick={() => { setCurrentSystemView('New Work Leads'); setViewDropdownOpen(false); }}>New Work Leads</div>
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '320px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, padding: '8px' }}>
+                <div style={{ padding: '8px 12px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>SYSTEM</div>
+                
+                {[
+                  'All Work Leads',
+                  'All Closed',
+                  'Closed Today',
+                  'Closed Negative Outcome',
+                  'Manually Closed',
+                  'Closed Time Over',
+                  'Deal Lost',
+                  'Deal Won'
+                ].map((viewName) => (
+                  <div 
+                    key={viewName}
+                    onClick={() => { setCurrentSystemView(viewName); setViewDropdownOpen(false); }}
+                    style={{ 
+                      padding: '10px 12px', 
+                      borderRadius: '8px', 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      background: currentSystemView === viewName ? '#fdf2f8' : 'transparent',
+                      color: currentSystemView === viewName ? '#9d174d' : '#0f172a',
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                      marginBottom: '2px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentSystemView !== viewName) e.currentTarget.style.background = 'var(--bg-secondary)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentSystemView !== viewName) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    {viewName}
+                    {viewName === 'All Closed' && (
+                      <span style={{ 
+                        background: '#9d174d', 
+                        color: 'white', 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600 
+                      }}>3413</span>
+                    )}
+                  </div>
+                ))}
+
+                <div style={{ height: '1px', background: 'var(--glass-border)', margin: '8px 0' }}></div>
+                <div style={{ padding: '8px 12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Add filters, then save them here as a smart view.
+                </div>
               </div>
             )}
           </div>
@@ -317,59 +375,141 @@ return result;
 
         {/* Bulk Actions Toolbar */}
         {selectedRows.size > 0 && (
-          <div style={{ padding: '12px 24px', background: 'rgba(59,130,246,0.05)', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'fadeIn 0.2s' }}>
+          <div style={{ padding: '12px 24px', background: '#eff6ff', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'fadeIn 0.2s' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontWeight: 600, color: 'var(--primary-color)', marginRight: '8px' }}>{selectedRows.size} selected</span>
-              <div style={{ height: '24px', width: '1px', background: 'var(--glass-border)', marginRight: '8px' }}></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid #4f46e5', padding: '6px 12px', borderRadius: '8px', color: '#4f46e5', fontWeight: 600, fontSize: '0.85rem' }}>
+                <CheckSquare size={16} /> {selectedRows.size} selected
+              </div>
               
               <button onClick={() => {
                 const firstId = Array.from(selectedRows)[0];
                 const lead = data.find(l => l.id === firstId);
                 if(lead) setEditLead(lead);
-              }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}><Edit2 size={14}/> Edit</button>
+              }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#334155' }} className="hover-bg-secondary"><Edit2 size={16}/> Edit</button>
               
-              <button onClick={() => { showToast("Re-engagement initiated"); setSelectedRows(new Set()); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}><RefreshCw size={14}/> Re-engage</button>
+              <button onClick={() => { showToast("Re-engagement initiated"); setSelectedRows(new Set()); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#334155' }} className="hover-bg-secondary"><RefreshCw size={16}/> Re-engage</button>
               
-              <button onClick={() => setShowBulkAssign(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}><UserPlus size={14}/> Assign</button>
+              <button onClick={() => setShowBulkAssign(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#334155' }} className="hover-bg-secondary"><UserPlus size={16}/> Assign</button>
               
-              <button onClick={() => setShowBulkTag(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}><Tag size={14}/> Tag</button>
+              <button onClick={() => setShowBulkTag(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#334155' }} className="hover-bg-secondary"><Tag size={16}/> Tag</button>
               
-              <button onClick={() => showToast("Added to list successfully")} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}>Add to List</button>
+              <button onClick={() => setShowAddToList(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#334155' }} className="hover-bg-secondary">Add to List</button>
               
-              <button onClick={() => showToast("Exporting selected leads...")} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}><UploadCloud size={14}/> Export</button>
+              <button onClick={() => showToast("Exporting selected leads...")} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#334155' }} className="hover-bg-secondary"><UploadCloud size={16}/> Export</button>
 
               <div style={{ position: 'relative' }}>
-                <button onClick={(e) => { e.stopPropagation(); setBulkMenuOpen(!bulkMenuOpen); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}><MoreVertical size={14}/> More</button>
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setBulkMenuOpen(!bulkMenuOpen); 
+                  }} 
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#334155' }}
+                  className="hover-bg-secondary"
+                >
+                  <MoreVertical size={16}/> More
+                </button>
                 {bulkMenuOpen && (
-                  <div style={{position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '240px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 9999, padding: '8px'}}>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>View Details</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>View Activity / Timeline</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>View Analytics</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Duplicate Lead</div>
-                    <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }}></div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Add Note</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Create Task</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Create Opportunity</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Create Ticket</div>
-                    <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }}></div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Send Email</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Send WhatsApp</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Export</div>
-                    <div className="action-item" onClick={() => setBulkMenuOpen(false)}>Refresh</div>
-                    <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }}></div>
-                    <div className="action-item" onClick={() => {
-                      if(window.confirm(`Delete ${selectedRows.size} selected leads?`)) {
-                        deleteLead(Array.from(selectedRows));
-                        setSelectedRows(new Set());
-                      }
+                  <div 
+                    style={{ 
+                      position: 'absolute', 
+                      top: '100%', 
+                      right: 0, 
+                      marginTop: '4px', 
+                      background: 'white', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '12px', 
+                      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', 
+                      width: '200px', 
+                      zIndex: 9999,
+                      padding: '8px 0',
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="hover-bg-secondary" style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: 'rgb(51, 65, 85)', fontSize: '0.9rem', fontWeight: 500 }} onClick={() => { 
+                      const lead = Array.from(selectedRows).map(id => data.find((l: any) => l.id === id)).find(Boolean);
+                      if (lead) setEditLead(lead);
+                      setBulkMenuOpen(false); 
+                    }}>
+                      <Edit2 size={16} /> Edit
+                    </div>
+                    
+                    <div className="hover-bg-secondary" style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: 'rgb(51, 65, 85)', fontSize: '0.9rem', fontWeight: 500 }} onClick={() => { 
+                      const lead = Array.from(selectedRows).map(id => data.find((l: any) => l.id === id)).find(Boolean);
+                      if (lead) setCreateDealLead(lead);
+                      setBulkMenuOpen(false); 
+                    }}>
+                      <Briefcase size={16} /> Create Deal
+                    </div>
+                    
+                    <div className="hover-bg-secondary" style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: 'rgb(51, 65, 85)', fontSize: '0.9rem', fontWeight: 500 }} onClick={() => { 
+                      setShowAddToList(true);
                       setBulkMenuOpen(false);
-                    }} style={{ color: 'var(--error-color)' }}><TrashIcon size={14}/> Close Lead</div>
+                    }}>
+                      <ListPlus size={16} /> Add to list
+                    </div>
+                    
+                    <div className="hover-bg-secondary" style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: 'rgb(51, 65, 85)', fontSize: '0.9rem', fontWeight: 500 }} onClick={() => { 
+                      const lead = Array.from(selectedRows).map(id => data.find((l: any) => l.id === id)).find(Boolean);
+                      if (lead) setChangeCategoryLead(lead);
+                      setBulkMenuOpen(false); 
+                    }}>
+                      <ArrowRightLeft size={16} /> Change category
+                    </div>
+
+                    <div 
+                      className="hover-bg-secondary" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCampaignExpanded(!campaignExpanded);
+                      }}
+                      style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: '#334155', fontSize: '0.9rem', fontWeight: 500 }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <Send size={16} /> Campaign
+                      </div>
+                      <ChevronDown size={14} style={{ transform: campaignExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                    </div>
+                    
+                    {campaignExpanded && (
+                      <div style={{ background: '#f8fafc', margin: '4px 8px', borderRadius: '8px', overflow: 'hidden' }}>
+                        <div 
+                          className="hover-bg-secondary"
+                          onClick={() => {
+                            showToast("WhatsApp Campaign Initiated");
+                            setBulkMenuOpen(false);
+                            setCampaignExpanded(false);
+                          }}
+                          style={{ padding: '8px 16px', paddingLeft: '44px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#10b981', fontSize: '0.85rem', fontWeight: 600 }}
+                        >
+                          <MessageCircle size={14} /> WhatsApp
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }}></div>
+                    
+                    <div 
+                      className="hover-bg-secondary" 
+                      onClick={() => {
+                        if(window.confirm(`Delete ${selectedRows.size} selected leads?`)) {
+                          deleteLead(Array.from(selectedRows));
+                          setSelectedRows(new Set());
+                        }
+                        setBulkMenuOpen(false);
+                        setCampaignExpanded(false);
+                      }} 
+                      style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#ef4444', fontSize: '0.9rem', fontWeight: 500 }}
+                    >
+                      <TrashIcon size={16} /> Delete
+                    </div>
                   </div>
                 )}
               </div>
-              
-              <button onClick={() => setSelectedRows(new Set())} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', padding: '6px 12px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-secondary)' }}><X size={14}/> Close</button>
             </div>
+            
+            <button onClick={() => setSelectedRows(new Set())} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', padding: '6px 12px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#64748b' }}><X size={16}/> Close</button>
           </div>
         )}
         <div style={{ flex: 1, overflow: 'auto' }}>
@@ -397,47 +537,76 @@ return result;
                       
                       switch (col.id) {
                         case 'Lead Name': 
-                          content = <div style={{ fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' }} onClick={() => setViewLead(row)}>{row.name}</div>; break;
+                          content = (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: '12px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', color: '#4f46e5', fontWeight: 'bold' }}>
+                                  {String(row.name).charAt(0).toUpperCase() || 'L'}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span onClick={() => setFullViewLead(row)} style={{ cursor: 'pointer', color: '#4f46e5', fontWeight: 600, fontSize: '0.95rem' }}>
+                                    {row.name}
+                                  </span>
+                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: row.stage === 'New Lead' || row.status === 'New' ? '#ecfdf5' : row.stage === 'Interested' ? '#fffbeb' : row.nextFollowUp ? '#eff6ff' : '#f8fafc', color: row.stage === 'New Lead' || row.status === 'New' ? '#10b981' : row.stage === 'Interested' ? '#f59e0b' : row.nextFollowUp ? '#3b82f6' : '#64748b', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid', borderColor: row.stage === 'New Lead' || row.status === 'New' ? '#a7f3d0' : row.stage === 'Interested' ? '#fde68a' : row.nextFollowUp ? '#bfdbfe' : '#e2e8f0' }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }}></div>
+                                    {row.leadStage || row.stage || 'New Lead'}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="lead-name-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <button title="Call" style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#ecfdf5', color: '#10b981', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Phone size={14} /></button>
+                                <button title="WhatsApp" style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#ecfdf5', color: '#10b981', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><MessageCircle size={14} /></button>
+                                <button title="Mute/Unmute" style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#fef2f2', color: '#ef4444', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Mic size={14} /></button>
+                                <button title="View" onClick={() => setViewLead(row)} style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#f3e8ff', color: '#a855f7', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Eye size={14} /></button>
+                                <div style={{ width: '1px', height: '14px', background: '#e2e8f0', margin: '0 2px' }}></div>
+                                <button title="More" onClick={(e) => { e.stopPropagation(); setActiveRowMenu(row.id); }} style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><MoreHorizontal size={14} /></button>
+                              </div>
+                            </div>
+                          );
+                          break;
                         case 'Lead Owner': 
                           content = (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', width: '100%', minWidth: '180px' }} className="lead-owner-badge-container">
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '32px', width: '100%' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <div style={{ position: 'relative' }}>
                                   {row.ownerPhoto ? (
-                                    <img src={row.ownerPhoto} alt={ownerName} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                                    <img src={row.ownerPhoto} alt={ownerName} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
                                   ) : (
-                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 600, flexShrink: 0 }}>
+                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', flexShrink: 0 }}>
                                       {ownerName?.[0] || '?'}
                                     </div>
                                   )}
-                                  
                                 </div>
-                                <select 
-                                  value={ownerName} 
-                                  onChange={(e) => {
-                                    const newOwner = e.target.value;
-                                    if (updateLead) {
-                                      updateLead({ ...row, owner: newOwner, counselor: newOwner, assignedTo: newOwner });
-                                    }
-                                  }}
-                                  style={{ background: 'transparent', border: '1px solid transparent', fontWeight: 500, color: 'var(--text-primary)', outline: 'none', cursor: 'pointer', padding: '2px 4px', borderRadius: '4px', maxWidth: '120px' }}
-                                >
-                                  {['Abhishek', 'Padmesh', 'Parikshit', 'Pavan S.H', 'Spoorthi', 'Thanushree BR', 'Yashwanth'].includes(ownerName) ? null : <option value={ownerName}>{ownerName}</option>}
-                                  {['Abhishek', 'Padmesh', 'Parikshit', 'Pavan S.H', 'Spoorthi', 'Thanushree BR', 'Yashwanth'].map(u => (
-                                    <option key={u} value={u}>{u}</option>
-                                  ))}
-                                </select>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <select 
+                                    value={ownerName} 
+                                    onChange={(e) => {
+                                      const newOwner = e.target.value;
+                                      if (updateLead) {
+                                        updateLead({ ...row, owner: newOwner, counselor: newOwner, assignedTo: newOwner });
+                                      }
+                                    }}
+                                    style={{ background: 'transparent', border: '1px solid transparent', fontWeight: 600, color: '#0f172a', fontSize: '0.9rem', outline: 'none', cursor: 'pointer', padding: '0', borderRadius: '4px', maxWidth: '120px', appearance: 'none', WebkitAppearance: 'none' }}
+                                  >
+                                    {['Abhishek', 'Padmesh', 'Parikshit', 'Pavan S.H', 'Spoorthi', 'Thanushree BR', 'Yashwanth'].includes(ownerName) ? null : <option value={ownerName}>{ownerName}</option>}
+                                    {['Abhishek', 'Padmesh', 'Parikshit', 'Pavan S.H', 'Spoorthi', 'Thanushree BR', 'Yashwanth'].map(u => (
+                                      <option key={u} value={u}>{u}</option>
+                                    ))}
+                                  </select>
+                                  <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 500 }}>{row.ownerRole || 'Sales Executive'}</span>
+                                </div>
                               </div>
-                              <div style={{ display: 'flex', gap: '6px' }} className="owner-action-btns">
-                                <a href={`tel:${row.mobile || row.phone}`} onClick={(e) => e.stopPropagation()} style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-color)', textDecoration: 'none', transition: 'all 0.2s' }} className="owner-action-btn" title="Call Lead">
-                                  <Phone size={12} />
+                              <div className="owner-action-btns" style={{ display: 'flex', gap: '8px' }}>
+                                <a href={`tel:${row.mobile || row.phone}`} onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', textDecoration: 'none', transition: 'all 0.2s' }} title="Call Lead">
+                                  <Phone size={14} />
                                 </a>
-                                <a href={`https://wa.me/${(row.mobile || row.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e', textDecoration: 'none', transition: 'all 0.2s' }} className="owner-action-btn" title="Message Lead">
-                                  <MessageCircle size={12} />
+                                <a href={`https://wa.me/${(row.mobile || row.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', textDecoration: 'none', transition: 'all 0.2s' }} title="Message Lead">
+                                  <MessageCircle size={14} />
                                 </a>
                               </div>
                             </div>
-                          ); break;
+                          ); 
+                          break;
                         case 'Lead Stage': content = <div style={{ padding: '4px 10px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'inline-flex', fontSize: '0.8rem', fontWeight: 500 }}>{row.leadStage || row.stage || 'New Lead'}</div>; break;
                         case 'Next Followup': content = row.nextFollowUp || '—'; break;
                         case 'Mobile Number': 
@@ -542,11 +711,11 @@ return result;
         {activeModal === 'timeline' && <ActionModal key="timeline-modal" title="View Timeline" onClose={() => setActiveModal(null)} onSave={() => { setActiveModal(null); showToast('Timeline updated'); }}><div style={{color: 'var(--text-secondary)'}}>Chronological timeline...</div></ActionModal>}
         
         {(activeModal === 'owner' || activeModal === 'bulk_owner') && (
-          <ActionModal key="owner-modal" title="Assign Owner" onClose={() => setActiveModal(null)} onSave={() => { setActiveModal(null); showToast('Owner assigned'); }}>
-            <select id="owner-select" style={{width:'100%', padding:'8px', borderRadius:'8px', border: '1px solid var(--border-color)', outline: 'none'}}>
-              {['Abhishek', 'Padmesh', 'Parikshit', 'Pavan S.H', 'Spoorthi', 'Thanushree BR', 'Yashwanth'].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </ActionModal>
+          <AssignLeadsModal 
+            isOpen={true}
+            onClose={() => setActiveModal(null)}
+            leads={activeModal === 'owner' ? [menuLead] : filteredData.filter(l => selectedRows.has(l.id))}
+          />
         )}
         
         {(activeModal === 'stage' || activeModal === 'bulk_stage') && (
@@ -555,6 +724,56 @@ return result;
               {['New Lead', 'Contacted', 'Working', 'Qualified', 'Opportunity', 'Converted', 'Lost'].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </ActionModal>
+        )}
+        
+        {/* REUSED Lead Details Modals */}
+        {createDealLead && <CreateUpdateDealModal key="create-deal" isOpen={!!createDealLead} lead={createDealLead} onClose={() => setCreateDealLead(null)} />}
+        
+        {showAddToList && (
+          <AddToListDrawer 
+            key="add-to-list-drawer"
+            isOpen={showAddToList}
+            onClose={() => setShowAddToList(false)} 
+            lead={null}
+            onSave={(listName: string) => {
+              if(!listName.trim()) return;
+              
+              const updatedLeads = Array.from(selectedRows).map(id => {
+                const lead = data.find((l: any) => l.id === id);
+                if (lead) {
+                  return { ...lead, lists: [...(lead.lists || []), listName] };
+                }
+                return null;
+              }).filter(Boolean);
+              
+              if (updatedLeads.length > 0) {
+                setData(prev => prev.map(l => {
+                  const updatedLead = updatedLeads.find((ul: any) => ul.id === l.id);
+                  return updatedLead ? updatedLead : l;
+                }));
+                updatedLeads.forEach((l: any) => updateLead(l));
+                showToast(`Added ${updatedLeads.length} lead(s) to ${listName}`);
+              }
+              
+              setShowAddToList(false);
+            }} 
+          />
+        )}
+        
+        {changeCategoryLead && (
+          <ChangeCategoryModal 
+            key="change-category-modal"
+            isOpen={!!changeCategoryLead}
+            onClose={() => setChangeCategoryLead(null)}
+            lead={changeCategoryLead}
+            onSave={(updatedLead: any, changes: string[]) => {
+              const toSave = { ...updatedLead };
+              setData(prev => prev.map(l => l.id === toSave.id ? toSave : l));
+              updateLead(toSave);
+              setChangeCategoryLead(null);
+              showToast('Category updated successfully');
+            }}
+          />
         )}
       </AnimatePresence>
       <AnimatePresence>
@@ -600,6 +819,24 @@ return result;
           </ActionModal>
         )}
       </AnimatePresence>
+
+      {/* CSS for hover actions */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .owner-action-btns {
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .hover-bg-secondary:hover .owner-action-btns {
+          opacity: 1;
+        }
+        .lead-name-actions {
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .hover-bg-secondary:hover .lead-name-actions {
+          opacity: 1;
+        }
+      `}} />
     </div>
   );
 }

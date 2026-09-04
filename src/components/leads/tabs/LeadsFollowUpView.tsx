@@ -31,7 +31,7 @@ function ActionModal({ title, onClose, onSave, children }: { title: string, onCl
   );
 }
 
-const CURRENT_USER = 'Rahul Sharma'; // Assuming logged in user for demo
+const CURRENT_USER = 'Abhay'; // Assuming logged in user for demo
 
 export function LeadsFollowUpView() {
   const { leads, updateLead } = useCRM();

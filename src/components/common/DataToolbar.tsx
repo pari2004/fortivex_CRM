@@ -158,7 +158,7 @@ export function DataToolbar<T extends Record<string, any>>({
 
 
   return (
-    <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', zIndex: 100 }}>
       
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-primary, #ffffff)', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '12px', flex: 1, minWidth: '300px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
@@ -195,7 +195,7 @@ export function DataToolbar<T extends Record<string, any>>({
                 {showColumns && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                    style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '250px', maxHeight: '350px', overflowY: 'auto', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: 'var(--shadow-md)', zIndex: 50, padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}
+                    style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '250px', maxHeight: '350px', overflowY: 'auto', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: 'var(--shadow-md)', zIndex: 9999, padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}
                   >
                     <div style={{ fontSize: '0.9rem', fontWeight: 'bold', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px', marginBottom: '4px' }}>Customize Columns</div>
                     {allColumns.map(col => (
@@ -226,7 +226,7 @@ export function DataToolbar<T extends Record<string, any>>({
               {showExport && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '250px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: 'var(--shadow-md)', zIndex: 50, padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}
+                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '250px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: 'var(--shadow-md)', zIndex: 9999, padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}
                 >
                   <div style={{ padding: '8px', fontSize: '0.8rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>EXPORT FILTERED ({filteredData.length})</div>
                   <button onClick={() => handleExport('csv', 'filtered')} style={{ textAlign: 'left', padding: '10px 12px', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'background 0.2s', width: '100%' }}>Export Filtered as CSV</button>

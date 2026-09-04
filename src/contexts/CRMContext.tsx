@@ -1,6 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { mockUsers, mockLeads, mockDeals, mockTasks, mockCalls, mockVideoCalls, mockLists } from './mockData';
 import { leadsData, studentsData, generatedBusinessLeads, BusinessLead, generatedDeals, generatedQuotes, generatedPayments, Quote, QuoteLineItem, generatedApplications, Application, Student, StudentActivity } from '@/lib/data/mockData';
 import { Reminder } from '@/lib/types/reminder';
 import { usersData, CRMProperty, defaultPropertiesData } from '@/lib/data/systemData';
@@ -99,6 +101,13 @@ export interface UploadRecord {
   bulkUploadSource: string;
   createdOn: string;
   totalRecords: number;
+}
+
+export interface DoNotTrackRecord {
+  id: string;
+  number: string;
+  sentById: string;
+  createdAt: string;
 }
 
 export interface Distribution {
@@ -214,7 +223,28 @@ export interface LeadSourceItem { id: string; name: string; description: string;
 export interface CallOutcome { id: string; name: string; type: 'Positive' | 'Neutral' | 'Negative'; description: string; order: number; }
 export interface VisitOutcome { id: string; name: string; type: 'Positive' | 'Neutral' | 'Negative'; description: string; order: number; }
 export interface TicketStage { id: string; name: string; isResolved: boolean; isClosed: boolean; order: number; description?: string; }
-export interface TicketCategory { id: string; name: string; order: number; description?: string; }
+export interface TicketCategory {
+  id: string;
+  name: string;
+  description: string;
+  order: number;
+}
+
+export interface SupportTicket {
+  id: string;
+  title: string;
+  description: string;
+  status?: string;
+  priority?: string;
+  contactId?: string;
+  categoryId: string;
+  stageId: string;
+  assignedTo: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DocumentCategoryNode { id: string; name: string; subCategories: DocumentCategoryNode[]; order: number; }
 
 
@@ -414,6 +444,85 @@ const INITIAL_REMINDERS: Reminder[] = [
   }
 ];
 
+const INITIAL_DONOTTRACK_RECORDS: DoNotTrackRecord[] = [
+  { id: 'DNT-001', number: '+91 9876543210', sentById: 'USR-001', createdAt: '2026-08-15T10:00:00Z' },
+  { id: 'DNT-002', number: '+91 9876543211', sentById: 'USR-002', createdAt: '2026-08-16T11:30:00Z' },
+  { id: 'DNT-003', number: '+91 9876543212', sentById: 'USR-001', createdAt: '2026-08-17T14:45:00Z' },
+  { id: 'DNT-004', number: '+91 9876543213', sentById: 'USR-003', createdAt: '2026-08-18T09:15:00Z' },
+];
+
+const INITIAL_SUPPORT_TICKETS: SupportTicket[] = [
+  { id: 'TKT-001', title: 'Login Issue', description: 'User cannot login to portal.', categoryId: 'TC-1', stageId: 'TS-1', assignedTo: 'USR-001', createdBy: 'System', createdAt: '2026-08-20T10:00:00Z', updatedAt: '2026-08-20T10:00:00Z' },
+  { id: 'TKT-002', title: 'Payment Failed', description: 'Credit card charge rejected.', categoryId: 'TC-2', stageId: 'TS-2', assignedTo: 'USR-002', createdBy: 'System', createdAt: '2026-08-21T11:30:00Z', updatedAt: '2026-08-21T11:30:00Z' }
+];
+
+
+export interface QuotationDefaults {
+  isConfigured: boolean;
+  baseCurrency: string;
+  enabledCurrencies: string[];
+  quoteValidityDays: number;
+  quotePrefix: string;
+  quoteDigits: number;
+  roundAmounts: 'decimals' | 'whole';
+  defaultGst: number;
+  defaultTds: number;
+  attachPaymentLink: boolean;
+  bankName: string;
+  accountHolder: string;
+  accountNumber: string;
+  ifscCode: string;
+  accountType: 'Savings' | 'Current';
+  upiId: string;
+  showBankInPdf: boolean;
+  defaultTerms: string;
+  enableShippingCharges: boolean;
+  businessName: string;
+  businessGstin: string;
+  billingAddress: string;
+  shippingAddress: string;
+  showShippingInPdf: boolean;
+  signatoryName: string;
+  designation: string;
+  signatureImage: string | null;
+  showSignatureInPdf: boolean;
+  brandColor: string;
+  logo: string | null;
+}
+
+export const INITIAL_QUOTATION_DEFAULTS: QuotationDefaults = {
+  isConfigured: false,
+  baseCurrency: 'INR',
+  enabledCurrencies: ['INR'],
+  quoteValidityDays: 30,
+  quotePrefix: 'QTN-',
+  quoteDigits: 4,
+  roundAmounts: 'decimals',
+  defaultGst: 18,
+  defaultTds: 0,
+  attachPaymentLink: false,
+  bankName: '',
+  accountHolder: '',
+  accountNumber: '',
+  ifscCode: '',
+  accountType: 'Current',
+  upiId: '',
+  showBankInPdf: false,
+  defaultTerms: '',
+  enableShippingCharges: false,
+  businessName: '',
+  businessGstin: '',
+  billingAddress: '',
+  shippingAddress: '',
+  showShippingInPdf: false,
+  signatoryName: '',
+  designation: '',
+  signatureImage: null,
+  showSignatureInPdf: false,
+  brandColor: '#2563eb',
+  logo: null
+};
+
 interface CRMContextType {
   lists: ListSegment[];
   distributions: Distribution[];
@@ -438,6 +547,8 @@ interface CRMContextType {
   deleteVideoCall: (id: string) => void;
 
   demos: Demo[];
+  doNotTrackRecords: DoNotTrackRecord[];
+  removeDoNotTrackRecords: (ids: string[]) => void;
   
   leadLifecycleStages: LeadLifecycleStage[]; updateLeadLifecycleStages: (stages: LeadLifecycleStage[]) => void;
   prospectingCriteria: ProspectingCriteria; updateProspectingCriteria: (criteria: ProspectingCriteria) => void;
@@ -448,6 +559,10 @@ interface CRMContextType {
   visitOutcomes: VisitOutcome[]; updateVisitOutcomes: (outcomes: VisitOutcome[]) => void;
   ticketStages: TicketStage[]; updateTicketStages: (stages: TicketStage[]) => void;
   ticketCategories: TicketCategory[]; updateTicketCategories: (categories: TicketCategory[]) => void;
+  supportTickets: SupportTicket[]; 
+  addSupportTicket: (ticket: SupportTicket) => void;
+  updateSupportTicket: (ticket: SupportTicket) => void;
+  deleteSupportTicket: (id: string) => void;
   documentCategoriesTree: DocumentCategoryNode[]; updateDocumentCategoriesTree: (tree: DocumentCategoryNode[]) => void;
 
   
@@ -458,6 +573,8 @@ interface CRMContextType {
   dealStages: string[];
   updateDealStages: (stages: string[]) => void;
   quotes: Quote[];
+  quotationDefaults: QuotationDefaults;
+  updateQuotationDefaults: (defaults: QuotationDefaults) => void;
   payments: Payment[];
   tasks: Task[];
   systemUsers: User[];
@@ -465,6 +582,8 @@ interface CRMContextType {
   reports: Report[];
   reminders: Reminder[];
   addTask: (task: Omit<Task, 'id'>) => void;
+  updateTask: (taskId: string, task: Task) => void;
+  deleteTask: (taskId: string) => void;
   addUser: (user: Omit<User, 'id'>) => void;
   updateSystemUser: (user: User) => void;
 
@@ -524,10 +643,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [calls, setCalls] = useState<Call[]>([]);
+  const [calls, setCalls] = useState<any[]>([]);
   const [videoCalls, setVideoCalls] = useState<VideoCall[]>([]);
 
   const [demos, setDemos] = useState<Demo[]>([]);
+  const [doNotTrackRecords, setDoNotTrackRecords] = useState<DoNotTrackRecord[]>([]);
+
+  const { canViewUser } = useAuth();
   
   const [leadLifecycleStages, setLeadLifecycleStages] = useState<LeadLifecycleStage[]>([]);
   const [prospectingCriteria, setProspectingCriteria] = useState<ProspectingCriteria>({ maxFollowUps: 5, sequence: ['Call', 'Email'], intervalHours: 24, positiveAction: 'Create Deal', negativeAction: 'Close Lead', timeoutAction: 'Close Lead' });
@@ -538,6 +660,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [visitOutcomes, setVisitOutcomes] = useState<VisitOutcome[]>([]);
   const [ticketStages, setTicketStages] = useState<TicketStage[]>([]);
   const [ticketCategories, setTicketCategories] = useState<TicketCategory[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [documentCategoriesTree, setDocumentCategoriesTree] = useState<DocumentCategoryNode[]>([]);
 
   
@@ -548,6 +671,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deals, setDeals] = useState<Deal[]>([]);
   const [dealStages, setDealStages] = useState<string[]>(['Discovery', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost']);
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [quotationDefaults, setQuotationDefaults] = useState<QuotationDefaults>(INITIAL_QUOTATION_DEFAULTS);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -599,7 +723,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     { id: 'ROL-001', name: 'Super Admin', userCount: 1, status: 'Active', description: 'Complete system access', users: ['USR-005'], permissions: {} },
     { id: 'ROL-002', name: 'Admin', userCount: 5, status: 'Active', description: 'Broad operational access', users: ['USR-006', 'USR-005', 'USR-008', 'USR-004', 'USR-003'], permissions: {} },
     { id: 'ROL-003', name: 'Manager', userCount: 2, status: 'Active', description: 'Manage teams and operations', users: ['USR-002', 'USR-003'], permissions: {} },
-    { id: 'ROL-004', name: 'Sales Manager', userCount: 0, status: 'Active', description: 'Manage sales team and pipeline', users: [], permissions: {} },
     { id: 'ROL-005', name: 'Admission Counselor', userCount: 0, status: 'Active', description: 'Handle leads and admissions', users: [], permissions: {} },
     { id: 'ROL-006', name: 'Marketing', userCount: 0, status: 'Active', description: 'Manage campaigns', users: [], permissions: {} },
     { id: 'ROL-007', name: 'Member', userCount: 0, status: 'Active', description: 'Basic member access', users: [], permissions: {} },
@@ -642,16 +765,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const [systemUsers, setSystemUsers] = useState<User[]>([
-    { id: 'USR-001', name: 'Thanushree B R', phone: '9876543201', email: 'thanushree@empowers.edu', role: 'Admin', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-001' },
-    { id: 'USR-002', name: 'Pavan S H', phone: '9876543202', email: 'pavan@empowers.edu', role: 'Admin', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-11T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-002' },
-    { id: 'USR-003', name: 'Parikshit', phone: '9876543203', email: 'parikshit@empowers.edu', role: 'Admin', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-12T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-003' },
-    { id: 'USR-004', name: 'Padmesh', phone: '9876543204', email: 'padmesh@empowers.edu', role: 'Admin', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-13T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-004' },
-    { id: 'USR-005', name: 'Abhishek', phone: '9876543205', email: 'abhishek@empowers.edu', role: 'Super Admin', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-14T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-005' },
-    { id: 'USR-006', name: 'Yashwanth', phone: '9876543206', email: 'yashwanth@empowers.edu', role: 'Super Admin', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-15T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-006' },
-    { id: 'USR-007', name: 'Spoorthi', phone: '9876543207', email: 'spoorthi@empowers.edu', role: 'Admin', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-16T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-007' },
-    { id: 'USR-008', name: 'Sudarshana', phone: '9876543208', email: 'sudarshana@empowers.edu', role: 'HR Manager', department: 'Tech', status: 'Active', lastLogin: '2026-08-21T10:00:00Z', createdDate: '2026-01-17T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-008' },
-  ]);
+  const [systemUsers, setSystemUsers] = useState<User[]>(mockUsers as any);
 
   const updateSystemUser = (updatedUser: User) => {
     setSystemUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
@@ -662,6 +776,17 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Load from local storage
   useEffect(() => {
+    const isSeeded = localStorage.getItem('crm_seeded_abhay_v1') === 'true';
+    if (!isSeeded) {
+      localStorage.removeItem('crm_leads');
+      localStorage.removeItem('crm_deals');
+      localStorage.removeItem('crm_tasks');
+      localStorage.removeItem('crm_calls');
+      localStorage.removeItem('crm_videoCalls');
+      localStorage.removeItem('crm_lists');
+      localStorage.setItem('crm_seeded_abhay_v1', 'true');
+    }
+
     const loadData = (key: string, defaultData: any) => {
       const saved = localStorage.getItem(`crm_${key}`);
       const loadedRoles = localStorage.getItem('crm_roles');
@@ -711,12 +836,12 @@ const initialDistributions: Distribution[] = [
   { id: 'D-002', name: 'New Inquiry Distribution', summary: 'Distribute regional inquiries.', entityType: 'Lead', type: 'Weighted', createdOn: '2024-04-15', totalLeads: 320, status: 'Active' }
 ];
 
-    setLists(loadData('lists', initialLists));
+    setLists(loadData('lists', mockLists));
     setDistributions(loadData('distributions', initialDistributions));
     setUploads(loadData('uploads', []));
     
     // Auto-migrate cached leads to include the new mockData follow-ups if missing
-    let loadedLeads = loadData('leads', leadsData);
+    let loadedLeads = loadData('leads', mockLeads);
     if (!loadedLeads.some((l: any) => !!l.nextFollowUp)) {
       loadedLeads = leadsData;
       if (typeof window !== 'undefined') {
@@ -731,11 +856,17 @@ const initialDistributions: Distribution[] = [
     setStudents(loadData('students', studentsData));
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVideoCalls(loadData('videoCalls', []));
+    setVideoCalls(loadData('videoCalls', mockVideoCalls));
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCalls(loadData('calls', []));
+    setTicketCategories(loadData('ticketCategoriesV2', []));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSupportTickets(loadData('supportTickets', INITIAL_SUPPORT_TICKETS));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCalls(loadData('calls', mockCalls));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDemos(loadData('demos', []));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDoNotTrackRecords(loadData('doNotTrackRecords', INITIAL_DONOTTRACK_RECORDS));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     
     setLeadLifecycleStages(loadData('leadLifecycleStages', [
@@ -762,15 +893,7 @@ const initialDistributions: Distribution[] = [
     setVisitOutcomes(loadData('visitOutcomes', [
       { id: '1', name: 'Walk-in Done', type: 'Positive', description: 'Client visited office', order: 1 }
     ]));
-    setTicketStages(loadData('ticketStages', [
-      { id: '1', name: 'Open', isResolved: false, isClosed: false, order: 1 },
-      { id: '2', name: 'In Progress', isResolved: false, isClosed: false, order: 2 },
-      { id: '3', name: 'Resolved', isResolved: true, isClosed: false, order: 3 },
-      { id: '4', name: 'Closed', isResolved: true, isClosed: true, order: 4 }
-    ]));
-    setTicketCategories(loadData('ticketCategories', [
-      { id: '1', name: 'Billing', order: 1 }, { id: '2', name: 'Technical Support', order: 2 }
-    ]));
+    setTicketStages(loadData('ticketStagesV2', []));
     setDocumentCategoriesTree(loadData('documentCategoriesTree', [
       { id: '1', name: 'Documents', order: 1, subCategories: [
         { id: '1-1', name: 'Contracts', order: 1, subCategories: [] },
@@ -782,14 +905,20 @@ const initialDistributions: Distribution[] = [
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setBusinessLeads(loadData('businessLeads', generatedBusinessLeads));
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDeals(loadData('deals', generatedDeals));
+    setDeals(loadData('deals', mockDeals));
     setDealStages(loadData('dealStages', ['Session Scheduled', 'Session Done', 'Partial Payment Done', 'Learner Onboarded', 'Deal Won', 'Deal Lost']));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuotes(loadData('quotes', generatedQuotes));
+    const storedDefaults = localStorage.getItem('crm_quotation_defaults');
+    if (storedDefaults) {
+      try {
+        setQuotationDefaults(JSON.parse(storedDefaults));
+      } catch (e) {}
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPayments(loadData('payments', NEW_DEMO_PAYMENTS));
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTasks(loadData('tasks', []));
+    setTasks(loadData('tasks', mockTasks));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUsers(loadData('users', usersData));
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -817,6 +946,7 @@ const initialDistributions: Distribution[] = [
       localStorage.setItem('crm_businessLeads', JSON.stringify(businessLeads));
       localStorage.setItem('crm_deals', JSON.stringify(deals));
       localStorage.setItem('crm_quotes', JSON.stringify(quotes));
+      localStorage.setItem('crm_quotation_defaults', JSON.stringify(quotationDefaults));
       localStorage.setItem('crm_payments', JSON.stringify(payments));
       localStorage.setItem('crm_tasks', JSON.stringify(tasks));
       localStorage.setItem('crm_users', JSON.stringify(users));
@@ -824,11 +954,13 @@ const initialDistributions: Distribution[] = [
       localStorage.setItem('crm_reminders', JSON.stringify(reminders));
     }
   }, [lists, distributions, uploads, leads, applications, students, videoCalls, calls, demos, documents, businessLeads, 
-      deals, properties, quotes, payments, tasks, users, systemUsers, reports, reminders, isLoaded]);
+      deals, properties, quotes, quotationDefaults, payments, tasks, users, systemUsers, reports, reminders, isLoaded]);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const addTask = (task: Omit<Task, 'id'>) => setTasks(prev => [{ ...task, id: generateId() } as Task, ...prev]);
+  const updateTask = (taskId: string, task: Task) => setTasks(prev => prev.map(t => t.id === taskId ? task : t));
+  const deleteTask = (taskId: string) => setTasks(prev => prev.filter(t => t.id !== taskId));
   const addUser = (user: Omit<User, 'id'>) => setUsers(prev => [{ ...user, id: generateId() } as User, ...prev]);
   const addReport = (report: Omit<Report, 'id'>) => setReports(prev => [{ ...report, id: generateId() } as Report, ...prev]);
 
@@ -886,8 +1018,22 @@ const initialDistributions: Distribution[] = [
   const updateLeadSourceList = (d: LeadSourceItem[]) => { setLeadSourceList(d); if (typeof window !== 'undefined') localStorage.setItem('crm_leadSourceList', JSON.stringify(d)); };
   const updateCallOutcomes = (d: CallOutcome[]) => { setCallOutcomes(d); if (typeof window !== 'undefined') localStorage.setItem('crm_callOutcomes', JSON.stringify(d)); };
   const updateVisitOutcomes = (d: VisitOutcome[]) => { setVisitOutcomes(d); if (typeof window !== 'undefined') localStorage.setItem('crm_visitOutcomes', JSON.stringify(d)); };
-  const updateTicketStages = (d: TicketStage[]) => { setTicketStages(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketStages', JSON.stringify(d)); };
-  const updateTicketCategories = (d: TicketCategory[]) => { setTicketCategories(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketCategories', JSON.stringify(d)); };
+  const updateTicketStages = (d: TicketStage[]) => { setTicketStages(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketStagesV2', JSON.stringify(d)); };
+  const updateTicketCategories = (d: TicketCategory[]) => { setTicketCategories(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketCategoriesV2', JSON.stringify(d)); };
+
+  const addSupportTicket = (t: SupportTicket) => {
+    setSupportTickets(prev => [...prev, t]);
+    if (typeof window !== 'undefined') localStorage.setItem('crm_supportTickets', JSON.stringify([...supportTickets, t]));
+  };
+  const updateSupportTicket = (t: SupportTicket) => {
+    setSupportTickets(prev => prev.map(x => x.id === t.id ? t : x));
+    if (typeof window !== 'undefined') localStorage.setItem('crm_supportTickets', JSON.stringify(supportTickets.map(x => x.id === t.id ? t : x)));
+  };
+  const deleteSupportTicket = (id: string) => {
+    setSupportTickets(prev => prev.filter(x => x.id !== id));
+    if (typeof window !== 'undefined') localStorage.setItem('crm_supportTickets', JSON.stringify(supportTickets.filter(x => x.id !== id)));
+  };
+
   const updateDocumentCategoriesTree = (d: DocumentCategoryNode[]) => { setDocumentCategoriesTree(d); if (typeof window !== 'undefined') localStorage.setItem('crm_documentCategoriesTree', JSON.stringify(d)); };
 
   const uploadDocument = (doc: Omit<Document, 'id' | 'name' | 'date' | 'uploadedBy' | 'status'>) => {
@@ -940,6 +1086,7 @@ const initialDistributions: Distribution[] = [
   const addQuote = (quote: Omit<Quote, 'id'>) => setQuotes(prev => [{ ...quote, id: `QT-${generateId().toUpperCase()}` } as Quote, ...prev]);
   const updateQuote = (quote: Quote) => setQuotes(prev => prev.map(q => q.id === quote.id ? quote : q));
   const deleteQuote = (id: string) => setQuotes(prev => prev.filter(q => q.id !== id));
+  const updateQuotationDefaults = (defaults: QuotationDefaults) => setQuotationDefaults(defaults);
 
   const addPayment = (payment: Omit<Payment, 'id'>) => setPayments(prev => [{ ...payment, id: `PAY-${generateId().toUpperCase()}` } as Payment, ...prev]);
   const updatePayment = (payment: Payment) => setPayments(prev => prev.map(p => p.id === payment.id ? payment : p));
@@ -992,6 +1139,14 @@ const initialDistributions: Distribution[] = [
     }));
   };
 
+  const removeDoNotTrackRecords = (ids: string[]) => {
+    const updated = doNotTrackRecords.filter(r => !ids.includes(r.id));
+    setDoNotTrackRecords(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('crm_doNotTrackRecords', JSON.stringify(updated));
+    }
+  };
+
   const snoozeReminder = (id: string, newDueDate: string, newDueTime: string) => {
     setReminders(prev => prev.map(r => {
       if (r.id === id) {
@@ -1012,9 +1167,14 @@ const initialDistributions: Distribution[] = [
   const updateUser = (updatedUser: User) => {
     setUsers(users.map(u => (u.id === updatedUser.id ? updatedUser : u)));
   };
+    const scopedLeads = useMemo(() => leads.filter(l => canViewUser(l.counselor) || canViewUser(l.owner)), [leads, canViewUser]);
+  const scopedTasks = useMemo(() => tasks.filter(t => canViewUser(t.assignedTo) || canViewUser(t.owner)), [tasks, canViewUser]);
+  const scopedCalls = useMemo(() => calls.filter(c => canViewUser(c.caller) || canViewUser(c.handledBy) || canViewUser(c.counselor)), [calls, canViewUser]);
+  const scopedDeals = useMemo(() => deals.filter(d => canViewUser(d.owner)), [deals, canViewUser]);
+
   return (
     <CRMContext.Provider value={{
-      videoCalls, lists, distributions, uploads, leads, applications, students, calls, demos, documents, businessLeads,
+      videoCalls, lists, distributions, uploads, leads: scopedLeads, applications, students, calls: scopedCalls, demos, documents, businessLeads,
       
       
       leadLifecycleStages, updateLeadLifecycleStages,
@@ -1026,17 +1186,18 @@ const initialDistributions: Distribution[] = [
       visitOutcomes, updateVisitOutcomes,
       ticketStages, updateTicketStages,
       ticketCategories, updateTicketCategories,
+      supportTickets, addSupportTicket, updateSupportTicket, deleteSupportTicket,
       documentCategoriesTree, updateDocumentCategoriesTree,
-      deals,
+      deals: scopedDeals,
       dealStages,
       updateDealStages,
-      properties, quotes, payments, tasks, users, systemUsers, reports, reminders,
+      properties, quotes, quotationDefaults, payments, tasks: scopedTasks, users, systemUsers, reports, reminders, doNotTrackRecords,
       addList, updateList, deleteList, addDistribution, updateDistribution, deleteDistribution,
       addUpload, updateUpload, deleteUpload, processUpload,
       addVideoCall, updateVideoCall, deleteVideoCall, addLead, updateLead, deleteLead, addApplication, updateApplication, addStudent, updateStudent, logCall, scheduleDemo, uploadDocument, addBusinessLead, updateBusinessLead, deleteBusinessLeads, linkLeadsToBusiness,
-      addDeal, updateDeal, addQuote, updateQuote, deleteQuote, addPayment, updatePayment, deletePayment, addTask, addUser, addReport,
+      addDeal, updateDeal, addQuote, updateQuote, deleteQuote, updateQuotationDefaults, addPayment, updatePayment, deletePayment, addTask, updateTask, deleteTask, addUser, addReport,
       addReminder, updateReminder, deleteReminder, toggleCompleteReminder, snoozeReminder, updateUser, updateSystemUser,
-      addProperty, updateProperty, deleteProperty, reorderProperties
+      addProperty, updateProperty, deleteProperty, reorderProperties, removeDoNotTrackRecords
     }}>
       {children}
     </CRMContext.Provider>

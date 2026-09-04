@@ -1,17 +1,19 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function Breadcrumbs() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   
   if (pathname === '/login' || pathname === '/signup' || pathname === '/') return null;
 
   const paths = pathname.split('/').filter(p => p);
+  const tab = searchParams.get('tab');
 
   return (
     <motion.div 
@@ -32,7 +34,8 @@ export function Breadcrumbs() {
       
       {paths.map((path, index) => {
         const href = `/${paths.slice(0, index + 1).join('/')}`;
-        const isLast = index === paths.length - 1;
+        // If there's a tab, the main path shouldn't be the last item structurally (so it should be a link)
+        const isLast = (index === paths.length - 1) && !tab;
         let formattedPath = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
         if (pathname === '/activity' && path === 'activity') formattedPath = 'Active Table View';
 
@@ -51,6 +54,15 @@ export function Breadcrumbs() {
           </React.Fragment>
         );
       })}
+
+      {tab && (
+        <>
+          <ChevronRight size={14} style={{ opacity: 0.5 }} />
+          <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </span>
+        </>
+      )}
     </motion.div>
   );
 }

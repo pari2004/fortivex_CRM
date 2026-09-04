@@ -9,7 +9,7 @@ export function EditLeadModal({ lead, onClose, onSave }: any) {
   const handleChange = (e: any) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: 'var(--bg-primary)', padding: '24px', borderRadius: '16px', width: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
         <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px' }}>Edit Lead</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>

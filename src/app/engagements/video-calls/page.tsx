@@ -15,7 +15,7 @@ export default function VideoCallsPage() {
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   const [selectedLeadForWorkspace, setSelectedLeadForWorkspace] = useState<any>(null);
   
-  const CURRENT_USER = 'Pavan S H';
+  const CURRENT_USER = 'Abhay';
   
   const [activeFilter, setActiveFilter] = useState<'All' | 'My'>('All');
   const [activeStatusTab, setActiveStatusTab] = useState('All');

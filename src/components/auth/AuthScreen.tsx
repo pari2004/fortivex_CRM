@@ -7,22 +7,9 @@ import { useAuth, User } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import styles from './AuthScreen.module.css';
 import { Phone, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { getDynamicAccounts, getDynamicPasswords } from '@/lib/data/mockUsers';
 
-const DEMO_ACCOUNTS: User[] = [
-  { id: '1', name: 'Admin',         mobile: '9876543210', role: 'admin'      },
-  { id: '2', name: 'Counselor',     mobile: '9876543211', role: 'counselor'  },
-  { id: '3', name: 'Sales Manager', mobile: '9876543212', role: 'manager'    },
-  { id: '4', name: 'Marketing',     mobile: '9876543213', role: 'marketing'  },
-  { id: '5', name: 'Member',        mobile: '9876543214', role: 'member'     },
-];
 
-const DEMO_PASSWORDS: Record<string, string> = {
-  admin:      'Admin@123',
-  counselor:  'Counselor@123',
-  manager:    'Sales@123',
-  marketing:  'Marketing@123',
-  member:     'Member@123',
-};
 
 function LoadingScreen({ companyLogo }: { companyLogo: string | null }) {
   return (
@@ -57,12 +44,12 @@ export default function AuthScreen({ initialMode = 'login' }: { initialMode?: 'l
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    const account = DEMO_ACCOUNTS.find((a) => a.mobile === loginMobile.trim());
+    const account = getDynamicAccounts().find((a) => a.mobile === loginMobile.trim());
     if (!account) { 
       setLoginError('No account found with this mobile number.'); 
       return; 
     }
-    if (loginPassword !== DEMO_PASSWORDS[account.role]) { 
+    if (loginPassword !== (getDynamicPasswords()[account.name.toLowerCase()] || getDynamicPasswords()[account.role])) { 
       setLoginError('Incorrect password. Use the demo credentials below.'); 
       return; 
     }
@@ -73,7 +60,7 @@ export default function AuthScreen({ initialMode = 'login' }: { initialMode?: 'l
 
   const handleQuickLogin = (acc: User) => {
     setLoginMobile(acc.mobile);
-    setLoginPassword(DEMO_PASSWORDS[acc.role]);
+    setLoginPassword(getDynamicPasswords()[acc.name.toLowerCase()] || getDynamicPasswords()[acc.role]);
     setLoginError('');
   };
 
@@ -146,7 +133,7 @@ export default function AuthScreen({ initialMode = 'login' }: { initialMode?: 'l
 
           <div className={styles.quickLoginCard} style={{ maxHeight: '200px', overflowY: 'auto' }}>
             <div className={styles.quickLoginTitle}>Quick Login — click to fill</div>
-            {DEMO_ACCOUNTS.map((acc) => (
+            {getDynamicAccounts().map((acc) => (
               <div 
                 key={acc.id} 
                 className={styles.quickLoginRow}

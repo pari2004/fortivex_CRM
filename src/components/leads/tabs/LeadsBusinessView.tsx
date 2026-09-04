@@ -9,6 +9,7 @@ import { useCRM } from '@/contexts/CRMContext';
 import { CustomizeBusinessColumnsModal } from '../modals/CustomizeBusinessColumnsModal';
 import { LinkLeadsModal } from '../modals/LinkLeadsModal';
 import { AddNewLeadModal } from '../AddNewLeadModal';
+import { EditBusinessModal } from '../modals/EditBusinessModal';
 import { BusinessLead } from '@/lib/data/mockData';
 
 // --- Toast Utility ---
@@ -59,7 +60,7 @@ const ALL_BUSINESS_COLUMNS = ['Business Name', 'Address', 'Website', 'Industry',
 const DEFAULT_BUSINESS_COLUMNS = ['Business Name', 'Address', 'Website', 'Industry', 'Priority', 'Added By', 'Created On'];
 
 export function LeadsBusinessView() {
-  const { businessLeads, addBusinessLead, updateBusinessLead, deleteBusinessLeads, linkLeadsToBusiness } = useCRM();
+  const { leads, businessLeads, addBusinessLead, updateBusinessLead, deleteBusinessLeads, linkLeadsToBusiness } = useCRM();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -69,6 +70,7 @@ export function LeadsBusinessView() {
   // Modals
   const [activeRowMenu, setActiveRowMenu] = useState<string | null>(null);
   const [detailsRecord, setDetailsRecord] = useState<any>(null);
+  const [viewLeadsRecord, setViewLeadsRecord] = useState<any>(null);
   const [editRecord, setEditRecord] = useState<any>(null);
   const [addRecordOpen, setAddRecordOpen] = useState(false);
   const [newBusiness, setNewBusiness] = useState<Partial<BusinessLead>>({});
@@ -217,48 +219,50 @@ export function LeadsBusinessView() {
   // Render Cell based on column
   const renderCell = (col: string, row: BusinessLead) => {
     switch (col) {
-      case 'Business Name': return <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{row.name}</div>;
-      case 'Address': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.address || '—'}</div>;
-      case 'Website': return <a href={`https://${row.website}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.85rem', color: 'var(--primary-color)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>{row.website || '—'}</a>;
-      case 'Industry': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.industry || '—'}</div>;
-      case 'Priority': return <div><span className={`px-2 py-1 text-xs font-bold rounded-full border ${getPriorityColor(row.priority || '')}`}>{row.priority || '—'}</span></div>;
-      case 'Added By': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.addedBy || '—'}</div>;
-      case 'Created On': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.createdOn || '—'}</div>;
-      case 'Mobile': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.mobile || '—'}</div>;
-      case 'Email': return <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.email || '—'}</div>;
-      default: return <span>—</span>;
+      case 'Business Name': return <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.95rem' }}>{row.name}</div>;
+      case 'Address': return <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{row.address || '—'}</div>;
+      case 'Website': return <a href={`https://${row.website}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }} className="hover-underline" onClick={e => e.stopPropagation()}>{row.website || '—'}</a>;
+      case 'Industry': return row.industry ? <span style={{ padding: '4px 10px', background: '#eff6ff', color: '#3b82f6', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, border: '1px solid #bfdbfe' }}>{row.industry}</span> : <span style={{color: '#94a3b8'}}>—</span>;
+      case 'Priority': return <div><span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} className={getPriorityColor(row.priority || '')}>{row.priority || '—'}</span></div>;
+      case 'Added By': return <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>{row.addedBy || '—'}</div>;
+      case 'Created On': return <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>{row.createdOn || '—'}</div>;
+      case 'Mobile': return <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{row.mobile || '—'}</div>;
+      case 'Email': return <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{row.email || '—'}</div>;
+      default: return <span style={{color: '#94a3b8'}}>—</span>;
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px', position: 'relative' }}>
       
-      {/* Top Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', background: 'var(--bg-card)', padding: '16px 24px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', background: 'white', padding: '12px 20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ position: 'relative' }}>
-            <Search size={18} color="var(--text-tertiary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+            <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input 
               type="text" 
               placeholder="Search business..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              style={{ padding: '8px 16px 8px 36px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-primary)', width: '250px', fontSize: '0.9rem' }}
+              style={{ padding: '8px 16px 8px 36px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc', color: '#1e293b', width: '250px', fontSize: '0.9rem', transition: 'border-color 0.2s, background 0.2s' }}
+              onFocus={(e) => { e.target.style.borderColor = '#3b82f6'; e.target.style.background = 'white'; }}
+              onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; e.target.style.background = '#f8fafc'; }}
             />
           </div>
           
           <button 
             onClick={() => setCustomizeColumnsOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }} className="hover-bg-secondary">
-            <Columns size={16} /> Customize Table Columns
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#475569', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500, transition: 'all 0.2s' }} className="hover-bg-secondary">
+            <Columns size={16} /> Customize Columns
           </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }} className="hover-bg-secondary">
+          <button onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#475569', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500, transition: 'all 0.2s' }} className="hover-bg-secondary">
             <Download size={16} /> Export
           </button>
-          <button onClick={() => setAddRecordOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: 'white', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }}>
+          <button onClick={() => setAddRecordOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(59,130,246,0.2)' }} onMouseOver={e => e.currentTarget.style.background = '#2563eb'} onMouseOut={e => e.currentTarget.style.background = '#3b82f6'}>
             <Plus size={16} /> Add New Business
           </button>
         </div>
@@ -266,89 +270,94 @@ export function LeadsBusinessView() {
 
       {/* Selected Business Toolbar */}
       {selectedIds.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--bg-card)', padding: '12px 24px', borderRadius: '12px', border: '1px solid var(--primary-color)', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.1)', animation: 'fadeIn 0.2s ease-out' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: 'var(--primary-color)', borderRight: '1px solid var(--glass-border)', paddingRight: '16px' }}>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgb(239, 246, 255)', padding: '10px 20px', borderRadius: '12px', border: '1px solid rgb(191, 219, 254)', boxShadow: 'rgba(59, 130, 246, 0.05) 0px 4px 15px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: 'rgb(59, 130, 246)', borderRight: '1px solid rgb(191, 219, 254)', paddingRight: '16px' }}>
             <CheckSquare size={18} /> {selectedIds.length} Selected
           </div>
-          <button onClick={() => setSelectedIds([])} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }} className="hover-text-primary">
+          <button onClick={() => setSelectedIds([])} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: 'rgb(100, 116, 139)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, padding: '4px 8px', borderRadius: '6px' }} className="hover-bg-secondary">
             <X size={14} /> Clear Selection
           </button>
           
-          <div style={{ flex: 1 }} />
+          <div style={{ flex: 1, minWidth: '20px' }} />
 
-          <button onClick={() => setDetailsRecord(businessLeads.find(b => b.id === selectedIds[0]))} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Eye size={16} /> View Associated Leads
+          {selectedIds.length === 1 && (
+            <>
+              <button onClick={() => setViewLeadsRecord(businessLeads.find(b => b.id === selectedIds[0]))} style={{ background: 'white', border: '1px solid rgb(226, 232, 240)', color: 'rgb(51, 65, 85)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px' }} className="hover-bg-secondary">
+                <Eye size={14} /> View Associated Leads
+              </button>
+              <button onClick={() => setLinkLeadsBusinessId(selectedIds[0])} style={{ background: 'white', border: '1px solid rgb(226, 232, 240)', color: 'rgb(51, 65, 85)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px' }} className="hover-bg-secondary">
+                <UserPlus size={14} /> Link Leads With Business
+              </button>
+              <button onClick={() => setAddNewLeadBusinessId(selectedIds[0])} style={{ background: 'white', border: '1px solid rgb(226, 232, 240)', color: 'rgb(51, 65, 85)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px' }} className="hover-bg-secondary">
+                <Plus size={14} /> Add New Lead
+              </button>
+              <button onClick={() => setEditRecord(businessLeads.find(b => b.id === selectedIds[0]))} style={{ background: 'white', border: '1px solid rgb(226, 232, 240)', color: 'rgb(51, 65, 85)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px' }} className="hover-bg-secondary">
+                <Edit2 size={14} /> Edit
+              </button>
+            </>
+          )}
+          
+          <button onClick={handleDeleteSelected} style={{ background: 'white', border: '1px solid rgb(254, 226, 226)', color: 'rgb(239, 68, 68)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px' }} className="hover-bg-red">
+            <Trash2 size={14} /> Delete {selectedIds.length} Business{selectedIds.length > 1 ? 'es' : ''}
           </button>
-          <button onClick={() => setLinkLeadsBusinessId(selectedIds[0])} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <UserPlus size={16} /> Link Leads With Business
-          </button>
-          <button onClick={() => setAddNewLeadBusinessId(selectedIds[0])} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Plus size={16} /> Add New Lead
-          </button>
-          <button onClick={() => setEditRecord(businessLeads.find(b => b.id === selectedIds[0]))} disabled={selectedIds.length !== 1} style={{ background: 'transparent', border: 'none', color: selectedIds.length === 1 ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: selectedIds.length === 1 ? 'pointer' : 'not-allowed', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Edit2 size={16} /> Edit Business
-          </button>
-          <button onClick={handleDeleteSelected} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Trash2 size={16} /> Delete {selectedIds.length} Business{selectedIds.length > 1 ? 'es' : ''}
-          </button>
-        </div>
+        </motion.div>
       )}
 
       {/* Main Table */}
-      <div style={{ flex: 1, background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
-            <thead style={{ background: 'var(--bg-secondary)', position: 'sticky', top: 0, zIndex: 10 }}>
+            <thead style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
               <tr>
-                <th style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-tertiary)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', width: '60px' }}>
-                  <div onClick={toggleSelectAll} style={{ cursor: 'pointer', color: selectedIds.length > 0 ? 'var(--primary-color)' : 'var(--text-tertiary)' }}>
+                <th style={{ padding: '14px 20px', borderBottom: '2px solid #e2e8f0', borderRight: '1px solid #e2e8f0', color: '#334155', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', width: '60px' }}>
+                  <div onClick={toggleSelectAll} style={{ cursor: 'pointer', color: selectedIds.length > 0 ? '#3b82f6' : '#94a3b8' }}>
                     {selectedIds.length > 0 && selectedIds.length === currentData.length ? <CheckSquare size={18} /> : <Square size={18} />}
                   </div>
                 </th>
                 {visibleColumns.map(col => (
-                  <th key={col} style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-tertiary)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                  <th key={col} style={{ padding: '14px 20px', borderBottom: '2px solid #e2e8f0', borderRight: '1px solid #e2e8f0', color: '#334155', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
                     {col}
                   </th>
                 ))}
-                <th style={{ padding: '16px 24px', borderBottom: '1px solid var(--glass-border)', width: '60px', position: 'sticky', right: 0, background: 'var(--bg-secondary)', zIndex: 11 }}></th>
+                <th style={{ padding: '14px 20px', borderBottom: '2px solid #e2e8f0', width: '60px', position: 'sticky', right: 0, background: '#f8fafc', zIndex: 11 }}></th>
               </tr>
             </thead>
             <tbody>
               {currentData.map((row) => (
-                <tr key={row.id} style={{ borderBottom: '1px solid var(--glass-border)', background: selectedIds.includes(row.id) ? 'rgba(59, 130, 246, 0.02)' : 'var(--bg-primary)', transition: 'background 0.2s' }} className="hover-bg-secondary">
-                  <td style={{ padding: '16px 24px' }}>
-                    <div onClick={() => toggleSelect(row.id)} style={{ cursor: 'pointer', color: selectedIds.includes(row.id) ? 'var(--primary-color)' : 'var(--text-tertiary)' }}>
+                <tr key={row.id} style={{ borderBottom: '1px solid #e2e8f0', background: selectedIds.includes(row.id) ? '#f8fafc' : 'white', transition: 'background 0.2s' }} className="hover-bg-secondary">
+                  <td style={{ padding: '16px 20px' }}>
+                    <div onClick={() => toggleSelect(row.id)} style={{ cursor: 'pointer', color: selectedIds.includes(row.id) ? '#3b82f6' : '#94a3b8' }}>
                       {selectedIds.includes(row.id) ? <CheckSquare size={18} /> : <Square size={18} />}
                     </div>
                   </td>
                   {visibleColumns.map(col => (
-                    <td key={`${row.id}-${col}`} style={{ padding: '16px 24px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    <td key={`${row.id}-${col}`} style={{ padding: '16px 20px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                       {renderCell(col, row)}
                     </td>
                   ))}
-                  <td style={{ padding: '16px 24px', position: 'sticky', right: 0, background: selectedIds.includes(row.id) ? 'var(--bg-secondary)' : 'var(--bg-primary)', borderLeft: '1px solid var(--glass-border)' }}>
+                  <td style={{ padding: '16px 20px', position: 'sticky', right: 0, background: selectedIds.includes(row.id) ? '#f8fafc' : 'white', borderLeft: '1px solid #e2e8f0' }}>
                     <div style={{ position: 'relative' }}>
-                      <button onClick={(e) => { e.stopPropagation(); setActiveRowMenu(activeRowMenu === row.id ? null : row.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} className="hover-bg-secondary">
-                        <MoreVertical size={18} />
+                      <button onClick={(e) => { e.stopPropagation(); setActiveRowMenu(activeRowMenu === row.id ? null : row.id); }} style={{ background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }} className="hover-bg-secondary">
+                        <MoreVertical size={16} />
                       </button>
                       
                       <AnimatePresence>
                         {activeRowMenu === row.id && (
-                          <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.15 }} style={{ position: 'absolute', right: '100%', top: '0', marginRight: '8px', width: '220px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden' }}>
+                          <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.15 }} style={{ position: 'absolute', right: '100%', top: '0', marginRight: '8px', width: '220px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden' }}>
                             <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                              <button onClick={() => { setDetailsRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Eye size={16} color="var(--text-tertiary)" /> View Details</button>
-                              <button onClick={() => { setDetailsRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><UserPlus size={16} color="var(--text-tertiary)" /> View Associated Leads</button>
-                              <button onClick={() => { setEditRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Edit2 size={16} color="var(--text-tertiary)" /> Edit Business</button>
-                              <button onClick={() => { setLinkLeadsBusinessId(row.id); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><UserPlus size={16} color="var(--text-tertiary)" /> Link Leads</button>
-                              <button onClick={() => { setAddNewLeadBusinessId(row.id); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Plus size={16} color="var(--text-tertiary)" /> Add New Lead</button>
-                              <button onClick={() => { setNoteRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><MessageCircle size={16} color="var(--text-tertiary)" /> Add Note</button>
+                              <button onClick={() => { setDetailsRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Eye size={16} color="#64748b" /> View Details</button>
+                              <button onClick={() => { setViewLeadsRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><UserPlus size={16} color="#64748b" /> View Associated Leads</button>
+                              <button onClick={() => { setEditRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Edit2 size={16} color="#64748b" /> Edit Business</button>
+                              <button onClick={() => { setLinkLeadsBusinessId(row.id); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><UserPlus size={16} color="#64748b" /> Link Leads</button>
+                              <button onClick={() => { setAddNewLeadBusinessId(row.id); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Plus size={16} color="#64748b" /> Add New Lead</button>
+                              <button onClick={() => { setNoteRecord(row); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><MessageCircle size={16} color="#64748b" /> Add Note</button>
                               
-                              <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
+                              <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
                               
-                              <button onClick={() => { setSelectedIds([row.id]); setTimeout(handleExport, 100); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Download size={16} color="var(--text-tertiary)" /> Export Business</button>
-                              <button onClick={() => { showToast('Business refreshed'); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><RefreshCw size={16} color="var(--text-tertiary)" /> Refresh</button>
+                              <button onClick={() => { setSelectedIds([row.id]); setTimeout(handleExport, 100); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Download size={16} color="#64748b" /> Export Business</button>
+                              <button onClick={() => { showToast('Business refreshed'); setActiveRowMenu(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#1e293b', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><RefreshCw size={16} color="#64748b" /> Refresh</button>
                               
-                              <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
+                              <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
                               
                               <button onClick={() => { 
                                 if (window.confirm(`Are you sure you want to delete ${row.name}?`)) {
@@ -356,7 +365,7 @@ export function LeadsBusinessView() {
                                   showToast('Business deleted');
                                 }
                                 setActiveRowMenu(null); 
-                              }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#ef4444', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-secondary"><Trash2 size={16} /> Delete Business</button>
+                              }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#ef4444', fontSize: '0.85rem', fontWeight: 500 }} className="hover-bg-red"><Trash2 size={16} /> Delete Business</button>
                             </div>
                           </motion.div>
                         )}
@@ -367,7 +376,7 @@ export function LeadsBusinessView() {
               ))}
               {currentData.length === 0 && (
                 <tr>
-                  <td colSpan={visibleColumns.length + 2} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No business records found.</td>
+                  <td colSpan={visibleColumns.length + 2} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No business records found.</td>
                 </tr>
               )}
             </tbody>
@@ -375,21 +384,21 @@ export function LeadsBusinessView() {
         </div>
 
         {/* Pagination */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)' }}>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+          <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
             Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <ChevronLeft size={16} /> Prev
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', color: currentPage === 1 ? '#cbd5e1' : '#475569', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', fontWeight: 500 }} className={currentPage === 1 ? "" : "hover-bg-secondary"}>
+              <ChevronLeft size={14} /> Prev
             </button>
             {Array.from({ length: totalPages }, (_, i) => (
-              <button key={i + 1} onClick={() => setCurrentPage(i + 1)} style={{ width: '32px', height: '32px', border: '1px solid var(--border-color)', borderRadius: '6px', background: currentPage === i + 1 ? 'var(--primary-color)' : 'var(--bg-primary)', color: currentPage === i + 1 ? 'white' : 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>
+              <button key={i + 1} onClick={() => setCurrentPage(i + 1)} style={{ width: '32px', height: '32px', border: currentPage === i + 1 ? '1px solid #3b82f6' : '1px solid #e2e8f0', borderRadius: '8px', background: currentPage === i + 1 ? '#eff6ff' : 'white', color: currentPage === i + 1 ? '#3b82f6' : '#475569', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }} className={currentPage === i + 1 ? "" : "hover-bg-secondary"}>
                 {i + 1}
               </button>
             ))}
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} style={{ padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: currentPage === totalPages || totalPages === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Next <ChevronRight size={16} />
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', color: currentPage === totalPages || totalPages === 0 ? '#cbd5e1' : '#475569', cursor: currentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', fontWeight: 500 }} className={currentPage === totalPages || totalPages === 0 ? "" : "hover-bg-secondary"}>
+              Next <ChevronRight size={14} />
             </button>
           </div>
         </div>
@@ -408,7 +417,7 @@ export function LeadsBusinessView() {
         
         {addNewLeadBusinessId && (
           <AddNewLeadModal
-            key="add-new-lead-modal"
+            isQuickPhoneAdd={true}
             onClose={() => setAddNewLeadBusinessId(null)}
             onSuccess={(leadData) => {
               if (leadData?.id) {
@@ -428,6 +437,34 @@ export function LeadsBusinessView() {
         )}
 
         {/* Existing Modals Re-wired */}
+        {viewLeadsRecord && (
+          <GenericModal key="view-leads-modal" title={`Showing all linked leads with business ${viewLeadsRecord.name}`} onClose={() => setViewLeadsRecord(null)} maxWidth="700px">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {viewLeadsRecord.associatedLeads && viewLeadsRecord.associatedLeads.length > 0 ? (
+                leads.filter(l => viewLeadsRecord.associatedLeads?.includes(l.id)).map(lead => {
+                  const initials = lead.name ? lead.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+                  const dateStr = lead.updatedAt ? new Date(lead.updatedAt).toLocaleDateString() : 'recently';
+                  
+                  return (
+                    <div key={lead.id} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#c0a0e0', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{initials}</div>
+                      <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h3 style={{ margin: 0, fontSize: '1rem', color: '#0f172a' }}>{lead.name}</h3>
+                            <span style={{ background: '#a080d0', color: 'white', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px' }}>Contact Type : {lead.contactType || 'OTHER'}</span>
+                          </div>
+                          <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '4px' }}>modified : {dateStr}</div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ color: '#64748b', fontSize: '0.85rem' }}>No linked leads found for this business.</div>
+              )}
+            </div>
+          </GenericModal>
+        )}
+
         {detailsRecord && (
           <GenericModal key="details-modal" title={`Business Details: ${detailsRecord.name}`} onClose={() => setDetailsRecord(null)}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
@@ -467,19 +504,14 @@ export function LeadsBusinessView() {
         )}
 
         {editRecord && (
-          <GenericModal key="edit-modal" title="Edit Business" onClose={() => setEditRecord(null)} onSave={handleSaveEditBusiness}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Business Name</label><input type="text" value={editRecord.name} onChange={e => setEditRecord({...editRecord, name: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Industry</label><select value={editRecord.industry || ''} onChange={e => setEditRecord({...editRecord, industry: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>{['Education', 'Technology', 'Healthcare', 'Finance', 'Consulting', 'Retail'].map(t=><option key={t}>{t}</option>)}</select></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Address</label><input type="text" value={editRecord.address || ''} onChange={e => setEditRecord({...editRecord, address: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Website</label><input type="text" value={editRecord.website || ''} onChange={e => setEditRecord({...editRecord, website: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Contact Person</label><input type="text" value={editRecord.contactPerson || ''} onChange={e => setEditRecord({...editRecord, contactPerson: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Mobile</label><input type="text" value={editRecord.mobile || ''} onChange={e => setEditRecord({...editRecord, mobile: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Priority</label><select value={editRecord.priority || ''} onChange={e => setEditRecord({...editRecord, priority: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>{['High', 'Medium', 'Low'].map(t=><option key={t}>{t}</option>)}</select></div>
-               <div><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label><input type="text" value={editRecord.email || ''} onChange={e => setEditRecord({...editRecord, email: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }} /></div>
-            </div>
-            <div style={{ marginTop: '16px' }}><label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Notes</label><textarea rows={3} value={editRecord.notes || ''} onChange={e => setEditRecord({...editRecord, notes: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', resize: 'vertical' }} /></div>
-          </GenericModal>
+          <EditBusinessModal 
+            businessId={editRecord.id}
+            onClose={() => setEditRecord(null)}
+            onSuccess={() => {
+              showToast("Business updated successfully");
+              setEditRecord(null);
+            }}
+          />
         )}
 
         {addRecordOpen && (

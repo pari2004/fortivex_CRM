@@ -64,7 +64,6 @@ const PERMISSIONS = [
 const ROLE_DASHBOARD_MAP: Record<string, string[]> = {
   'Super Admin': MODULES, // All modules
   'Admin': ['Dashboard', 'Users', 'Roles', 'Settings', 'Security', 'System Logs', 'Employees', 'Integrations'],
-  'Sales Manager': ['Dashboard', 'Pipeline', 'Targets', 'Reports', 'Analytics', 'Team Performance', 'Leads', 'Calls'],
   'Admission Counselor': ['Leads', 'Applications', 'Students', 'Follow-ups', 'Admissions', 'Calendar', 'Documents'],
   'Marketing Manager': ['Campaigns', 'Social Media', 'Reports', 'Analytics', 'Lead Sources', 'Ads', 'Website Content'],
   'Member': ['Dashboard', 'My Tasks', 'My Schedule', 'Attendance', 'Documents', 'Help & Support', 'Profile', 'Settings']
@@ -92,7 +91,7 @@ export default function RolesPage() {
     roleColor: '#2563EB',
     priority: 'Normal',
     permissions: {},
-    users: r.name === 'Super Admin' ? [SYSTEM_USERS[4]] : (r.name === 'Sales Manager' ? [SYSTEM_USERS[0]] : [])
+    users: r.name === 'Super Admin' ? [SYSTEM_USERS[4]] : ([])
   }));
 
   const [localData, setLocalData] = useState<ExtendedRole[]>(initialData);
@@ -369,7 +368,7 @@ export default function RolesPage() {
             <PremiumTextArea label="Description" name="description" value={formData.description || ''} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={3} icon={<CheckSquare size={16} />} />
           </div>
           <div style={{ gridColumn: '1 / 3' }}>
-            <PremiumSelect label="Dashboard Access" name="dashboardAccess" value={formData.dashboardAccess || 'Default'} onChange={(e) => setFormData({...formData, dashboardAccess: e.target.value})} options={['Default', 'Admin', 'Sales Manager', 'Admission Counselor', 'Marketing Manager', 'Member']} icon={<Shield size={16} />} />
+            <PremiumSelect label="Dashboard Access" name="dashboardAccess" value={formData.dashboardAccess || 'Default'} onChange={(e) => setFormData({...formData, dashboardAccess: e.target.value})} options={['Default', 'Admin', 'Admission Counselor', 'Marketing Manager', 'Member']} icon={<Shield size={16} />} />
           </div>
           <div style={{ gridColumn: '1 / 3' }}>
             <PremiumSelect label="Sidebar Access" name="sidebarAccess" value={formData.sidebarAccess || 'Full'} onChange={(e) => setFormData({...formData, sidebarAccess: e.target.value})} options={['Full', 'Limited', 'Minimal', 'Custom']} icon={<CheckSquare size={16} />} />

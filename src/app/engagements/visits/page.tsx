@@ -9,7 +9,7 @@ import { generatedLeads, activeUsersData } from '@/lib/data/mockData';
 import { MapPin, Search, Filter, CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown, AlertCircle, Settings, GripVertical, X } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
-const CURRENT_USER = 'Rahul Sharma';
+const CURRENT_USER = 'Abhay';
 
 // Generate realistic demo visits using generatedLeads
 const generateVisits = () => {

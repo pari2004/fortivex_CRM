@@ -14,7 +14,7 @@
   flex-direction: column;
   height: 100%;
   transition: width 0.3s ease;
-  z-index: 10;
+  z-index: 110;
 }
 
 .sidebarHeader {
@@ -97,7 +97,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  z-index: 5;
+  z-index: 100;
 }
 
 .headerSearch {

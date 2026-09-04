@@ -41,8 +41,8 @@ export const usersData: User[] = [
 ];
 
 export const rolesData: Role[] = [
+  { id: 'ROL-000', name: 'IT', userCount: 1, status: 'Active', description: 'Ultimate Super Admin', lastUpdated: '2026-08-01T10:00:00Z' },
   { id: 'ROL-001', name: 'Admin', userCount: 1, status: 'Active', description: 'Full system access', lastUpdated: '2026-08-01T10:00:00Z' },
-  { id: 'ROL-002', name: 'Sales Manager', userCount: 1, status: 'Active', description: 'Manage sales team and pipeline', lastUpdated: '2026-08-01T10:00:00Z' },
   { id: 'ROL-003', name: 'Admission Counselor', userCount: 1, status: 'Active', description: 'Handle leads and admissions', lastUpdated: '2026-08-01T10:00:00Z' },
   { id: 'ROL-004', name: 'Marketing', userCount: 1, status: 'Active', description: 'Manage campaigns', lastUpdated: '2026-08-01T10:00:00Z' },
   { id: 'ROL-005', name: 'Member', userCount: 1, status: 'Active', description: 'Basic member access', lastUpdated: '2026-08-01T10:00:00Z' }

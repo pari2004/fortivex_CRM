@@ -27,7 +27,7 @@ export default function AllEngagementsPage() {
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   
   // Using the same active user convention as other pages
-  const CURRENT_USER = 'Pavan S.H';
+  const CURRENT_USER = 'Abhay';
   
   const [activeFilter, setActiveFilter] = useState<'All' | 'My'>('All');
   const [searchQuery, setSearchQuery] = useState('');

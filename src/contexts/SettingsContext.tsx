@@ -100,7 +100,7 @@ const DEFAULT_NOTIFS: NotificationsConfig = {
 };
 
 const DEFAULT_APPEARANCE: AppearanceConfig = {
-  theme: 'dark',
+  theme: 'light',
   accent: 'blue',
   sidebar: 'expanded',
   density: 'comfortable',
@@ -154,7 +154,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (savedNotifs) setNotifications(JSON.parse(savedNotifs));
 
       const savedApp = localStorage.getItem('fortivex_appearance');
-      if (savedApp) setAppearance(JSON.parse(savedApp));
+      if (savedApp) setAppearance({ ...JSON.parse(savedApp), theme: 'light' });
 
       const savedApiKeys = localStorage.getItem('fortivex_api_keys');
       if (savedApiKeys) setApiKeys(JSON.parse(savedApiKeys));
@@ -189,19 +189,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
     root.style.setProperty('--primary-color', accentColors[appearance.accent] || accentColors.blue);
     
-    // Apply theme (could append class to body)
-    document.body.classList.remove('light-theme', 'dark-theme');
-    
-    let activeTheme = appearance.theme;
-    if (activeTheme === 'system') {
-      activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    if (activeTheme === 'light') {
-      document.body.classList.add('light-theme');
-    } else if (activeTheme === 'dark') {
-      document.body.classList.add('dark-theme');
-    }
+    // Theme is always light
+    document.body.classList.remove('dark-theme');
+    document.body.classList.add('light-theme');
 
     // Apply dashboard background if base64 (we'll store it as a CSS var and use it in DynamicBackground)
     if (appearance.dashboardBackground.startsWith('data:image')) {

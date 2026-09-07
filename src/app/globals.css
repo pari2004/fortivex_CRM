@@ -204,20 +204,6 @@ input, textarea, select { font-family: inherit; }
 
 
 /* Theming */
-body.dark-theme {
-  --bg-primary: #060B1F;
-  --bg-secondary: rgba(15, 23, 42, 0.4);
-  --bg-tertiary: rgba(15, 23, 42, 0.6);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #475569;
-  --border-color: rgba(148, 163, 184, 0.2);
-  --glass-bg: rgba(15, 23, 42, 0.6);
-  --glass-bg-heavy: rgba(15, 23, 42, 0.85);
-  --glass-border: rgba(148, 163, 184, 0.2);
-  --glass-border-strong: rgba(148, 163, 184, 0.4);
-}
-
 body.light-theme {
   --bg-primary: #ffffff;
   --bg-secondary: rgba(248, 250, 252, 0.6);

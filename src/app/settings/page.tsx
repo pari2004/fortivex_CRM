@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Building, Shield, Bell, Palette, Key, Database, LogOut, Settings as SettingsIcon, 
   CheckCircle2, Download, RefreshCw, Trash2, Edit2, Plus, Monitor, LayoutDashboard, Copy, 
-  AlertCircle, Smartphone, Globe, Mail, MapPin, Hash, ShieldCheck, Sun, Moon, Calendar,
+  AlertCircle, Smartphone, Globe, Mail, MapPin, Hash, ShieldCheck, Sun, Calendar,
   Upload, Search, Phone, PhoneCall, FileText, X, Check, Link as LinkIcon, ExternalLink, Layers, ArrowRight
 } from 'lucide-react';
 import { PremiumInput, PremiumSelect, PremiumTextArea, PremiumCard, ToggleSwitch } from '@/components/common/PremiumForm';
@@ -575,11 +575,9 @@ export default function SettingsPage() {
                       <div>
                         <h4 style={{ margin: '0 0 12px 0', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Theme Mode</h4>
                         <div style={{ display: 'flex', gap: '16px' }}>
-                          {['light', 'dark', 'system'].map(t => (
-                            <button key={t} onClick={() => setAppForm({...appForm, theme: t})} style={{ padding: '12px 24px', borderRadius: '12px', background: appForm.theme === t ? 'var(--primary-color)' : 'var(--bg-secondary)', color: appForm.theme === t ? 'white' : 'var(--text-primary)', border: '1px solid', borderColor: appForm.theme === t ? 'var(--primary-color)' : 'var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, textTransform: 'capitalize' }}>
-                              {t === 'light' ? <Sun size={18}/> : t === 'dark' ? <Moon size={18}/> : <Monitor size={18}/>} {t}
-                            </button>
-                          ))}
+                          <button disabled style={{ padding: '12px 24px', borderRadius: '12px', background: 'var(--primary-color)', color: 'white', border: '1px solid var(--primary-color)', cursor: 'default', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                            <Sun size={18}/> Light
+                          </button>
                         </div>
                       </div>
 

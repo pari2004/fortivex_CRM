@@ -10,13 +10,15 @@ interface Props {
 }
 
 export function LogCallOutcomeDrawer({ isOpen, onClose, lead }: Props) {
-  const { updateLead } = useCRM();
+  const { updateLead, callOutcomes, addTask } = useCRM();
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCall, setSelectedCall] = useState('Outgoing 1 hour ago (Connected)');
   
-  const [selectedOutcome, setSelectedOutcome] = useState('');
+  const [selectedOutcomeId, setSelectedOutcomeId] = useState('');
   const [tagSearch, setTagSearch] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
 
   const callLogs = [
     'Outgoing 1 hour ago (Connected)',
@@ -33,13 +35,36 @@ export function LogCallOutcomeDrawer({ isOpen, onClose, lead }: Props) {
   ];
 
   const handleReset = () => {
-    setSelectedOutcome('');
+    setSelectedOutcomeId('');
     setTagSearch('');
+    setRemarks('');
+    setFollowUpDate('');
     setSelectedCall('Outgoing 1 hour ago (Connected)');
   };
 
   const handleSave = () => {
+    if (!selectedOutcomeId) return;
+    
+    const selectedOutcome = callOutcomes.find(o => o.id === selectedOutcomeId);
     if (!selectedOutcome) return;
+
+    if (selectedOutcome.name.toLowerCase().includes('follow-up') && !followUpDate) {
+      alert("Please select a follow-up date.");
+      return;
+    }
+    
+    // Create follow-up task if date is provided
+    if (followUpDate) {
+      addTask({
+        id: Math.random().toString(36).substr(2, 9),
+        title: `Follow up with ${lead.firstName} ${lead.lastName}`,
+        dueDate: followUpDate,
+        priority: 'High',
+        status: 'To Do',
+        assignee: 'Abhay',
+        relatedLeadId: lead.id
+      });
+    }
     
     // Log the outcome as an activity
     const CURRENT_USER = 'Abhay';
@@ -49,12 +74,21 @@ export function LogCallOutcomeDrawer({ isOpen, onClose, lead }: Props) {
       lifecycle: lead.status || 'Contacted',
       activityType: 'Call Outcome',
       category: 'Activity',
-      description: `Logged call outcome: ${selectedOutcome} for ${selectedCall.split('(')[0].trim()}`,
-      activityBy: CURRENT_USER
+      description: `Call Outcome: ${selectedOutcome.name}${remarks ? ` - ${remarks}` : ''}`,
+      activityBy: CURRENT_USER,
+      extraData: {
+        outcome: selectedOutcome.name,
+        remarks,
+        nextFollowUp: followUpDate || null,
+        callDirection: 'Outgoing',
+        callDuration: '0h:2m:49s'
+      }
     };
     
     const updatedLead = {
       ...lead,
+      lastCallOutcome: selectedOutcome.name,
+      lastCallTime: new Date().toISOString(),
       activities: [newActivity, ...(lead.activities || [])]
     };
     
@@ -256,34 +290,68 @@ export function LogCallOutcomeDrawer({ isOpen, onClose, lead }: Props) {
                 borderRadius: '12px', 
                 padding: '24px', 
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' 
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+                marginBottom: '24px'
               }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a', margin: '0 0 20px 0' }}>Select Outcome</h3>
                 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                  {outcomes.map((outcome, idx) => (
-                    <div 
-                      key={idx}
-                      onClick={() => setSelectedOutcome(outcome.label)}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        border: `1px solid ${selectedOutcome === outcome.label ? outcome.color : '#e2e8f0'}`,
-                        backgroundColor: selectedOutcome === outcome.label ? outcome.bgColor : 'white',
-                        color: '#0f172a',
-                        fontSize: '0.9rem',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: outcome.color }}></div>
-                      {outcome.label}
-                    </div>
-                  ))}
+                  {callOutcomes.filter(o => o.name.toLowerCase().includes(tagSearch.toLowerCase())).map((outcome) => {
+                    let color = '#3b82f6', bgColor = '#eff6ff';
+                    if (outcome.type === 'Positive') { color = '#10b981'; bgColor = '#ecfdf5'; }
+                    else if (outcome.type === 'Negative') { color = '#ef4444'; bgColor = '#fef2f2'; }
+
+                    return (
+                      <div 
+                        key={outcome.id}
+                        onClick={() => setSelectedOutcomeId(outcome.id)}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '20px',
+                          border: `1px solid ${selectedOutcomeId === outcome.id ? color : '#e2e8f0'}`,
+                          backgroundColor: selectedOutcomeId === outcome.id ? bgColor : 'white',
+                          color: '#0f172a',
+                          fontSize: '0.9rem',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }}></div>
+                        {outcome.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Remarks and Follow up */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Remarks / Notes</label>
+                  <textarea
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Enter call notes..."
+                    rows={3}
+                    style={{
+                      width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit', boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Next Follow-up (Optional)</label>
+                  <input
+                    type="datetime-local"
+                    value={followUpDate}
+                    onChange={(e) => setFollowUpDate(e.target.value)}
+                    style={{
+                      width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box'
+                    }}
+                  />
                 </div>
               </div>
 
@@ -315,17 +383,17 @@ export function LogCallOutcomeDrawer({ isOpen, onClose, lead }: Props) {
               
               <button 
                 onClick={handleSave}
-                disabled={!selectedOutcome}
+                disabled={!selectedOutcomeId}
                 style={{
                   flex: 1,
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  backgroundColor: selectedOutcome ? '#10b981' : '#e2e8f0',
-                  color: selectedOutcome ? 'white' : '#94a3b8',
+                  backgroundColor: selectedOutcomeId ? '#10b981' : '#e2e8f0',
+                  color: selectedOutcomeId ? 'white' : '#94a3b8',
                   fontWeight: 600,
                   fontSize: '0.95rem',
-                  cursor: selectedOutcome ? 'pointer' : 'not-allowed',
+                  cursor: selectedOutcomeId ? 'pointer' : 'not-allowed',
                   transition: 'all 0.2s ease'
                 }}
               >

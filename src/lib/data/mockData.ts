@@ -925,6 +925,26 @@ export interface Quote {
   total: number;
   lineItems: QuoteLineItem[];
   notes: string;
+  // Snapshot Configuration
+  businessName?: string;
+  businessGstin?: string;
+  billingAddress?: string;
+  shippingAddress?: string;
+  brandColor?: string;
+  logo?: string | null;
+  signatureImage?: string | null;
+  signatoryName?: string;
+  designation?: string;
+  bankName?: string;
+  accountHolder?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  upiId?: string;
+  accountType?: string;
+  showBankInPdf?: boolean;
+  showShippingInPdf?: boolean;
+  showSignatureInPdf?: boolean;
+  attachPaymentLink?: boolean;
 }
 
 export const generatedQuotes: Quote[] = Array.from({ length: 25 }, (_, i) => {

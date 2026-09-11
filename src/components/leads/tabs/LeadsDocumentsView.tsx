@@ -436,9 +436,32 @@ export function LeadsDocumentsView() {
                 {leads.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
             </div>
-            
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', borderBottom: '1px solid var(--glass-border)' }}>
-               <img src={selectedLead.profilePhoto} alt={selectedLead.name} style={{ width: '90px', height: '90px', borderRadius: '45px', objectFit: 'cover', border: '3px solid var(--bg-card)', boxShadow: 'var(--shadow-sm)', marginBottom: '16px' }} />
+               <div style={{ position: 'relative', cursor: 'pointer', marginBottom: '16px' }} onClick={() => document.getElementById('profile-upload')?.click()}>
+                 <img src={selectedLead.profilePhoto} alt={selectedLead.name} style={{ width: '90px', height: '90px', borderRadius: '45px', objectFit: 'cover', border: '3px solid var(--bg-card)', boxShadow: 'var(--shadow-sm)', transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = '0.7'} onMouseLeave={e => e.currentTarget.style.opacity = '1'} />
+                 <input 
+                   type="file" 
+                   id="profile-upload" 
+                   style={{ display: 'none' }} 
+                   accept="image/*"
+                   onChange={(e) => {
+                     const file = e.target.files?.[0];
+                     if (file) {
+                       const reader = new FileReader();
+                       reader.onload = (event) => {
+                         if (event.target?.result) {
+                           const updatedLead = { ...selectedLead, profilePhoto: event.target.result as string };
+                           crm.updateLead(updatedLead as any);
+                         }
+                       };
+                       reader.readAsDataURL(file);
+                     }
+                   }}
+                 />
+                 <div style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--primary-color)', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-card)' }}>
+                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                 </div>
+               </div>
                <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{selectedLead.name}</h3>
                <p style={{ color: 'var(--text-secondary)' }}>ID: {selectedLead.id}</p>
             </div>

@@ -58,6 +58,7 @@ export function LeadsUploadsView({ newUploadEvent }: { newUploadEvent?: any }) {
   // Action States
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   useGlobalEscape(!!activeMenuId, () => { setActiveMenuId(null) });
+  useGlobalEscape(dateMenuOpen, () => { setDateMenuOpen(false) });
   const [viewDetails, setViewDetails] = useState<UploadRecord | null>(null);
   const [fileDetails, setFileDetails] = useState<UploadRecord | null>(null);
     const [genericActionModal, setGenericActionModal] = useState<{title: string, message: string, action: string} | null>(null);
@@ -182,15 +183,21 @@ export function LeadsUploadsView({ newUploadEvent }: { newUploadEvent?: any }) {
             </button>
             <AnimatePresence>
               {dateMenuOpen && (
-                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                  style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '200px', background: '#fff', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {['All Time', 'Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Week', 'This Month', 'Last Month', 'Custom Range'].map(opt => (
-                    <button key={opt} onClick={() => { setDateFilter(opt); setDateMenuOpen(false); setPage(1); }} 
-                      style={{ padding: '8px 12px', background: dateFilter === opt ? 'var(--bg-secondary)' : 'transparent', border: 'none', borderRadius: '6px', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: dateFilter === opt ? 600 : 400 }}>
-                      {opt}
-                    </button>
-                  ))}
-                </motion.div>
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={() => setDateMenuOpen(false)} />
+                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                    style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '200px', background: '#fff', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {['All Time', 'Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Week', 'This Month', 'Last Month', 'Custom Range'].map(opt => (
+                      <button key={opt} onClick={() => { setDateFilter(opt); setDateMenuOpen(false); setPage(1); }} 
+                        style={{ padding: '8px 12px', background: dateFilter === opt ? 'var(--bg-secondary)' : 'transparent', border: 'none', borderRadius: '6px', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: dateFilter === opt ? 600 : 400 }}
+                        onMouseOver={e=>e.currentTarget.style.background='var(--bg-secondary)'} 
+                        onMouseOut={e=>{ if (dateFilter !== opt) e.currentTarget.style.background='transparent' }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
               )}
             </AnimatePresence>
           </div>

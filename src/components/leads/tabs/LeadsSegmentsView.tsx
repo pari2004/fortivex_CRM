@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 import { useCRM } from '@/contexts/CRMContext';
+import { SegmentLeadsTable } from './SegmentLeadsTable';
+import { LeadWorkspaceModal } from '@/components/dashboard/modals/LeadWorkspaceModal';
 
 // --- Toast Utility ---
 function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -42,11 +44,11 @@ const studentPerformanceData = [
 const initialLists = [
   {
     id: 'L-001',
-    name: 'New Inquiry Leads',
+    name: 'Registration Form Till Sep 1',
     sourceCategory: 'External Lead Sources',
     allowDuplicates: false,
     disallowAutoRechain: false,
-    description: 'New inquiry leads collected from website and campaigns',
+    description: 'Leads generated from the registration form campaign ending Sept 1st',
     owner: 'Admin User',
     contains: 1250,
     distribution: 'Assigned',
@@ -69,11 +71,16 @@ const initialLists = [
     contains: 325,
     distribution: 'Assigned',
     createdDate: '2024-04-15',
-    lastUpdated: '2024-05-09'
+    lastUpdated: '2024-05-09',
+    listType: 'Sales',
+    listCreationType: 'Manual',
+    bulkUploadSource: 'N/A',
+    listStatus: 'Active',
+    createdOn: '2024-04-15'
   },
   {
     id: 'L-003',
-    name: 'Unworked Leads',
+    name: 'New Leads',
     sourceCategory: 'Bulk Uploads',
     allowDuplicates: false,
     disallowAutoRechain: true,
@@ -82,33 +89,66 @@ const initialLists = [
     contains: 540,
     distribution: 'Kept Unassigned',
     createdDate: '2024-04-20',
-    lastUpdated: '2024-05-08'
+    lastUpdated: '2024-05-08',
+    listType: 'Marketing',
+    listCreationType: 'Upload',
+    bulkUploadSource: 'Trade Show CSV',
+    listStatus: 'Active',
+    createdOn: '2024-04-20'
   },
   {
     id: 'L-004',
-    name: 'Admissions Follow-up',
+    name: 'Follow-up Required',
     sourceCategory: 'External Lead Sources',
     allowDuplicates: false,
     disallowAutoRechain: true,
-    description: 'Leads requiring admission follow-up',
+    description: 'Leads requiring callback or follow-up',
     owner: 'Sales Team',
     contains: 280,
     distribution: 'Assigned',
     createdDate: '2024-03-10',
-    lastUpdated: '2024-05-11'
+    lastUpdated: '2024-05-11',
+    listType: 'Sales',
+    listCreationType: 'System',
+    bulkUploadSource: 'N/A',
+    listStatus: 'Active',
+    createdOn: '2024-03-10'
   },
   {
     id: 'L-005',
-    name: 'Marketing Campaign Leads',
-    sourceCategory: 'Bulk Uploads',
+    name: 'Interested Leads',
+    sourceCategory: 'Others - Created By Users',
     allowDuplicates: true,
     disallowAutoRechain: false,
-    description: 'Leads generated through active marketing campaigns',
+    description: 'Leads that have shown high interest in products',
     owner: 'Marketing Team',
     contains: 875,
     distribution: 'Assigned',
     createdDate: '2024-02-15',
-    lastUpdated: '2024-04-22'
+    lastUpdated: '2024-04-22',
+    listType: 'Marketing',
+    listCreationType: 'Manual',
+    bulkUploadSource: 'N/A',
+    listStatus: 'Active',
+    createdOn: '2024-02-15'
+  },
+  {
+    id: 'L-006',
+    name: 'Opportunity Ready Leads',
+    sourceCategory: 'External Lead Sources',
+    allowDuplicates: false,
+    disallowAutoRechain: true,
+    description: 'Qualified leads ready for opportunity pipeline',
+    owner: 'Admin User',
+    contains: 150,
+    distribution: 'Assigned',
+    createdDate: '2024-05-05',
+    lastUpdated: '2024-05-12',
+    listType: 'Sales',
+    listCreationType: 'System',
+    bulkUploadSource: 'N/A',
+    listStatus: 'Active',
+    createdOn: '2024-05-05'
   }
 ];
 
@@ -146,7 +186,9 @@ const Toggle = ({ isOn, onToggle }: { isOn: boolean, onToggle: () => void }) => 
     >
       <div style={{
         width: '26px', height: '26px', background: 'white', borderRadius: '50%',
-        position: 'absolute', top: '2px', left: isOn ? '28px' : '2px', transition: 'left 0.3s',
+        position: 'absolute', top: '2px', left: '2px',
+        transform: isOn ? 'translateX(26px)' : 'translateX(0)',
+        transition: 'transform 0.3s',
         boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
       }} />
     </div>
@@ -350,6 +392,8 @@ export function LeadsSegmentsView({ newUploadEvent }: { newUploadEvent?: any }) 
 
   const [confirmAllowDupModal, setConfirmAllowDupModal] = useState(false);
   const [confirmRechurnModal, setConfirmRechurnModal] = useState(false);
+  
+  const [fullViewLead, setFullViewLead] = useState<any>(null);
   const [targetActionId, setTargetActionId] = useState<string | null>(null);
   const [listFilter, setListFilter] = useState('All Lists');
 
@@ -462,218 +506,274 @@ export function LeadsSegmentsView({ newUploadEvent }: { newUploadEvent?: any }) 
     }
   };
 
+  // --- KPIs Calculation ---
+  const totalLists = lists.length;
+  const totalLeads = lists.reduce((acc, curr) => acc + (Number(curr.contains) || 0), 0);
+  const activeLists = lists.filter(l => l.listStatus === 'Active').length;
+  const recentlyCreated = lists.filter(l => {
+    // simplified recent logic (last 30 days)
+    if (!l.createdOn) return false;
+    const diff = (new Date().getTime() - new Date(l.createdOn).getTime()) / (1000 * 3600 * 24);
+    return diff <= 30;
+  }).length;
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-primary)', overflow: 'hidden' }}>
+    <div style={{ 
+      flex: 1, display: 'flex', flexDirection: 'column', height: '100%', 
+      background: 'linear-gradient(to bottom right, #f8fafc, #eff6ff)', 
+      overflow: 'hidden',
+      padding: '24px',
+      gap: '24px'
+    }}>
       
-      {/* Top Header / Toolbar */}
-      <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: selectedCount > 0 ? '#e0e7ff' : 'var(--bg-card)', transition: 'background 0.3s ease', zIndex: 11 }}>
-        {selectedCount > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary-color)', fontWeight: 600 }}>
-               <CheckCircle size={20} /> {selectedCount} List{selectedCount > 1 ? 's' : ''} Selected
+      {/* KPIs */}
+      {selectedCount === 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+          {[
+            { label: 'Total Lists', value: totalLists, icon: <Users size={20} color="#3b82f6" />, bg: '#eff6ff' },
+            { label: 'Total Leads in Lists', value: totalLeads.toLocaleString(), icon: <CheckSquare size={20} color="#8b5cf6" />, bg: '#f5f3ff' },
+            { label: 'Active Lists', value: activeLists, icon: <CheckCircle size={20} color="#10b981" />, bg: '#ecfdf5' },
+            { label: 'Recently Created (30d)', value: recentlyCreated, icon: <Plus size={20} color="#f59e0b" />, bg: '#fffbeb' },
+          ].map((kpi, i) => (
+            <div key={i} style={{ 
+              background: 'white', borderRadius: '16px', padding: '20px', 
+              boxShadow: '0 2px 10px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f1f5f9'
+            }}>
+               <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: kpi.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 {kpi.icon}
+               </div>
+               <div>
+                 <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{kpi.label}</p>
+                 <h3 style={{ margin: '4px 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{kpi.value}</h3>
+               </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Main Card */}
+      <div style={{ 
+        flex: 1, background: 'white', borderRadius: '16px', display: 'flex', flexDirection: 'column',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden'
+      }}>
+
+        {/* Top Header / Toolbar */}
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: selectedCount > 0 ? '#eff6ff' : 'white', transition: 'background 0.3s ease', zIndex: 11 }}>
+          {selectedCount > 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', fontWeight: 600 }}>
+                 <CheckCircle size={20} /> {selectedCount} List{selectedCount > 1 ? 's' : ''} Selected
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                 <button onClick={() => setLeadsList(lists.find(l => l.id === selectedIds[0]))} style={{ background: 'transparent', border: 'none', color: '#334155', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }} onMouseOver={e => e.currentTarget.style.color='#2563eb'} onMouseOut={e => e.currentTarget.style.color='#334155'}>
+                   <Users size={16} /> View Leads
+                 </button>
+                 <div style={{ width: '1px', height: '16px', background: '#cbd5e1' }} />
+                 <button onClick={() => setDistributeModal(true)} style={{ background: 'transparent', border: 'none', color: '#334155', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }} onMouseOver={e => e.currentTarget.style.color='#2563eb'} onMouseOut={e => e.currentTarget.style.color='#334155'}>
+                   <Share2 size={16} /> Distribution
+                 </button>
+                 <div style={{ width: '1px', height: '16px', background: '#cbd5e1' }} />
+                 <button onClick={() => setWhatsappModal(true)} style={{ background: 'transparent', border: 'none', color: '#334155', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }} onMouseOver={e => e.currentTarget.style.color='#2563eb'} onMouseOut={e => e.currentTarget.style.color='#334155'}>
+                   <MessageCircle size={16} /> Create WhatsApp Campaign
+                 </button>
+                 <div style={{ width: '1px', height: '16px', background: '#cbd5e1' }} />
+                 <button onClick={() => setConfirmAllowDupModal(true)} style={{ background: 'transparent', border: 'none', color: '#334155', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }} onMouseOver={e => e.currentTarget.style.color='#2563eb'} onMouseOut={e => e.currentTarget.style.color='#334155'}>
+                   <CheckSquare size={16} /> Allow Duplicates
+                 </button>
+                 <div style={{ width: '1px', height: '16px', background: '#cbd5e1' }} />
+                 <button onClick={() => setConfirmRechurnModal(true)} style={{ background: 'transparent', border: 'none', color: '#334155', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }} onMouseOver={e => e.currentTarget.style.color='#2563eb'} onMouseOut={e => e.currentTarget.style.color='#334155'}>
+                   <ShieldAlert size={16} /> Disallow Auto Rechurn
+                 </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => setAllListsOpen(!allListsOpen)}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}
+              >
+                {listFilter} <span style={{ background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem' }}>{listFilter === 'All Lists' ? lists.length : lists.filter(l => l.sourceCategory === listFilter).length}</span> <ChevronDown size={18} />
+              </button>
+                <AnimatePresence>
+                {allListsOpen && (
+                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                    style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '250px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', zIndex: 100, padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <button onClick={() => { setListFilter('All Lists'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'All Lists' ? '#f1f5f9' : 'transparent', border: 'none', borderRadius: '8px', textAlign: 'left', fontWeight: listFilter === 'All Lists' ? 600 : 400, cursor: 'pointer', color: '#1e293b' }}><span>All Lists</span> <span style={{ color: '#94a3b8' }}>{lists.length}</span></button>
+                    <button onClick={() => { setListFilter('Bulk Uploads'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'Bulk Uploads' ? '#f1f5f9' : 'transparent', border: 'none', borderRadius: '8px', textAlign: 'left', fontWeight: listFilter === 'Bulk Uploads' ? 600 : 400, cursor: 'pointer', color: '#1e293b' }}><span>Bulk Uploads</span> <span style={{ color: '#94a3b8' }}>{lists.filter(l => l.sourceCategory === 'Bulk Uploads').length}</span></button>
+                    <button onClick={() => { setListFilter('External Lead Sources'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'External Lead Sources' ? '#f1f5f9' : 'transparent', border: 'none', borderRadius: '8px', textAlign: 'left', fontWeight: listFilter === 'External Lead Sources' ? 600 : 400, cursor: 'pointer', color: '#1e293b' }}><span>External Lead Sources</span> <span style={{ color: '#94a3b8' }}>{lists.filter(l => l.sourceCategory === 'External Lead Sources').length}</span></button>
+                    <button onClick={() => { setListFilter('Others - Created By Users'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'Others - Created By Users' ? '#f1f5f9' : 'transparent', border: 'none', borderRadius: '8px', textAlign: 'left', fontWeight: listFilter === 'Others - Created By Users' ? 600 : 400, cursor: 'pointer', color: '#1e293b' }}><span>Others - Created By Users</span> <span style={{ color: '#94a3b8' }}>{lists.filter(l => l.sourceCategory === 'Others - Created By Users').length}</span></button>
+                  </motion.div>
+                )}
+                </AnimatePresence>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-               <button onClick={() => setLeadsList(lists.find(l => l.id === selectedIds[0]))} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                 <Users size={16} /> View Leads
-               </button>
-               <div style={{ width: '1px', height: '16px', background: 'var(--glass-border)' }} />
-               <button onClick={() => setDistributeModal(true)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                 <Share2 size={16} /> Distribution
-               </button>
-               <div style={{ width: '1px', height: '16px', background: 'var(--glass-border)' }} />
-               <button onClick={() => setWhatsappModal(true)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                 <MessageCircle size={16} /> Create WhatsApp Campaign
-               </button>
-               <div style={{ width: '1px', height: '16px', background: 'var(--glass-border)' }} />
-               <button onClick={() => setConfirmAllowDupModal(true)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                 <CheckSquare size={16} /> Allow Duplicates
-               </button>
-               <div style={{ width: '1px', height: '16px', background: 'var(--glass-border)' }} />
-               <button onClick={() => setConfirmRechurnModal(true)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                 <ShieldAlert size={16} /> Disallow Auto Rechurn
-               </button>
+            <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', padding: '10px 16px', borderRadius: '10px', width: '350px', border: '1px solid #e2e8f0' }}>
+              <Search size={18} color="#94a3b8" />
+              <input 
+                type="text" 
+                placeholder="Search across Lists..." 
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
+                style={{ background: 'transparent', border: 'none', outline: 'none', marginLeft: '12px', width: '100%', fontSize: '0.95rem', color: '#0f172a' }} 
+              />
             </div>
           </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
-          <div style={{ position: 'relative' }}>
-            <button 
-              onClick={() => setAllListsOpen(!allListsOpen)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}
-            >
-              {listFilter} <span style={{ background: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.85rem' }}>{listFilter === 'All Lists' ? lists.length : lists.filter(l => l.sourceCategory === listFilter).length}</span> <ChevronDown size={18} />
-            </button>
-              <AnimatePresence>
-              {allListsOpen && (
-                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
-                  style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '250px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)', zIndex: 100, padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <button onClick={() => { setListFilter('All Lists'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'All Lists' ? 'var(--bg-secondary)' : 'transparent', border: 'none', borderRadius: '6px', textAlign: 'left', fontWeight: listFilter === 'All Lists' ? 600 : 400, cursor: 'pointer', color: 'var(--text-primary)' }}><span>All Lists</span> <span style={{ color: 'var(--text-tertiary)' }}>{lists.length}</span></button>
-                  <button onClick={() => { setListFilter('Bulk Uploads'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'Bulk Uploads' ? 'var(--bg-secondary)' : 'transparent', border: 'none', borderRadius: '6px', textAlign: 'left', fontWeight: listFilter === 'Bulk Uploads' ? 600 : 400, cursor: 'pointer', color: 'var(--text-primary)' }}><span>Bulk Uploads</span> <span style={{ color: 'var(--text-tertiary)' }}>{lists.filter(l => l.sourceCategory === 'Bulk Uploads').length}</span></button>
-                  <button onClick={() => { setListFilter('External Lead Sources'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'External Lead Sources' ? 'var(--bg-secondary)' : 'transparent', border: 'none', borderRadius: '6px', textAlign: 'left', fontWeight: listFilter === 'External Lead Sources' ? 600 : 400, cursor: 'pointer', color: 'var(--text-primary)' }}><span>External Lead Sources</span> <span style={{ color: 'var(--text-tertiary)' }}>{lists.filter(l => l.sourceCategory === 'External Lead Sources').length}</span></button>
-                  <button onClick={() => { setListFilter('Others - Created By Users'); setAllListsOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: listFilter === 'Others - Created By Users' ? 'var(--bg-secondary)' : 'transparent', border: 'none', borderRadius: '6px', textAlign: 'left', fontWeight: listFilter === 'Others - Created By Users' ? 600 : 400, cursor: 'pointer', color: 'var(--text-primary)' }}><span>Others - Created By Users</span> <span style={{ color: 'var(--text-tertiary)' }}>{lists.filter(l => l.sourceCategory === 'Others - Created By Users').length}</span></button>
-                </motion.div>
-              )}
-              </AnimatePresence>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '10px 16px', borderRadius: '8px', width: '350px', border: '1px solid var(--border-color)' }}>
-            <Search size={18} color="var(--text-tertiary)" />
-            <input 
-              type="text" 
-              placeholder="Search across Lists..." 
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-              style={{ background: 'transparent', border: 'none', outline: 'none', marginLeft: '12px', width: '100%', fontSize: '0.95rem', color: 'var(--text-primary)' }} 
-            />
+          )}
+          {/* Right: Actions */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+             {selectedCount === 0 && <button onClick={() => setCreateModal(true)} style={{ padding: '10px 20px', borderRadius: '10px', background: '#2563eb', color: 'white', border: 'none', display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,99,235,0.25)' }}>
+               <Plus size={18} /> Create List
+             </button>}
           </div>
         </div>
-        )}
-        {/* Right: Actions */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-           {selectedCount === 0 && <button onClick={() => setCreateModal(true)} className="primary-btn" style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 600, cursor: 'pointer' }}>
-             <Plus size={18} /> Create List
-           </button>}
-        </div>
-      </div>
 
-      {/* Table Container */}
-      <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto' }}>
-        <table style={{ width: '100%', minWidth: '1800px', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ position: 'sticky', top: 0, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', zIndex: 10, fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-            <tr>
-              <th style={{ width: '48px', padding: '16px', borderBottom: '1px solid var(--glass-border)', textAlign: 'center' }}>
-                <input type="checkbox" onChange={handleSelectAll} checked={currentData.length > 0 && selectedIds.length === currentData.length} style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary-color)' }} />
-              </th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '220px' }}>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  List Name <Filter size={14} color={headerFilters.name ? "var(--primary-color)" : "var(--text-tertiary)"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'name' ? null : 'name')} />
-                  <AnimatePresence>
-                    {filterMenu === 'name' && (
-                      <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                        style={{ position: 'absolute', top: '100%', left: 0, width: '200px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', padding: '12px', zIndex: 20, textTransform: 'none' }}>
-                        <input type="text" placeholder="Filter by name..." value={headerFilters.name} onChange={e => setHeaderFilters({...headerFilters, name: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: '6px', outline: 'none' }} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '130px' }}>List Type</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '160px' }}>List Creation Type</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '160px' }}>Bulk Upload Source</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '130px' }}>List Status</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '130px' }}>Created On</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '150px' }}>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  Allow Duplicates <Filter size={14} color={headerFilters.allowDuplicates ? "var(--primary-color)" : "var(--text-tertiary)"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'allowDuplicates' ? null : 'allowDuplicates')} />
-                  <AnimatePresence>
-                    {filterMenu === 'allowDuplicates' && (
-                      <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                        style={{ position: 'absolute', top: '100%', left: 0, width: '150px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', padding: '8px', zIndex: 20, textTransform: 'none' }}>
-                        <select value={headerFilters.allowDuplicates} onChange={e => setHeaderFilters({...headerFilters, allowDuplicates: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: '6px', outline: 'none' }}>
-                          <option value="">All</option><option value="ON">ON</option><option value="OFF">OFF</option>
-                        </select>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '150px' }}>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  Disallow Rechurn <Filter size={14} color={headerFilters.disallowAutoRechain ? "var(--primary-color)" : "var(--text-tertiary)"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'disallowAutoRechain' ? null : 'disallowAutoRechain')} />
-                  <AnimatePresence>
-                    {filterMenu === 'disallowAutoRechain' && (
-                      <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                        style={{ position: 'absolute', top: '100%', left: 0, width: '150px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', padding: '8px', zIndex: 20, textTransform: 'none' }}>
-                        <select value={headerFilters.disallowAutoRechain} onChange={e => setHeaderFilters({...headerFilters, disallowAutoRechain: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: '6px', outline: 'none' }}>
-                          <option value="">All</option><option value="ON">ON</option><option value="OFF">OFF</option>
-                        </select>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '150px' }}>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  Owner <Filter size={14} color={headerFilters.owner ? "var(--primary-color)" : "var(--text-tertiary)"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'owner' ? null : 'owner')} />
-                  <AnimatePresence>
-                    {filterMenu === 'owner' && (
-                      <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                        style={{ position: 'absolute', top: '100%', left: 0, width: '180px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', padding: '8px', zIndex: 20, textTransform: 'none' }}>
-                        <select value={headerFilters.owner} onChange={e => setHeaderFilters({...headerFilters, owner: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: '6px', outline: 'none' }}>
-                          <option value="">All Owners</option><option value="Admin User">Admin User</option><option value="Rahul Sharma">Rahul Sharma</option><option value="Priya Nair">Priya Nair</option><option value="Sales Team">Sales Team</option><option value="Marketing Team">Marketing Team</option>
-                        </select>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '140px' }}>List Contains</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '140px' }}>Distribution</th>
-              <th style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', width: '80px', textAlign: 'center' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.length > 0 ? currentData.map((row: any) => (
-              <tr key={row.id} onClick={(e) => {
-                  const target = e.target as HTMLElement;
-                  if (target.closest('button') || target.closest('input') || target.closest('.toggle-container') || target.closest('select')) return;
-                  handleSelectRow(row.id, { target: { checked: !selectedIds.includes(row.id) } } as any);
-                }} 
-                style={{ borderBottom: '1px solid var(--glass-border)', background: selectedIds.includes(row.id) ? 'var(--bg-secondary)' : 'transparent', transition: 'background 0.2s', cursor: 'pointer' }}
-                onMouseOver={(e) => { if (!selectedIds.includes(row.id)) e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                onMouseOut={(e) => { if (!selectedIds.includes(row.id)) e.currentTarget.style.background = 'transparent' }}>
-                <td style={{ padding: '16px', textAlign: 'center' }}><input type="checkbox" checked={selectedIds.includes(row.id)} onChange={(e) => handleSelectRow(row.id, e)} style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary-color)' }} /></td>
-                <td style={{ padding: '16px', fontWeight: 600, color: 'var(--primary-color)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px' }} title={row.name}>{row.name}</td>
-                <td style={{ padding: '16px' }}>{row.listType || '-'}</td>
-                <td style={{ padding: '16px' }}>{row.listCreationType || '-'}</td>
-                <td style={{ padding: '16px' }}>{row.bulkUploadSource || '-'}</td>
-                <td style={{ padding: '16px' }}>
-                   <span style={{ padding: '4px 8px', borderRadius: '4px', background: row.listStatus === 'Active' ? '#dcfce7' : '#f1f5f9', color: row.listStatus === 'Active' ? '#166534' : '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
-                     {row.listStatus || '-'}
-                   </span>
-                </td>
-                <td style={{ padding: '16px' }}>{row.createdOn || '-'}</td>
-                <td style={{ padding: '16px' }}>
-                  <div className="toggle-container">
-                    <Toggle isOn={row.allowDuplicates} onToggle={() => handleToggleDuplicates(row.id)} />
+        {/* Table Container */}
+        <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', background: 'white' }}>
+          <table style={{ width: '100%', minWidth: '1800px', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 10, fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <tr>
+                <th style={{ width: '48px', padding: '16px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>
+                  <input type="checkbox" onChange={handleSelectAll} checked={currentData.length > 0 && selectedIds.length === currentData.length} style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#2563eb' }} />
+                </th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '220px' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    List Name <Filter size={14} color={headerFilters.name ? "#2563eb" : "#94a3b8"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'name' ? null : 'name')} />
+                    <AnimatePresence>
+                      {filterMenu === 'name' && (
+                        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                          style={{ position: 'absolute', top: '100%', left: 0, width: '200px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', padding: '12px', zIndex: 20, textTransform: 'none' }}>
+                          <input type="text" placeholder="Filter by name..." value={headerFilters.name} onChange={e => setHeaderFilters({...headerFilters, name: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none' }} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </td>
-                <td style={{ padding: '16px' }}>
-                  <div className="toggle-container">
-                    <Toggle isOn={row.disallowAutoRechain} onToggle={() => handleToggleRechain(row.id)} />
+                </th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '130px' }}>List Type</th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '160px' }}>List Creation Type</th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '160px' }}>Bulk Upload Source</th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '130px' }}>List Status</th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '130px' }}>Created On</th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '150px' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Allow Duplicates <Filter size={14} color={headerFilters.allowDuplicates ? "#2563eb" : "#94a3b8"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'allowDuplicates' ? null : 'allowDuplicates')} />
+                    <AnimatePresence>
+                      {filterMenu === 'allowDuplicates' && (
+                        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                          style={{ position: 'absolute', top: '100%', left: 0, width: '150px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', padding: '8px', zIndex: 20, textTransform: 'none' }}>
+                          <select value={headerFilters.allowDuplicates} onChange={e => setHeaderFilters({...headerFilters, allowDuplicates: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none' }}>
+                            <option value="">All</option><option value="ON">ON</option><option value="OFF">OFF</option>
+                          </select>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </td>
-                <td style={{ padding: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }} title={row.owner}>{row.owner}</td>
-                <td style={{ padding: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '130px' }}><button onClick={() => handleAction('leads', row)} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary-color)', cursor: 'pointer' }}>{row.contains} Leads</button></td>
-                <td style={{ padding: '16px' }}>
-                   <span style={{ padding: '4px 8px', borderRadius: '4px', background: row.distribution === 'Assigned' ? '#dbeafe' : '#fef3c7', color: row.distribution === 'Assigned' ? '#1e40af' : '#b45309', fontSize: '0.8rem', fontWeight: 600 }}>
-                     {row.distribution}
-                   </span>
-                </td>
-                <td style={{ padding: '16px', textAlign: 'center', position: 'relative' }}>
-                  <button onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}>
-                    <MoreVertical size={18} color="var(--text-tertiary)" />
-                  </button>
-                  <AnimatePresence>
-                    {activeMenuId === row.id && <ActionDropdown isUp={false} onAction={handleAction} list={row} />}
-                  </AnimatePresence>
-                </td>
+                </th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '150px' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Disallow Rechurn <Filter size={14} color={headerFilters.disallowAutoRechain ? "#2563eb" : "#94a3b8"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'disallowAutoRechain' ? null : 'disallowAutoRechain')} />
+                    <AnimatePresence>
+                      {filterMenu === 'disallowAutoRechain' && (
+                        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                          style={{ position: 'absolute', top: '100%', left: 0, width: '150px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', padding: '8px', zIndex: 20, textTransform: 'none' }}>
+                          <select value={headerFilters.disallowAutoRechain} onChange={e => setHeaderFilters({...headerFilters, disallowAutoRechain: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none' }}>
+                            <option value="">All</option><option value="ON">ON</option><option value="OFF">OFF</option>
+                          </select>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '200px' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Owner <Filter size={14} color={headerFilters.owner ? "#2563eb" : "#94a3b8"} cursor="pointer" onClick={() => setFilterMenu(filterMenu === 'owner' ? null : 'owner')} />
+                    <AnimatePresence>
+                      {filterMenu === 'owner' && (
+                        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                          style={{ position: 'absolute', top: '100%', left: 0, width: '180px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', padding: '8px', zIndex: 20, textTransform: 'none' }}>
+                          <select value={headerFilters.owner} onChange={e => setHeaderFilters({...headerFilters, owner: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none' }}>
+                            <option value="">All Owners</option><option value="Admin User">Admin User</option><option value="Rahul Sharma">Rahul Sharma</option><option value="Priya Nair">Priya Nair</option><option value="Sales Team">Sales Team</option><option value="Marketing Team">Marketing Team</option>
+                          </select>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '140px' }}>List Contains</th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '140px' }}>Distribution</th>
+                <th style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', width: '80px', textAlign: 'center' }}>Actions</th>
               </tr>
-            )) : (
-              <tr><td colSpan={13} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>No lists found.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {currentData.length > 0 ? currentData.map((row: any) => (
+                <tr key={row.id} onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest('button') || target.closest('input') || target.closest('.toggle-container') || target.closest('select')) return;
+                    handleSelectRow(row.id, { target: { checked: !selectedIds.includes(row.id) } } as any);
+                  }} 
+                  style={{ borderBottom: '1px solid #f1f5f9', background: selectedIds.includes(row.id) ? '#f8fafc' : 'white', transition: 'background 0.2s', cursor: 'pointer' }}
+                  onMouseOver={(e) => { if (!selectedIds.includes(row.id)) e.currentTarget.style.background = '#f8fafc' }}
+                  onMouseOut={(e) => { if (!selectedIds.includes(row.id)) e.currentTarget.style.background = 'white' }}>
+                  <td style={{ padding: '16px', textAlign: 'center' }}><input type="checkbox" checked={selectedIds.includes(row.id)} onChange={(e) => handleSelectRow(row.id, e)} style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#2563eb' }} /></td>
+                  <td style={{ padding: '16px', fontWeight: 600, color: '#2563eb', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px', fontSize: '0.9rem' }} title={row.name}>{row.name}</td>
+                  <td style={{ padding: '16px', color: '#334155', fontSize: '0.9rem' }}>{row.listType || '-'}</td>
+                  <td style={{ padding: '16px', color: '#334155', fontSize: '0.9rem' }}>{row.listCreationType || '-'}</td>
+                  <td style={{ padding: '16px', color: '#334155', fontSize: '0.9rem' }}>{row.bulkUploadSource || '-'}</td>
+                  <td style={{ padding: '16px' }}>
+                     <span style={{ padding: '4px 10px', borderRadius: '12px', background: row.listStatus === 'Active' ? '#dcfce7' : '#f1f5f9', color: row.listStatus === 'Active' ? '#166534' : '#64748b', fontSize: '0.75rem', fontWeight: 600, border: `1px solid ${row.listStatus === 'Active' ? '#bbf7d0' : '#e2e8f0'}` }}>
+                       {row.listStatus || '-'}
+                     </span>
+                  </td>
+                  <td style={{ padding: '16px', color: '#334155', fontSize: '0.9rem' }}>{row.createdOn || '-'}</td>
+                  <td style={{ padding: '16px' }}>
+                    <div className="toggle-container">
+                      <Toggle isOn={row.allowDuplicates} onToggle={() => handleToggleDuplicates(row.id)} />
+                    </div>
+                  </td>
+                  <td style={{ padding: '16px' }}>
+                    <div className="toggle-container">
+                      <Toggle isOn={row.disallowAutoRechain} onToggle={() => handleToggleRechain(row.id)} />
+                    </div>
+                  </td>
+                  <td style={{ padding: '16px' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#e0e7ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>
+                         {(row.owner || 'Unknown').split(' ').map((n: string) => n[0]).join('').substring(0,2)}
+                       </div>
+                       <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px', color: '#334155', fontSize: '0.9rem', fontWeight: 500 }} title={row.owner || 'Unknown'}>{row.owner || 'Unknown'}</span>
+                     </div>
+                  </td>
+                  <td style={{ padding: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}><button onClick={() => handleAction('leads', row)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, color: '#3b82f6', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e=>e.currentTarget.style.background='#eff6ff'} onMouseOut={e=>e.currentTarget.style.background='#f8fafc'}>{Number(row.contains || 0).toLocaleString()} Leads</button></td>
+                  <td style={{ padding: '16px' }}>
+                     <span style={{ padding: '4px 8px', borderRadius: '6px', background: row.distribution === 'Assigned' ? '#eff6ff' : '#fff7ed', color: row.distribution === 'Assigned' ? '#1d4ed8' : '#c2410c', fontSize: '0.8rem', fontWeight: 500, border: `1px solid ${row.distribution === 'Assigned' ? '#bfdbfe' : '#ffedd5'}` }}>
+                       {row.distribution}
+                     </span>
+                  </td>
+                  <td style={{ padding: '16px', textAlign: 'center', position: 'relative' }}>
+                    <button onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '50%' }} onMouseOver={e=>e.currentTarget.style.background='#f1f5f9'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                      <MoreVertical size={18} color="#64748b" />
+                    </button>
+                    <AnimatePresence>
+                      {activeMenuId === row.id && <ActionDropdown isUp={false} onAction={handleAction} list={row} />}
+                    </AnimatePresence>
+                  </td>
+                </tr>
+              )) : (
+                <tr><td colSpan={13} style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>No lists found.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Pagination Footer */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid var(--glass-border)', background: 'var(--bg-card)', zIndex: 11 }}>
-         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Showing {Math.min((page - 1) * itemsPerPage + 1, filteredLists.length)} to {Math.min(page * itemsPerPage, filteredLists.length)} of {filteredLists.length} entries</span>
-         <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', cursor: page === 1 ? 'not-allowed' : 'pointer', opacity: page === 1 ? 0.5 : 1, color: 'var(--text-primary)' }}><ChevronLeft size={16} /></button>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', cursor: page === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, color: 'var(--text-primary)' }}><ChevronRight size={16} /></button>
-         </div>
+        {/* Pagination Footer */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: 'white', zIndex: 11 }}>
+           <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Showing {Math.min((page - 1) * itemsPerPage + 1, filteredLists.length)} to {Math.min(page * itemsPerPage, filteredLists.length)} of {filteredLists.length} entries</span>
+           <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => { setPage(p => Math.max(1, p - 1)); setFilterMenu(null); setActiveMenuId(null); }} disabled={page === 1} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: page === 1 ? 'not-allowed' : 'pointer', opacity: page === 1 ? 0.5 : 1, color: '#334155' }}><ChevronLeft size={16} /></button>
+              <button onClick={() => { setPage(p => Math.min(totalPages, p + 1)); setFilterMenu(null); setActiveMenuId(null); }} disabled={page === totalPages || totalPages === 0} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: page === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer', opacity: page === totalPages || totalPages === 0 ? 0.5 : 1, color: '#334155' }}><ChevronRight size={16} /></button>
+           </div>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -808,31 +908,22 @@ export function LeadsSegmentsView({ newUploadEvent }: { newUploadEvent?: any }) 
         )}
 
         {leadsList && (
-          <GenericModal key="leads-modal" title={`Leads in ${leadsList.name}`} width="800px" onClose={() => setLeadsList(null)}>
-             <div style={{ border: '1px solid var(--glass-border)', borderRadius: '8px', overflow: 'hidden' }}>
-               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                 <thead style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
-                   <tr>
-                     <th style={{ padding: '12px' }}>Lead Name</th>
-                     <th style={{ padding: '12px' }}>Mobile</th>
-                     <th style={{ padding: '12px' }}>Stage</th>
-                     <th style={{ padding: '12px' }}>Owner</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {Array.from({length: 5}).map((_, i) => (
-                     <tr key={i} style={{ borderTop: '1px solid var(--glass-border)' }}>
-                       <td style={{ padding: '12px', fontWeight: 600 }}>Demo Lead {i + 1}</td>
-                       <td style={{ padding: '12px' }}>+91 98000{1000 + i}</td>
-                       <td style={{ padding: '12px' }}>Working</td>
-                       <td style={{ padding: '12px' }}>{leadsList.owner}</td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
-             <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.85rem', marginTop: '12px' }}>Showing 5 of {leadsList.contains} leads. Open full Leads view for all records.</p>
-          </GenericModal>
+          <SegmentLeadsTable 
+            key="segment-leads"
+            listName={leadsList.name}
+            onClose={() => setLeadsList(null)}
+            onLeadClick={(lead) => {
+              setFullViewLead(lead);
+            }}
+          />
+        )}
+        
+        {fullViewLead && (
+          <LeadWorkspaceModal 
+            isOpen={true} 
+            onClose={() => setFullViewLead(null)} 
+            lead={fullViewLead} 
+          />
         )}
       </AnimatePresence>
     </div>

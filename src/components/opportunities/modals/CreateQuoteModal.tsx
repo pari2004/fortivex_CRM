@@ -2,14 +2,18 @@ import React, { useState } from 'react';
 import { useCRM, QuoteLineItem } from '@/contexts/CRMContext';
 import { X, Plus, Trash2 } from 'lucide-react';
 
+import { QuoteBusiness } from '../tabs/OpportunitiesQuotes';
+
 interface Props {
   onClose: () => void;
   onSuccess?: (id: string) => void;
+  businesses?: QuoteBusiness[];
 }
 
-export function CreateQuoteModal({ onClose, onSuccess }: Props) {
-  const { addQuote } = useCRM();
+export function CreateQuoteModal({ onClose, onSuccess, businesses = [] }: Props) {
+  const { addQuote, quotationDefaults } = useCRM();
   const [formData, setFormData] = useState({
+    businessId: businesses.length > 0 ? businesses.find(b => b.isDefault)?.id || businesses[0].id : '',
     customer: '',
     leadName: '',
     leadId: `L-${Math.floor(Math.random() * 10000)}`,
@@ -17,10 +21,10 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
     owner: 'Current User',
     subject: '',
     quoteDate: new Date().toISOString().split('T')[0],
-    expiredDate: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
-    currency: 'INR',
+    expiredDate: new Date(Date.now() + (quotationDefaults.quoteValidityDays || 30) * 86400000).toISOString().split('T')[0],
+    currency: quotationDefaults.baseCurrency || 'INR',
     paymentMode: 'Credit Card',
-    notes: 'Standard terms apply.'
+    notes: quotationDefaults.defaultTerms || 'Standard terms apply.'
   });
 
   const [lineItems, setLineItems] = useState<Omit<QuoteLineItem, 'id' | 'lineTotal'>[]>([{
@@ -28,7 +32,7 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
     description: '',
     quantity: 1,
     unitPrice: 0,
-    tax: 0,
+    tax: quotationDefaults.defaultGst || 0,
     discount: 0
   }]);
 
@@ -48,9 +52,12 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const generatedNum = Math.floor(Math.random() * Math.pow(10, quotationDefaults.quoteDigits || 4));
+    const quoteNumber = `${quotationDefaults.quotePrefix || 'QTN-'}${String(generatedNum).padStart(quotationDefaults.quoteDigits || 4, '0')}`;
+
     addQuote({
       ...formData,
-      quoteNumber: `QT-2026-${Math.floor(Math.random() * 10000)}`,
+      quoteNumber,
       recentAction: 'Quote Drafted',
       status: 'Draft',
       quoteAmount: grandTotal,
@@ -60,7 +67,7 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
       subtotal,
       tax: totalTax,
       discount: totalDiscount,
-      shipping,
+      shipping: quotationDefaults.enableShippingCharges ? shipping : 0,
       total: grandTotal,
       lineItems: itemsWithTotal.map(i => ({
         id: i.id,
@@ -71,7 +78,26 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
         tax: i.taxAmount,
         discount: i.discount,
         lineTotal: i.lineTotal
-      }))
+      })),
+      businessName: quotationDefaults.businessName,
+      businessGstin: quotationDefaults.businessGstin,
+      billingAddress: quotationDefaults.billingAddress,
+      shippingAddress: quotationDefaults.shippingAddress,
+      brandColor: quotationDefaults.brandColor,
+      logo: quotationDefaults.logo,
+      signatureImage: quotationDefaults.signatureImage,
+      signatoryName: quotationDefaults.signatoryName,
+      designation: quotationDefaults.designation,
+      bankName: quotationDefaults.bankName,
+      accountHolder: quotationDefaults.accountHolder,
+      accountNumber: quotationDefaults.accountNumber,
+      ifscCode: quotationDefaults.ifscCode,
+      upiId: quotationDefaults.upiId,
+      accountType: quotationDefaults.accountType,
+      showBankInPdf: quotationDefaults.showBankInPdf,
+      showShippingInPdf: quotationDefaults.showShippingInPdf,
+      showSignatureInPdf: quotationDefaults.showSignatureInPdf,
+      attachPaymentLink: quotationDefaults.attachPaymentLink
     });
     onSuccess?.(formData.customer);
     onClose();
@@ -87,7 +113,22 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Header Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Quote from</label>
+              <select 
+                value={formData.businessId} 
+                onChange={e => setFormData({...formData, businessId: e.target.value})} 
+                className="input-field" 
+                style={{ width: '100%', padding: '10px' }}
+                disabled={businesses.length === 0}
+              >
+                {businesses.length === 0 && <option value="">Default Business</option>}
+                {businesses.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Customer Name</label>
               <input required type="text" value={formData.customer} onChange={e => setFormData({...formData, customer: e.target.value, leadName: e.target.value})} className="input-field" style={{ width: '100%', padding: '10px' }} />
@@ -176,7 +217,7 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
                 ))}
               </tbody>
             </table>
-            <button type="button" onClick={() => setLineItems([...lineItems, { product: '', description: '', quantity: 1, unitPrice: 0, tax: 0, discount: 0 }])} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px dashed var(--border-color)', background: 'transparent', cursor: 'pointer', fontWeight: 500, color: 'var(--primary-color)' }}>
+            <button type="button" onClick={() => setLineItems([...lineItems, { product: '', description: '', quantity: 1, unitPrice: 0, tax: quotationDefaults.defaultGst || 0, discount: 0 }])} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px dashed var(--border-color)', background: 'transparent', cursor: 'pointer', fontWeight: 500, color: 'var(--primary-color)' }}>
               <Plus size={16} /> Add Line Item
             </button>
           </div>
@@ -201,10 +242,12 @@ export function CreateQuoteModal({ onClose, onSuccess }: Props) {
                 <span style={{ color: 'var(--text-tertiary)' }}>Tax:</span>
                 <span style={{ fontWeight: 600 }}>₹{totalTax.toLocaleString()}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>Shipping:</span>
-                <input type="number" value={shipping} onChange={e => setShipping(Number(e.target.value))} className="input-field" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} />
-              </div>
+              {quotationDefaults.enableShippingCharges && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-tertiary)' }}>Shipping:</span>
+                  <input type="number" value={shipping} onChange={e => setShipping(Number(e.target.value))} className="input-field" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} />
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '12px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
                 <span>Grand Total:</span>
                 <span>₹{grandTotal.toLocaleString()}</span>

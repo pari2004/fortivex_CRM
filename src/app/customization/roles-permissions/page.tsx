@@ -133,8 +133,8 @@ const SYSTEM_USERS = [
   { id: 'USR-05', name: 'Harvey Specter', photo: 'https://i.pravatar.cc/150?u=5', department: 'Management', email: 'harvey@fortivex.com', phone: '+1 234 567 894', status: 'Active', addedAt: '8/4/2026, 14:20:00 PM' },
 ];
 
-export default function RolesPage() {
-  const { role } = useAuth();
+export default function RolesPage({ hideHeader }: { hideHeader?: boolean } = {}) {
+  const { role, forceRefreshPermissions } = useAuth();
   const isAdmin = role === 'admin' || role === 'it';
   const router = useRouter();
   
@@ -258,6 +258,15 @@ export default function RolesPage() {
 
   const handleSavePermissions = () => {
     if (selectedRole) {
+      // Administrator Safety Check
+      if ((selectedRole.name === 'Admin' || selectedRole.name === 'IT') && 
+          tempPermissions['Customization'] && 
+          tempPermissions['Customization']['View'] === false) {
+        if (!window.confirm('WARNING: You are about to remove View access to Customization for the Administrator role. This could lock you out of managing the CRM. Are you absolutely sure you want to proceed?')) {
+          return;
+        }
+      }
+
       const updatedData = localData.map(r => {
         if (r.id === selectedRole.id) {
           return { ...r, permissions: tempPermissions };
@@ -265,7 +274,21 @@ export default function RolesPage() {
         return r;
       });
       setLocalData(updatedData);
-      showToast('Permissions saved successfully');
+      localStorage.setItem('crm_custom_roles', JSON.stringify(updatedData));
+      
+      // Update global context so it takes effect instantly
+      forceRefreshPermissions();
+      
+      showToast('Permissions updated successfully');
+      
+      // We do not close modal here, they stay on the screen but changes are saved
+    }
+  };
+
+  const handleCancelPermissions = () => {
+    if (selectedRole) {
+      setTempPermissions(selectedRole.permissions ? JSON.parse(JSON.stringify(selectedRole.permissions)) : {});
+      showToast('Unsaved changes discarded', 'error');
     }
   };
 
@@ -415,23 +438,25 @@ export default function RolesPage() {
   const allowedModules = MODULES;
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Roles & Permissions</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Manage access levels, security policies, and team permissions across the workspace.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="secondary-btn" onClick={() => openModal('auditLogs')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Copy size={16} /> Audit Logs
-          </button>
+    <div style={{ padding: hideHeader ? '0' : '24px', maxWidth: '1400px', margin: '0 auto' }}>
+      {!hideHeader && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Roles & Permissions</h1>
+            <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Manage access levels, security policies, and team permissions across the workspace.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="secondary-btn" onClick={() => openModal('auditLogs')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Copy size={16} /> Audit Logs
+            </button>
           {isAdmin && (
             <button className="primary-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => openModal('edit')}>
               <Plus size={16} /> Create Role
             </button>
           )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
         {localData.map((r, i) => (
@@ -821,7 +846,28 @@ export default function RolesPage() {
               </PremiumCard>
             )}
 
-            <PremiumCard title="Permission Matrix" icon={<CheckSquare size={18} />}>
+            <PremiumCard 
+              title="Permission Matrix" 
+              icon={<CheckSquare size={18} />}
+              headerAction={
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    className="secondary-btn" 
+                    onClick={handleCancelPermissions}
+                    style={{ padding: '6px 16px', fontSize: '0.85rem' }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="primary-btn" 
+                    onClick={handleSavePermissions}
+                    style={{ padding: '6px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Save size={16} /> Save Changes
+                  </button>
+                </div>
+              }
+            >
               <div style={{ gridColumn: '1 / -1', overflowX: 'auto', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead>

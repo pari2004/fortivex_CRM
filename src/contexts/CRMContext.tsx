@@ -247,7 +247,244 @@ export interface SupportTicket {
 
 export interface DocumentCategoryNode { id: string; name: string; subCategories: DocumentCategoryNode[]; order: number; }
 
+export const INITIAL_LEAD_LIFECYCLE_STAGES: LeadLifecycleStage[] = [
+  { id: '1', name: 'New Lead', description: 'Leads that have not been contacted yet.', substages: ['New Lead'], order: 1 },
+  { id: '2', name: 'Contacted', description: 'Leads that have been contacted at least once.', substages: ['Contacted'], order: 2 },
+  { id: '3', name: 'Qualified', description: 'Leads that meet criteria and show potential.', substages: ['Qualified'], order: 3 },
+  { id: '4', name: 'Follow-up', description: 'Leads requiring active follow up.', substages: ['Follow-up'], order: 4 },
+  { id: '5', name: 'Interested', description: 'Leads demonstrating strong interest.', substages: ['Interested'], order: 5 },
+  { id: '6', name: 'Application Started', description: 'Leads who have begun the application process.', substages: ['Application Started'], order: 6 },
+  { id: '7', name: 'Application Submitted', description: 'Leads who have submitted their application.', substages: ['Application Submitted'], order: 7 },
+  { id: '8', name: 'Documents Pending', description: 'Application received but pending documents.', substages: ['Documents Pending'], order: 8 },
+  { id: '9', name: 'Admission / Conversion', description: 'Leads in the final admission or conversion step.', substages: ['Admission / Conversion'], order: 9 },
+  { id: '10', name: 'Converted', description: 'Leads successfully closed and converted to students.', substages: ['Converted'], order: 10 },
+  { id: '11', name: 'Lost', description: 'Leads that were disqualified or lost.', substages: ['Lost'], order: 11 }
+];
 
+export const INITIAL_DEAL_STAGES: string[] = [
+  'New',
+  'Qualification',
+  'Proposal',
+  'Negotiation',
+  'Payment Pending',
+  'Partially Paid',
+  'Won',
+  'Lost'
+];
+
+export const INITIAL_CALL_OUTCOMES: CallOutcome[] = [
+  { id: '1', name: 'Connected', type: 'Positive', description: 'Call was answered and had a meaningful conversation.', order: 1 },
+  { id: '2', name: 'Interested', type: 'Positive', description: 'Lead showed interest and wants to proceed.', order: 2 },
+  { id: '3', name: 'Follow-up Required', type: 'Neutral', description: 'Need to follow up later.', order: 3 },
+  { id: '4', name: 'Call Back Later', type: 'Neutral', description: 'Lead asked to call back at a specific time.', order: 4 },
+  { id: '5', name: 'Not Interested', type: 'Negative', description: 'Lead is not interested in the offering.', order: 5 },
+  { id: '6', name: 'No Answer', type: 'Negative', description: 'Call rang but no one answered.', order: 6 },
+  { id: '7', name: 'Busy', type: 'Negative', description: 'Line was busy.', order: 7 },
+  { id: '8', name: 'Wrong Number', type: 'Negative', description: 'Number is incorrect or does not belong to the lead.', order: 8 },
+  { id: '9', name: 'Voicemail', type: 'Neutral', description: 'Left a voicemail.', order: 9 },
+  { id: '10', name: 'Number Unreachable', type: 'Negative', description: 'Number is switched off or out of coverage.', order: 10 },
+  { id: '11', name: 'Converted', type: 'Positive', description: 'Call resulted in a conversion/sale.', order: 11 },
+  { id: '12', name: 'Lost', type: 'Negative', description: 'Lead was disqualified or lost during the call.', order: 12 }
+];
+
+export interface Integration {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  status: 'Connected' | 'Not Connected';
+  icon: string;
+  connectedAt?: string;
+}
+
+export const INITIAL_INTEGRATIONS: Integration[] = [
+  { id: '1', name: 'Google Workspace', category: 'Email', description: 'Sync Gmail, Drive, and Docs.', status: 'Not Connected', icon: 'Mail' },
+  { id: '2', name: 'Google Calendar', category: 'Calendar', description: 'Sync meetings and tasks.', status: 'Not Connected', icon: 'Calendar' },
+  { id: '3', name: 'WhatsApp Business', category: 'WhatsApp', description: 'Send and receive customer messages.', status: 'Not Connected', icon: 'MessageCircle' },
+  { id: '4', name: 'Zoom', category: 'Calling', description: 'Log video calls and recordings.', status: 'Not Connected', icon: 'Video' },
+  { id: '5', name: 'Twilio SMS', category: 'SMS / Messaging', description: 'Send CRM messages and track status.', status: 'Not Connected', icon: 'MessageSquare' },
+  { id: '6', name: 'Stripe', category: 'Payment Integration', description: 'Sync payment status with opportunities.', status: 'Not Connected', icon: 'CreditCard' }
+];
+
+export interface CustomFormField {
+  id: string;
+  type: 'Text' | 'Long Text' | 'Number' | 'Email' | 'Phone' | 'Date' | 'Date & Time' | 'Dropdown' | 'Multi Select' | 'Checkbox' | 'Radio Button' | 'File Upload' | 'Address' | 'State' | 'City' | 'Area' | 'Tags';
+  label: string;
+  name: string;
+  placeholder?: string;
+  required: boolean;
+  defaultValue?: string;
+  helpText?: string;
+  options?: string[]; // for dropdown, multi select, radio
+  order: number;
+}
+
+export interface CustomForm {
+  id: string;
+  name: string;
+  description: string;
+  module: string;
+  status: 'Active' | 'Draft' | 'Inactive';
+  fields: CustomFormField[];
+  createdBy: string;
+  lastUpdated: string;
+  settings: {
+    allowDuplicateSubmission: boolean;
+    requireLogin: boolean;
+    successMessage: string;
+    redirectAfterSubmission: string;
+    emailNotification: string;
+    assignSubmissionTo: string;
+    createLeadAutomatically: boolean;
+    createTaskAutomatically: boolean;
+    addTagsAutomatically: string[];
+  };
+}
+
+export const INITIAL_CUSTOM_FORMS: CustomForm[] = [
+  {
+    id: '1',
+    name: 'Lead Registration Form',
+    description: 'Capture new leads from the website.',
+    module: 'Leads',
+    status: 'Active',
+    fields: [
+      { id: 'f1', type: 'Text', label: 'Full Name', name: 'fullName', required: true, order: 1 },
+      { id: 'f2', type: 'Email', label: 'Email Address', name: 'email', required: true, order: 2 },
+      { id: 'f3', type: 'Phone', label: 'Phone Number', name: 'phone', required: true, order: 3 }
+    ],
+    createdBy: 'Admin',
+    lastUpdated: new Date().toISOString(),
+    settings: {
+      allowDuplicateSubmission: false,
+      requireLogin: false,
+      successMessage: 'Thank you for registering!',
+      redirectAfterSubmission: '',
+      emailNotification: '',
+      assignSubmissionTo: 'Abhay',
+      createLeadAutomatically: true,
+      createTaskAutomatically: false,
+      addTagsAutomatically: ['Website Lead']
+    }
+  },
+  {
+    id: '2',
+    name: 'Student Admission Form',
+    description: 'Detailed admission form for enrolled students.',
+    module: 'Applications',
+    status: 'Draft',
+    fields: [
+      { id: 'f1', type: 'Text', label: 'First Name', name: 'firstName', required: true, order: 1 },
+      { id: 'f2', type: 'Text', label: 'Last Name', name: 'lastName', required: true, order: 2 }
+    ],
+    createdBy: 'Admin',
+    lastUpdated: new Date(Date.now() - 86400000).toISOString(),
+    settings: {
+      allowDuplicateSubmission: false,
+      requireLogin: true,
+      successMessage: 'Admission form submitted successfully.',
+      redirectAfterSubmission: '',
+      emailNotification: 'admin@example.com',
+      assignSubmissionTo: 'Abhay',
+      createLeadAutomatically: false,
+      createTaskAutomatically: true,
+      addTagsAutomatically: ['Admission']
+    }
+  },
+  {
+    id: '3',
+    name: 'Internship Registration Form',
+    description: 'Form for students applying to internships.',
+    module: 'Students',
+    status: 'Active',
+    fields: [
+      { id: 'f1', type: 'Text', label: 'Name', name: 'name', required: true, order: 1 },
+      { id: 'f2', type: 'Dropdown', label: 'Preferred Role', name: 'role', required: true, options: ['Frontend', 'Backend', 'Data Science'], order: 2 }
+    ],
+    createdBy: 'Admin',
+    lastUpdated: new Date().toISOString(),
+    settings: {
+      allowDuplicateSubmission: false,
+      requireLogin: false,
+      successMessage: 'Application received.',
+      redirectAfterSubmission: '',
+      emailNotification: '',
+      assignSubmissionTo: 'Abhay',
+      createLeadAutomatically: false,
+      createTaskAutomatically: false,
+      addTagsAutomatically: ['Internship']
+    }
+  },
+  {
+    id: '4',
+    name: 'Placement Enquiry Form',
+    description: 'Enquiry form for placement assistance.',
+    module: 'Leads',
+    status: 'Inactive',
+    fields: [],
+    createdBy: 'Admin',
+    lastUpdated: new Date().toISOString(),
+    settings: {
+      allowDuplicateSubmission: true,
+      requireLogin: false,
+      successMessage: 'We will get back to you.',
+      redirectAfterSubmission: '',
+      emailNotification: '',
+      assignSubmissionTo: 'Abhay',
+      createLeadAutomatically: true,
+      createTaskAutomatically: true,
+      addTagsAutomatically: ['Placement']
+    }
+  },
+  {
+    id: '5',
+    name: 'Application Document Form',
+    description: 'Upload required documents for the application.',
+    module: 'Applications',
+    status: 'Active',
+    fields: [
+      { id: 'f1', type: 'File Upload', label: 'Resume', name: 'resume', required: true, order: 1 },
+      { id: 'f2', type: 'File Upload', label: 'ID Proof', name: 'idProof', required: true, order: 2 }
+    ],
+    createdBy: 'Admin',
+    lastUpdated: new Date().toISOString(),
+    settings: {
+      allowDuplicateSubmission: false,
+      requireLogin: true,
+      successMessage: 'Documents uploaded successfully.',
+      redirectAfterSubmission: '',
+      emailNotification: '',
+      assignSubmissionTo: 'Abhay',
+      createLeadAutomatically: false,
+      createTaskAutomatically: false,
+      addTagsAutomatically: ['Docs Pending']
+    }
+  },
+  {
+    id: '6',
+    name: 'Feedback Form',
+    description: 'General feedback form for students.',
+    module: 'Students',
+    status: 'Active',
+    fields: [
+      { id: 'f1', type: 'Dropdown', label: 'Rating', name: 'rating', required: true, options: ['1', '2', '3', '4', '5'], order: 1 },
+      { id: 'f2', type: 'Long Text', label: 'Comments', name: 'comments', required: false, order: 2 }
+    ],
+    createdBy: 'Admin',
+    lastUpdated: new Date().toISOString(),
+    settings: {
+      allowDuplicateSubmission: true,
+      requireLogin: false,
+      successMessage: 'Thank you for your feedback.',
+      redirectAfterSubmission: '',
+      emailNotification: '',
+      assignSubmissionTo: 'Abhay',
+      createLeadAutomatically: false,
+      createTaskAutomatically: false,
+      addTagsAutomatically: ['Feedback']
+    }
+  }
+];
 
 export interface Payment {
   id: string;
@@ -556,6 +793,8 @@ interface CRMContextType {
   leadTagsList: LeadTag[]; updateLeadTagsList: (tags: LeadTag[]) => void;
   leadSourceList: LeadSourceItem[]; updateLeadSourceList: (sources: LeadSourceItem[]) => void;
   callOutcomes: CallOutcome[]; updateCallOutcomes: (outcomes: CallOutcome[]) => void;
+  customForms: CustomForm[]; updateCustomForms: (forms: CustomForm[]) => void;
+  integrations: Integration[]; updateIntegrations: (integrations: Integration[]) => void;
   visitOutcomes: VisitOutcome[]; updateVisitOutcomes: (outcomes: VisitOutcome[]) => void;
   ticketStages: TicketStage[]; updateTicketStages: (stages: TicketStage[]) => void;
   ticketCategories: TicketCategory[]; updateTicketCategories: (categories: TicketCategory[]) => void;
@@ -564,8 +803,6 @@ interface CRMContextType {
   updateSupportTicket: (ticket: SupportTicket) => void;
   deleteSupportTicket: (id: string) => void;
   documentCategoriesTree: DocumentCategoryNode[]; updateDocumentCategoriesTree: (tree: DocumentCategoryNode[]) => void;
-
-  
 
   documents: Document[];
   businessLeads: BusinessLead[];
@@ -586,7 +823,6 @@ interface CRMContextType {
   deleteTask: (taskId: string) => void;
   addUser: (user: Omit<User, 'id'>) => void;
   updateSystemUser: (user: User) => void;
-
 
 // CRM Properties
   properties: CRMProperty[];
@@ -657,13 +893,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [leadTagsList, setLeadTagsList] = useState<LeadTag[]>([]);
   const [leadSourceList, setLeadSourceList] = useState<LeadSourceItem[]>([]);
   const [callOutcomes, setCallOutcomes] = useState<CallOutcome[]>([]);
+  const [customForms, setCustomForms] = useState<CustomForm[]>([]);
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [visitOutcomes, setVisitOutcomes] = useState<VisitOutcome[]>([]);
   const [ticketStages, setTicketStages] = useState<TicketStage[]>([]);
   const [ticketCategories, setTicketCategories] = useState<TicketCategory[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [documentCategoriesTree, setDocumentCategoriesTree] = useState<DocumentCategoryNode[]>([]);
-
-  
 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [businessLeads, setBusinessLeads] = useState<BusinessLead[]>([]);
@@ -869,13 +1105,7 @@ const initialDistributions: Distribution[] = [
     setDoNotTrackRecords(loadData('doNotTrackRecords', INITIAL_DONOTTRACK_RECORDS));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     
-    setLeadLifecycleStages(loadData('leadLifecycleStages', [
-      { id: '1', name: 'New Lead', description: 'Leads that have not been contacted yet.', substages: ['New Inquiry Lead'], order: 1 },
-      { id: '2', name: 'Prospecting Lead', description: 'Leads your reps have started working on and are trying to find if they are interested in your product/service.', substages: ['Call Attempted Lead'], order: 2 },
-      { id: '3', name: 'Opportunity Lead', description: 'Leads who are interested in your product/service and require closer monitoring through deal stages.', substages: ['Interested Lead'], order: 3 },
-      { id: '4', name: 'Closed Lead', description: 'Leads no longer active. Either they were not interested or the deal was lost.', substages: ['Closed Lead'], order: 4 },
-      { id: '5', name: 'Rechurned Lead', description: 'Leads that were closed earlier and have been rechurned again as new to be worked again.', substages: ['Re-engaged Lead'], order: 5 }
-    ]));
+    setLeadLifecycleStages(loadData('leadLifecycleStages', INITIAL_LEAD_LIFECYCLE_STAGES));
     setProspectingCriteria(loadData('prospectingCriteria', { maxFollowUps: 5, sequence: ['Call', 'Email', 'WhatsApp'], intervalHours: 24, positiveAction: 'Create Deal', negativeAction: 'Close Lead', timeoutAction: 'Close Lead' }));
     setDealMode(loadData('dealMode', { mode: 'Flexible' }));
     setLeadTagsList(loadData('leadTagsList', [
@@ -885,11 +1115,9 @@ const initialDistributions: Distribution[] = [
       { id: '1', name: 'Website', description: 'Incoming from website', order: 1 },
       { id: '2', name: 'LinkedIn', description: 'LinkedIn outreach', order: 2 }
     ]));
-    setCallOutcomes(loadData('callOutcomes', [
-      { id: '1', name: 'Session Scheduled', type: 'Positive', description: 'Meeting booked', order: 1 },
-      { id: '2', name: 'Call Back Later', type: 'Neutral', description: 'Requested call back', order: 2 },
-      { id: '3', name: 'Not Interested', type: 'Negative', description: 'Declined offer', order: 3 }
-    ]));
+    setCallOutcomes(loadData('callOutcomes', INITIAL_CALL_OUTCOMES));
+    setCustomForms(loadData('customForms', INITIAL_CUSTOM_FORMS));
+    setIntegrations(loadData('integrations', INITIAL_INTEGRATIONS));
     setVisitOutcomes(loadData('visitOutcomes', [
       { id: '1', name: 'Walk-in Done', type: 'Positive', description: 'Client visited office', order: 1 }
     ]));
@@ -906,7 +1134,7 @@ const initialDistributions: Distribution[] = [
     setBusinessLeads(loadData('businessLeads', generatedBusinessLeads));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDeals(loadData('deals', mockDeals));
-    setDealStages(loadData('dealStages', ['Session Scheduled', 'Session Done', 'Partial Payment Done', 'Learner Onboarded', 'Deal Won', 'Deal Lost']));
+    setDealStages(loadData('dealStages', INITIAL_DEAL_STAGES));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuotes(loadData('quotes', generatedQuotes));
     const storedDefaults = localStorage.getItem('crm_quotation_defaults');
@@ -1017,7 +1245,15 @@ const initialDistributions: Distribution[] = [
   const updateLeadTagsList = (d: LeadTag[]) => { setLeadTagsList(d); if (typeof window !== 'undefined') localStorage.setItem('crm_leadTagsList', JSON.stringify(d)); };
   const updateLeadSourceList = (d: LeadSourceItem[]) => { setLeadSourceList(d); if (typeof window !== 'undefined') localStorage.setItem('crm_leadSourceList', JSON.stringify(d)); };
   const updateCallOutcomes = (d: CallOutcome[]) => { setCallOutcomes(d); if (typeof window !== 'undefined') localStorage.setItem('crm_callOutcomes', JSON.stringify(d)); };
-  const updateVisitOutcomes = (d: VisitOutcome[]) => { setVisitOutcomes(d); if (typeof window !== 'undefined') localStorage.setItem('crm_visitOutcomes', JSON.stringify(d)); };
+  const updateCustomForms = (forms: CustomForm[]) => {
+    setCustomForms(forms);
+    if (typeof window !== 'undefined') localStorage.setItem('crm_customForms', JSON.stringify(forms));
+  };
+  const updateIntegrations = (newIntegrations: Integration[]) => {
+    setIntegrations(newIntegrations);
+    if (typeof window !== 'undefined') localStorage.setItem('crm_integrations', JSON.stringify(newIntegrations));
+  };
+  const updateVisitOutcomes = (outcomes: VisitOutcome[]) => { setVisitOutcomes(outcomes); if (typeof window !== 'undefined') localStorage.setItem('crm_visitOutcomes', JSON.stringify(outcomes)); };
   const updateTicketStages = (d: TicketStage[]) => { setTicketStages(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketStagesV2', JSON.stringify(d)); };
   const updateTicketCategories = (d: TicketCategory[]) => { setTicketCategories(d); if (typeof window !== 'undefined') localStorage.setItem('crm_ticketCategoriesV2', JSON.stringify(d)); };
 
@@ -1182,9 +1418,11 @@ const initialDistributions: Distribution[] = [
       dealMode, updateDealMode,
       leadTagsList, updateLeadTagsList,
       leadSourceList, updateLeadSourceList,
-      callOutcomes, updateCallOutcomes,
-      visitOutcomes, updateVisitOutcomes,
-      ticketStages, updateTicketStages,
+        callOutcomes, updateCallOutcomes,
+        customForms, updateCustomForms,
+        integrations, updateIntegrations,
+        visitOutcomes, updateVisitOutcomes,
+        ticketStages, updateTicketStages,
       ticketCategories, updateTicketCategories,
       supportTickets, addSupportTicket, updateSupportTicket, deleteSupportTicket,
       documentCategoriesTree, updateDocumentCategoriesTree,

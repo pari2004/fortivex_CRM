@@ -36,7 +36,7 @@ interface Props {
 }
 
 export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
-  const { leads, updateLead, deleteLead, deals, updateDeal, tasks, businessLeads, documents, uploadDocument, dealStages , quotationDefaults } = useCRM();
+  const { leads, updateLead, deleteLead, deals, updateDeal, tasks, businessLeads, documents, uploadDocument, dealStages , quotationDefaults, leadLifecycleStages } = useCRM();
   const { openSharedInbox } = useInbox();
   const CURRENT_USER = 'Abhay';
   
@@ -264,7 +264,7 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
   };
 
   // Extracted Stages from mock data
-  const allLeadStages = ['New Lead', 'Contacted', 'Interested', 'Demo Scheduled', 'Enrolled', 'Lost'];
+  const allLeadStages = leadLifecycleStages.map(s => s.name);
 
   return (
     <div style={{
@@ -358,6 +358,55 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
             </div>
 
             <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid transparent', background: '#f8fafc', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginLeft: '8px' }}><X size={18} /></button>
+          </div>
+        </div>
+
+        {/* VISUAL PROGRESS INDICATOR */}
+        <div style={{ padding: '16px 24px', background: 'white', borderBottom: '1px solid #e2e8f0', overflowX: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'relative', minWidth: '800px' }}>
+            <div style={{ position: 'absolute', top: '12px', left: '20px', right: '20px', height: '2px', background: '#e2e8f0', zIndex: 0 }} />
+            {leadLifecycleStages.map((stage, idx) => {
+              const isActive = stage.name === currentLead.status;
+              const currentIndex = leadLifecycleStages.findIndex(s => s.name === currentLead.status);
+              const isPast = currentIndex > idx;
+              
+              // Progress bar fill logic (between nodes)
+              const hasLineFill = isPast || isActive;
+              
+              return (
+                <div key={stage.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 1, flex: 1, position: 'relative' }}>
+                  {/* The connected line fill (left half) */}
+                  {idx > 0 && (
+                    <div style={{ position: 'absolute', top: '12px', left: '-50%', width: '100%', height: '2px', background: isPast || isActive ? '#10b981' : 'transparent', zIndex: -1 }} />
+                  )}
+                  
+                  <div style={{ 
+                    width: '24px', height: '24px', borderRadius: '50%', 
+                    background: isActive ? '#3b82f6' : (isPast ? '#10b981' : '#f8fafc'), 
+                    border: `2px solid ${isActive ? '#3b82f6' : (isPast ? '#10b981' : '#cbd5e1')}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'white',
+                    boxShadow: isActive ? '0 0 0 4px rgba(59, 130, 246, 0.2)' : 'none',
+                    transition: 'all 0.2s'
+                  }}>
+                    {isPast && <CheckCircle size={14} />}
+                    {isActive && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'white' }} />}
+                  </div>
+                  <div style={{ 
+                    fontSize: '0.75rem', 
+                    fontWeight: isActive ? 700 : 500, 
+                    color: isActive ? '#3b82f6' : (isPast ? '#10b981' : '#64748b'), 
+                    textAlign: 'center', 
+                    width: '100%',
+                    padding: '0 4px',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.2'
+                  }}>
+                    {stage.name}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 

@@ -1,26 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCRM } from '@/contexts/CRMContext';
+import { useCRM, INITIAL_LEAD_LIFECYCLE_STAGES } from '@/contexts/CRMContext';
 import { ArrowDown } from 'lucide-react';
 
-// The 5 canonical lifecycle stages — these are the source of truth for structure.
-// Only the substage name (substages[0]) is user-editable.
-const CANONICAL_STAGES = [
-  { id: '1', name: 'New Lead', description: 'Leads that have not been contacted yet.', substages: ['New Inquiry Lead'], order: 1 },
-  { id: '2', name: 'Prospecting Lead', description: 'Leads your reps have started working on and are trying to find if they are interested in your product/service.', substages: ['Call Attempted Lead'], order: 2 },
-  { id: '3', name: 'Opportunity Lead', description: 'Leads who are interested in your product/service and require closer monitoring through deal stages.', substages: ['Interested Lead'], order: 3 },
-  { id: '4', name: 'Closed Lead', description: 'Leads no longer active. Either they were not interested or the deal was lost.', substages: ['Closed Lead'], order: 4 },
-  { id: '5', name: 'Rechurned Lead', description: 'Leads that were closed earlier and have been rechurned again as new to be worked again.', substages: ['Re-engaged Lead'], order: 5 },
-];
-
-export default function LeadLifecyclePage() {
+export default function LeadLifecyclePage({ hideHeader }: { hideHeader?: boolean } = {}) {
   const { leadLifecycleStages, updateLeadLifecycleStages } = useCRM();
 
   // Build a guaranteed 5-stage array by merging saved data with canonical defaults.
   // This handles the case where localStorage has stale data with fewer than 5 stages.
   const buildStages = () => {
-    return CANONICAL_STAGES.map(canonical => {
+    return INITIAL_LEAD_LIFECYCLE_STAGES.map(canonical => {
       const saved = leadLifecycleStages.find(s => s.id === canonical.id);
       if (saved) {
         // Use the saved substage name if it exists, but always use canonical title/description
@@ -76,7 +66,7 @@ export default function LeadLifecyclePage() {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+    <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', padding: hideHeader ? '0' : '24px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Large left content card */}
       <div style={{
         flex: 1,
@@ -84,7 +74,7 @@ export default function LeadLifecyclePage() {
         background: '#fff',
         borderRadius: '12px',
         padding: '32px',
-        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+        boxShadow: hideHeader ? 'none' : '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           {stages.map((stage, index) => (

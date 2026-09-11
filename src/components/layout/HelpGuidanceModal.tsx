@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Search, Pin, Users, Settings, Briefcase, 
-  Link as LinkIcon, MessageSquare, User, Building2 
+  Link as LinkIcon, MessageSquare, User, Building2, CheckCircle2, ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
+import SetupWorkspaceCenter from './SetupWorkspaceCenter';
 
 interface HelpGuidanceModalProps {
   isOpen: boolean;
@@ -103,10 +104,15 @@ const CARDS_DATA = [
 
 export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isOnboardingMode, setIsOnboardingMode] = useState(false);
+
+  const resetOnboarding = () => setIsOnboardingMode(false);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      setIsOnboardingMode(false);
+      setSearchTerm('');
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -155,18 +161,67 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           style={{ 
             position: 'relative',
-            width: '90%', 
-            maxWidth: '1200px', 
+            width: '95%', 
+            maxWidth: '1400px', 
             height: '90vh', 
-            background: '#f8fafc', 
-            borderRadius: '16px',
+            background: '#ffffff', 
+            borderRadius: '24px',
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             overflow: 'hidden'
           }}
         >
-          {/* Header */}
+          {/* LEFT SIDEBAR PANEL */}
+          <div style={{ 
+            width: '320px', 
+            background: 'linear-gradient(180deg, #f0fdfa 0%, #e0e7ff 100%)', 
+            borderRight: '1px solid #e2e8f0',
+            padding: '40px 32px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'auto'
+          }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem', color: '#1e293b', fontWeight: 700 }}>
+              Salesmax Help Center
+            </h2>
+            <p style={{ margin: '0 0 32px 0', fontSize: '1.05rem', color: '#475569', lineHeight: 1.6 }}>
+              Welcome to your dedicated workspace setup and support center. Find everything you need to customize your CRM and empower your team.
+            </p>
+
+            <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#334155' }}>Quick Start Guide</h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <li style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', color: '#475569', fontSize: '0.95rem' }}>
+                  <CheckCircle2 size={18} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                  <span>Customize your organization profile</span>
+                </li>
+                <li style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', color: '#475569', fontSize: '0.95rem' }}>
+                  <CheckCircle2 size={18} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                  <span>Invite your team members</span>
+                </li>
+                <li style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', color: '#475569', fontSize: '0.95rem' }}>
+                  <CheckCircle2 size={18} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                  <span>Import existing leads</span>
+                </li>
+                <li style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', color: '#475569', fontSize: '0.95rem' }}>
+                  <CheckCircle2 size={18} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                  <span>Connect your integrations</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div style={{ marginTop: 'auto', paddingTop: '40px' }}>
+              <div style={{ width: '100%', height: '120px', background: 'rgba(255,255,255,0.4)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Briefcase size={48} style={{ color: '#818cf8', opacity: 0.8 }} />
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN CONTENT AREA */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa', position: 'relative' }}>
+            
+            {/* Header / Close Button */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
             <button 
               onClick={onClose} 
@@ -178,105 +233,153 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
             </button>
           </div>
 
-          <div style={{ overflowY: 'auto', padding: '32px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            
-            {/* Top Banner */}
-            <div style={{ 
-              width: '100%', 
-              maxWidth: '900px',
-              background: 'linear-gradient(to right, #9333ea, #3b82f6)',
-              borderRadius: '16px',
-              padding: '40px 24px',
-              color: 'white',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px',
-              marginBottom: '32px'
-            }}>
-              <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em' }}>NEW TO SALESMAX?</h1>
-              <p style={{ margin: 0, fontSize: '1.2rem', opacity: 0.9, cursor: 'pointer' }} onClick={onClose}>
-                <Link href="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>
-                  Click here to get started in simple steps &rarr;
-                </Link>
-              </p>
-              <Link href="/customization/organization" onClick={onClose}>
-                <button style={{ 
-                  marginTop: '8px',
-                  background: 'rgba(255,255,255,0.2)', 
-                  border: '1px solid rgba(255,255,255,0.4)', 
-                  color: 'white', 
-                  padding: '8px 24px', 
-                  borderRadius: '24px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(4px)'
-                }}>
-                  Update Tax ID
-                </button>
-              </Link>
-            </div>
+            <div style={{ overflowY: 'auto', padding: '40px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              
+              <AnimatePresence mode="wait">
+                {isOnboardingMode ? (
+                  <SetupWorkspaceCenter 
+                    key="onboarding"
+                    onClose={onClose}
+                    onExit={resetOnboarding}
+                  />
+                ) : (
+                  <motion.div 
+                    key="help-center"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                  >
+                    
+                    {/* Search */}
+                    <div style={{ 
+                      width: '100%', 
+                      maxWidth: '700px', 
+                      display: 'flex', 
+                      marginBottom: '32px', 
+                      background: 'white',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', 
+                      borderRadius: '16px', 
+                      overflow: 'hidden',
+                      transition: 'box-shadow 0.2s, border-color 0.2s'
+                    }}
+                    onFocus={e => {
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(147, 51, 234, 0.2)';
+                      e.currentTarget.style.borderColor = '#9333ea';
+                    }}
+                    onBlur={e => {
+                      e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                    }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px', background: 'transparent' }}>
+                        <Search size={20} color="#64748b" />
+                      </div>
+                      <input 
+                        type="text" 
+                        placeholder="Search: e.g., how to add user, upload leads..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ flex: 1, padding: '16px 16px 16px 0', border: 'none', outline: 'none', fontSize: '1.05rem', color: '#1e293b' }}
+                      />
+                    </div>
 
-            {/* Search */}
-            <div style={{ width: '100%', maxWidth: '700px', display: 'flex', marginBottom: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px', background: 'white' }}>
-                <Search size={20} color="#94a3b8" />
-              </div>
-              <input 
-                type="text" 
-                placeholder="Search: e.g., how to add user, upload leads..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ flex: 1, padding: '16px', border: 'none', outline: 'none', fontSize: '1.05rem' }}
-              />
-              <button style={{ 
-                background: '#9333ea', 
-                color: 'white', 
-                border: 'none', 
-                padding: '0 32px', 
-                fontSize: '1.05rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}>
-                Find
-              </button>
-            </div>
+                    {/* Premium Top Banner */}
+                    <div style={{ 
+                      width: '100%', 
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)',
+                      borderRadius: '20px',
+                      padding: '48px 32px',
+                      color: 'white',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '16px',
+                      marginBottom: '32px',
+                      boxShadow: '0 10px 25px -5px rgba(147, 51, 234, 0.4)'
+                    }}>
+                      <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.03em' }}>NEW TO SALESMAX?</h1>
+                      <div 
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: 'rgba(255,255,255,0.15)', borderRadius: '100px', cursor: 'pointer', transition: 'background 0.2s' }}
+                        onClick={() => setIsOnboardingMode(true)}
+                        onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                        onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                      >
+                        <span style={{ fontSize: '1.15rem', fontWeight: 500 }}>Click here to get started in simple steps</span>
+                        <ArrowRight size={20} />
+                      </div>
+                      <Link href="/customization/organization" onClick={onClose} style={{ marginTop: '16px' }}>
+                        <button style={{ 
+                          background: 'white', 
+                          border: 'none', 
+                          color: '#4f46e5', 
+                          padding: '10px 28px', 
+                          borderRadius: '100px',
+                          fontWeight: 600,
+                          fontSize: '0.95rem',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                          transition: 'transform 0.2s'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                          Update Tax ID
+                        </button>
+                      </Link>
+                    </div>
 
-            {/* Warning Bar */}
-            <div style={{ 
-              width: '100%', 
-              background: '#fef2f2', 
-              borderLeft: '4px solid #ef4444', 
-              padding: '16px 24px',
-              borderRadius: '0 8px 8px 0',
-              marginBottom: '40px',
-              color: '#7f1d1d',
-              fontSize: '0.95rem',
-              lineHeight: '1.5'
-            }}>
-              <strong style={{ color: '#b91c1c' }}>IMPORTANT!!!</strong> All queries/support must go via <strong>Support Chat Channel only</strong> — no direct calls or WhatsApp. Write in detail with supporting screenshot/screen recording. <strong style={{ color: '#b91c1c' }}>Strictly avoid direct call or WhatsApp.</strong>
-            </div>
+                    {/* Warning Bar */}
+                    <div style={{ 
+                      width: '100%', 
+                      background: '#fff1f2', 
+                      border: '1px solid #fecdd3',
+                      borderLeft: '4px solid #f43f5e', 
+                      padding: '20px 24px',
+                      borderRadius: '12px',
+                      marginBottom: '40px',
+                      color: '#9f1239',
+                      fontSize: '0.95rem',
+                      lineHeight: '1.6',
+                      boxShadow: '0 4px 6px -1px rgba(225, 29, 72, 0.05)'
+                    }}>
+                      <strong style={{ color: '#e11d48' }}>IMPORTANT!!!</strong> All queries/support must go via <strong>Support Chat Channel only</strong> — no direct calls or WhatsApp. Write in detail with supporting screenshot/screen recording. <strong style={{ color: '#e11d48' }}>Strictly avoid direct call or WhatsApp.</strong>
+                    </div>
 
-            {/* Cards Grid */}
-            <div style={{ 
-              width: '100%', 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-              gap: '24px',
-              alignItems: 'start'
-            }}>
-              {filteredCards.map((card: any) => (
-                <div key={card.id} style={{ 
-                  background: 'white', 
-                  borderRadius: '12px', 
-                  border: '1px solid #e2e8f0', 
-                  padding: '24px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%'
-                }}>
+                    {/* Cards Grid */}
+                    <div style={{ 
+                      width: '100%', 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+                      gap: '24px',
+                      alignItems: 'start',
+                      paddingBottom: '40px'
+                    }}>
+                      {filteredCards.map((card: any) => (
+                        <div key={card.id} style={{ 
+                          background: 'white', 
+                          borderRadius: '16px', 
+                          border: '1px solid #e2e8f0', 
+                          padding: '28px',
+                          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          height: '100%',
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                          cursor: 'default'
+                        }}
+                        onMouseOver={e => {
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                          e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0,0,0,0.05)';
+                        }}
+                        onMouseOut={e => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)';
+                        }}
+                        >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                     {card.icon}
                     <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#9333ea', fontWeight: 600 }}>{card.title}</h3>
@@ -315,36 +418,43 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
                     ))}
                   </div>
 
-                  {card.buttonText && (
-                    <Link href={card.buttonLink} onClick={onClose} style={{ textDecoration: 'none', width: '100%' }}>
-                      <button style={{ 
-                        width: '100%', 
-                        padding: '10px', 
-                        background: 'white', 
-                        border: '1px solid #e2e8f0', 
-                        borderRadius: '8px',
-                        color: '#64748b',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.borderColor = '#9333ea';
-                        e.currentTarget.style.color = '#9333ea';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.borderColor = '#e2e8f0';
-                        e.currentTarget.style.color = '#64748b';
-                      }}
-                      >
-                        {card.buttonText}
-                      </button>
-                    </Link>
-                  )}
-                </div>
-              ))}
-            </div>
+                          {card.buttonText && (
+                            <Link href={card.buttonLink} onClick={onClose} style={{ textDecoration: 'none', width: '100%' }}>
+                              <button style={{ 
+                                width: '100%', 
+                                padding: '12px', 
+                                background: '#f8fafc', 
+                                border: '1px solid #e2e8f0', 
+                                borderRadius: '12px',
+                                color: '#475569',
+                                fontWeight: 600,
+                                fontSize: '0.95rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.background = '#f1f5f9';
+                                e.currentTarget.style.borderColor = '#cbd5e1';
+                                e.currentTarget.style.color = '#334155';
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.background = '#f8fafc';
+                                e.currentTarget.style.borderColor = '#e2e8f0';
+                                e.currentTarget.style.color = '#475569';
+                              }}
+                              >
+                                {card.buttonText}
+                              </button>
+                            </Link>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
+            </div>
           </div>
         </motion.div>
       </div>

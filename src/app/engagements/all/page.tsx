@@ -41,6 +41,33 @@ export default function AllEngagementsPage() {
     ALL_COLUMNS.map(c => ({ id: c, visible: true }))
   );
 
+  // Column sizing state
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+
+  const handleResizeStart = (e: React.MouseEvent, colId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.pageX;
+    const th = (e.target as HTMLElement).closest('th');
+    const startWidth = th?.getBoundingClientRect().width || 150;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const diff = moveEvent.pageX - startX;
+      const newWidth = Math.max(80, startWidth + diff); // Minimum width
+      setColumnWidths(prev => ({ ...prev, [colId]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'default';
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'col-resize';
+  };
+
   // Filter state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('');
@@ -348,8 +375,8 @@ export default function AllEngagementsPage() {
       </AnimatePresence>
 
       {/* Main Table Area */}
-      <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--glass-border)', boxShadow: 'var(--card-shadow)', overflow: 'hidden', flex: 1 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--glass-border)', boxShadow: 'var(--card-shadow)', overflow: 'hidden', flex: 1, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'fixed' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <th style={{ padding: '16px', width: '40px' }}>
@@ -361,8 +388,33 @@ export default function AllEngagementsPage() {
                 />
               </th>
               {visibleCols.map(col => (
-                <th key={col.id} style={{ padding: '16px', fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>
+                <th key={col.id} style={{ 
+                  padding: '16px', 
+                  fontSize: '0.85rem', 
+                  fontWeight: 700, 
+                  color: '#475569',
+                  position: 'relative',
+                  width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : (col.id === 'Lead' ? '250px' : '150px'),
+                  whiteSpace: 'nowrap',
+                  userSelect: 'none'
+                }}>
                   {col.id}
+                  <div
+                    onMouseDown={(e) => handleResizeStart(e, col.id)}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      width: '6px',
+                      height: '100%',
+                      cursor: 'col-resize',
+                      backgroundColor: 'transparent',
+                      zIndex: 1,
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => { (e.target as HTMLDivElement).style.backgroundColor = '#94a3b8'; }}
+                    onMouseLeave={(e) => { (e.target as HTMLDivElement).style.backgroundColor = 'transparent'; }}
+                  />
                 </th>
               ))}
             </tr>
@@ -376,8 +428,14 @@ export default function AllEngagementsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   key={eng.id} 
-                  style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }}
-                  className="hover-bg-secondary"
+                  onMouseEnter={() => setHoveredRowId(eng.id)}
+                  onMouseLeave={() => setHoveredRowId(null)}
+                  style={{ 
+                    borderBottom: '1px solid #e2e8f0', 
+                    cursor: 'pointer',
+                    backgroundColor: hoveredRowId === eng.id ? '#EFF6FF' : 'transparent',
+                    transition: 'background-color 0.2s ease'
+                  }}
                 >
                   <td style={{ padding: '16px' }}>
                     <input 
@@ -420,14 +478,14 @@ export default function AllEngagementsPage() {
                         )}
                         {col.id === 'Engagement Owner' && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold', flexShrink: 0 }}>
                               {eng.owner.charAt(0)}
                             </div>
-                            <span>{eng.owner}</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{eng.owner}</span>
                           </div>
                         )}
                         {col.id === 'Team' && (
-                          <span>{eng.team}</span>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{eng.team}</span>
                         )}
                         {col.id === 'Last Updated' && (
                           <span style={{ color: '#64748b' }}>

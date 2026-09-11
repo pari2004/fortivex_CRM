@@ -486,6 +486,28 @@ model CRMProperty {
   createdAt        DateTime      @default(now())
 }
 
+model CustomForm {
+  id          String    @id
+  name        String
+  description String?
+  module      String?
+  status      String    @default("Draft") // 'Active' | 'Draft' | 'Inactive'
+  fields      Json      @default("[]")
+  settings    Json?
+  createdBy   String?
+  lastUpdated DateTime  @default(now())
+}
+
+model Integration {
+  id          String    @id
+  name        String
+  category    String
+  description String?
+  status      String    @default("Not Connected") // 'Connected' | 'Not Connected'
+  icon        String?
+  connectedAt DateTime?
+}
+
 // ---------- Singleton config values (dealMode, prospectingCriteria, quotationDefaults, dealStages...) ----------
 
 model AppSetting {

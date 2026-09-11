@@ -820,12 +820,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     let cancelled = false;
 
-    // customForms/integrations aren't API-backed yet; restore from localStorage.
-    const storedCustomForms = typeof window !== 'undefined' ? localStorage.getItem('crm_customForms') : null;
-    setCustomForms(storedCustomForms ? JSON.parse(storedCustomForms) : INITIAL_CUSTOM_FORMS);
-    const storedIntegrations = typeof window !== 'undefined' ? localStorage.getItem('crm_integrations') : null;
-    setIntegrations(storedIntegrations ? JSON.parse(storedIntegrations) : INITIAL_INTEGRATIONS);
-
     (async () => {
       try {
         const [
@@ -835,6 +829,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           leadLifecycleStagesRes, leadSourcesRes, leadTagsRes, callOutcomesRes, visitOutcomesRes,
           documentCategoriesRes, propertiesRes, usersRes,
           dealModeRes, prospectingCriteriaRes, quotationDefaultsRes, dealStagesRes,
+          customFormsRes, integrationsRes,
         ] = await Promise.all([
           apiGet('/api/leads'), apiGet('/api/business-leads'), apiGet('/api/deals'), apiGet('/api/quotes'),
           apiGet('/api/payments'), apiGet('/api/applications'), apiGet('/api/students'), apiGet('/api/documents'),
@@ -847,6 +842,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           apiGet('/api/users'),
           apiGet('/api/settings/dealMode'), apiGet('/api/settings/prospectingCriteria'),
           apiGet('/api/settings/quotationDefaults'), apiGet('/api/settings/dealStages'),
+          apiGet('/api/custom-forms'), apiGet('/api/integrations'),
         ]);
 
         if (cancelled) return;
@@ -886,6 +882,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (prospectingCriteriaRes) setProspectingCriteria(prospectingCriteriaRes);
         if (quotationDefaultsRes) setQuotationDefaults(quotationDefaultsRes);
         if (dealStagesRes) setDealStages(dealStagesRes);
+        setCustomForms(customFormsRes);
+        setIntegrations(integrationsRes);
       } catch (e) {
         console.error('Failed to load CRM data from API', e);
       } finally {
@@ -1076,12 +1074,12 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTicketCategories(d);
   };
   const updateCustomForms = (forms: CustomForm[]) => {
+    syncList('/api/custom-forms', customForms, forms).catch(console.error);
     setCustomForms(forms);
-    if (typeof window !== 'undefined') localStorage.setItem('crm_customForms', JSON.stringify(forms));
   };
   const updateIntegrations = (newIntegrations: Integration[]) => {
+    syncList('/api/integrations', integrations, newIntegrations).catch(console.error);
     setIntegrations(newIntegrations);
-    if (typeof window !== 'undefined') localStorage.setItem('crm_integrations', JSON.stringify(newIntegrations));
   };
 
   const addSupportTicket = (t: SupportTicket) => {

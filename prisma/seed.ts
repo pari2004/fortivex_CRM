@@ -165,6 +165,106 @@ async function main() {
     )
   );
 
+  console.log('Seeding integrations...');
+  const defaultIntegrations = [
+    { id: '1', name: 'Google Workspace', category: 'Email', description: 'Sync Gmail, Drive, and Docs.', status: 'Not Connected', icon: 'Mail' },
+    { id: '2', name: 'Google Calendar', category: 'Calendar', description: 'Sync meetings and tasks.', status: 'Not Connected', icon: 'Calendar' },
+    { id: '3', name: 'WhatsApp Business', category: 'WhatsApp', description: 'Send and receive customer messages.', status: 'Not Connected', icon: 'MessageCircle' },
+    { id: '4', name: 'Zoom', category: 'Calling', description: 'Log video calls and recordings.', status: 'Not Connected', icon: 'Video' },
+    { id: '5', name: 'Twilio SMS', category: 'SMS / Messaging', description: 'Send CRM messages and track status.', status: 'Not Connected', icon: 'MessageSquare' },
+    { id: '6', name: 'Stripe', category: 'Payment Integration', description: 'Sync payment status with opportunities.', status: 'Not Connected', icon: 'CreditCard' },
+  ];
+  await Promise.all(
+    defaultIntegrations.map((int) =>
+      prisma.integration.upsert({ where: { id: int.id }, create: int, update: {} })
+    )
+  );
+
+  console.log('Seeding custom forms...');
+  const defaultCustomForms = [
+    {
+      id: '1', name: 'Lead Registration Form', description: 'Capture new leads from the website.', module: 'Leads', status: 'Active',
+      fields: [
+        { id: 'f1', type: 'Text', label: 'Full Name', name: 'fullName', required: true, order: 1 },
+        { id: 'f2', type: 'Email', label: 'Email Address', name: 'email', required: true, order: 2 },
+        { id: 'f3', type: 'Phone', label: 'Phone Number', name: 'phone', required: true, order: 3 },
+      ],
+      createdBy: 'Admin',
+      settings: {
+        allowDuplicateSubmission: false, requireLogin: false, successMessage: 'Thank you for registering!',
+        redirectAfterSubmission: '', emailNotification: '', assignSubmissionTo: 'Abhay',
+        createLeadAutomatically: true, createTaskAutomatically: false, addTagsAutomatically: ['Website Lead'],
+      },
+    },
+    {
+      id: '2', name: 'Student Admission Form', description: 'Detailed admission form for enrolled students.', module: 'Applications', status: 'Draft',
+      fields: [
+        { id: 'f1', type: 'Text', label: 'First Name', name: 'firstName', required: true, order: 1 },
+        { id: 'f2', type: 'Text', label: 'Last Name', name: 'lastName', required: true, order: 2 },
+      ],
+      createdBy: 'Admin',
+      settings: {
+        allowDuplicateSubmission: false, requireLogin: true, successMessage: 'Admission form submitted successfully.',
+        redirectAfterSubmission: '', emailNotification: 'admin@example.com', assignSubmissionTo: 'Abhay',
+        createLeadAutomatically: false, createTaskAutomatically: true, addTagsAutomatically: ['Admission'],
+      },
+    },
+    {
+      id: '3', name: 'Internship Registration Form', description: 'Form for students applying to internships.', module: 'Students', status: 'Active',
+      fields: [
+        { id: 'f1', type: 'Text', label: 'Name', name: 'name', required: true, order: 1 },
+        { id: 'f2', type: 'Dropdown', label: 'Preferred Role', name: 'role', required: true, options: ['Frontend', 'Backend', 'Data Science'], order: 2 },
+      ],
+      createdBy: 'Admin',
+      settings: {
+        allowDuplicateSubmission: false, requireLogin: false, successMessage: 'Application received.',
+        redirectAfterSubmission: '', emailNotification: '', assignSubmissionTo: 'Abhay',
+        createLeadAutomatically: false, createTaskAutomatically: false, addTagsAutomatically: ['Internship'],
+      },
+    },
+    {
+      id: '4', name: 'Placement Enquiry Form', description: 'Enquiry form for placement assistance.', module: 'Leads', status: 'Inactive',
+      fields: [],
+      createdBy: 'Admin',
+      settings: {
+        allowDuplicateSubmission: true, requireLogin: false, successMessage: 'We will get back to you.',
+        redirectAfterSubmission: '', emailNotification: '', assignSubmissionTo: 'Abhay',
+        createLeadAutomatically: true, createTaskAutomatically: true, addTagsAutomatically: ['Placement'],
+      },
+    },
+    {
+      id: '5', name: 'Application Document Form', description: 'Upload required documents for the application.', module: 'Applications', status: 'Active',
+      fields: [
+        { id: 'f1', type: 'File Upload', label: 'Resume', name: 'resume', required: true, order: 1 },
+        { id: 'f2', type: 'File Upload', label: 'ID Proof', name: 'idProof', required: true, order: 2 },
+      ],
+      createdBy: 'Admin',
+      settings: {
+        allowDuplicateSubmission: false, requireLogin: true, successMessage: 'Documents uploaded successfully.',
+        redirectAfterSubmission: '', emailNotification: '', assignSubmissionTo: 'Abhay',
+        createLeadAutomatically: false, createTaskAutomatically: false, addTagsAutomatically: ['Docs Pending'],
+      },
+    },
+    {
+      id: '6', name: 'Feedback Form', description: 'General feedback form for students.', module: 'Students', status: 'Active',
+      fields: [
+        { id: 'f1', type: 'Dropdown', label: 'Rating', name: 'rating', required: true, options: ['1', '2', '3', '4', '5'], order: 1 },
+        { id: 'f2', type: 'Long Text', label: 'Comments', name: 'comments', required: false, order: 2 },
+      ],
+      createdBy: 'Admin',
+      settings: {
+        allowDuplicateSubmission: true, requireLogin: false, successMessage: 'Thank you for your feedback.',
+        redirectAfterSubmission: '', emailNotification: '', assignSubmissionTo: 'Abhay',
+        createLeadAutomatically: false, createTaskAutomatically: false, addTagsAutomatically: ['Feedback'],
+      },
+    },
+  ];
+  await Promise.all(
+    defaultCustomForms.map(({ id, fields, settings, ...rest }) =>
+      prisma.customForm.upsert({ where: { id }, create: { id, fields, settings, ...rest }, update: {} })
+    )
+  );
+
   console.log('Seeding Leads...');
   const leadKnown = [
     'id', 'name', 'phone', 'mobile', 'email', 'city', 'state', 'qualification', 'program', 'course',

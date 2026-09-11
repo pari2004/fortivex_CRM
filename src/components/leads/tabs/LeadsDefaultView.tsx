@@ -127,7 +127,7 @@ const ResizableHeader = ({ colId, width, onResize }: { colId: string, width: num
 };
 
 export function LeadsDefaultView({ activeTab, newLeadEvent }: any) {
-  const { leads, users, updateLead, deleteLead } = useCRM();
+  const { leads, users, updateLead, deleteLead, leadLifecycleStages } = useCRM();
   const { user: authUser } = useAuth();
   const { openSharedInbox } = useInbox();
   const CURRENT_USER = authUser?.name || 'System Admin';
@@ -319,19 +319,18 @@ export function LeadsDefaultView({ activeTab, newLeadEvent }: any) {
     
     // Status Dropdown Filter
     if (statusFilter !== 'All Active') {
-      if (statusFilter === 'New Inquiry Lead') result = result.filter(l => l.stage === 'New Lead' || l.status === 'New');
-      else if (statusFilter === 'Assigned Today') {
+      if (statusFilter === 'Assigned Today') {
         const today = new Date().toISOString().split('T')[0];
         result = result.filter(l => l.owner && (l.createdDate === today || (l.createdAt && l.createdAt.startsWith(today))));
+      } else if (statusFilter === 'Unassigned') {
+        result = result.filter(l => !l.counselor && !l.owner);
+      } else if (statusFilter === 'Leads in callback later') {
+        result = result.filter(l => l.status === 'Callback Later' || l.stage === 'Callback Later');
+      } else if (statusFilter === 'Leads in RNR and not called') {
+        result = result.filter(l => l.status === 'RNR' || l.stage === 'RNR');
+      } else {
+        result = result.filter(l => l.status === statusFilter || l.stage === statusFilter);
       }
-      else if (statusFilter === 'Never Picked') result = result.filter(l => l.stage === 'Never Picked' || (l.attempts && l.attempts > 3 && l.remark?.includes('Never picked')));
-      else if (statusFilter === 'Call Attempted Lead') result = result.filter(l => l.stage === 'Attempted' || l.attempts > 0);
-      else if (statusFilter === 'Interested Lead') result = result.filter(l => l.stage === 'Interested');
-      else if (statusFilter === 'Is Customer') result = result.filter(l => l.stage === 'Converted' || l.stage === 'Customer');
-      else if (statusFilter === 'Follow-up Due') result = result.filter(l => !!l.nextFollowUp);
-      else if (statusFilter === 'Unassigned') result = result.filter(l => !l.counselor && !l.owner);
-      else if (statusFilter === 'Leads in callback later') result = result.filter(l => l.stage === 'Callback Later');
-      else if (statusFilter === 'Leads in RNR and not called') result = result.filter(l => l.stage === 'RNR');
     }
 
     // Apply basic search
@@ -440,7 +439,7 @@ export function LeadsDefaultView({ activeTab, newLeadEvent }: any) {
                 style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '260px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', zIndex: 9999, overflow: 'hidden' }}
               >
                 <div style={{ padding: '8px 0' }}>
-                  {['All Active', 'New Inquiry Lead', 'Assigned Today', 'Never Picked', 'Call Attempted Lead', 'Interested Lead', 'Is Customer', 'Follow-up Due', 'Unassigned'].map(opt => (
+                  {['All Active', ...leadLifecycleStages.map(s => s.name), 'Assigned Today', 'Unassigned'].map(opt => (
                     <div 
                       key={opt}
                       onClick={() => { setStatusFilter(opt); setShowStatusDropdown(false); }}

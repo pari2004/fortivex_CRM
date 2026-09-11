@@ -56,16 +56,10 @@ export function GlobalSearchModal({ isOpen, onClose, onNavigate }: Props) {
   }, [isOpen]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    if (isOpen) window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
     setActiveIdx(-1);
   }, [query]);
+
+  useGlobalEscape(!!isOpen, () => { onClose() });
 
   if (!isOpen) return null;
 
@@ -127,8 +121,6 @@ export function GlobalSearchModal({ isOpen, onClose, onNavigate }: Props) {
     }
   };
 
-
-  useGlobalEscape(!!isOpen, () => { onClose() });
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '10vh', zIndex: 99999 }}>
       <div 

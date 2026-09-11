@@ -17,6 +17,7 @@ import { LeadsFollowUpView } from '@/components/leads/tabs/LeadsFollowUpView';
 import { LeadsDataExportsView } from '@/components/leads/tabs/LeadsDataExportsView';
 import { LeadsEmailLeadsView } from '@/components/leads/tabs/LeadsEmailLeadsView';
 import { useCRM } from '@/contexts/CRMContext';
+import { useAuth } from '@/contexts/AuthContext';
 // --- Toast Utility ---
 function showToast(message: string, type: 'success' | 'error' = 'success') {
   const toast = document.createElement('div');
@@ -45,11 +46,14 @@ export default function LeadsPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [newUploadEvent, setNewUploadEvent] = useState<any>(null);
   const { processUpload } = useCRM();
+  const { hasPermission } = useAuth();
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
+    } else {
+      setActiveTab('Active Leads');
     }
   }, [searchParams]);
 
@@ -102,6 +106,7 @@ export default function LeadsPage() {
         
         {activeTab === 'Active Leads' ? (
           <div style={{ display: 'flex', gap: '16px' }}>
+            {hasPermission('Leads', 'Import') && (
             <button
               onClick={() => setIsUploadModalOpen(true)}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '12px', background: 'white', color: '#4f46e5', fontWeight: 600, border: '1px solid #e0e7ff', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'background 0.2s' }}
@@ -109,6 +114,9 @@ export default function LeadsPage() {
             >
               <UploadCloud size={18} /> New Upload
             </button>
+            )}
+            
+            {hasPermission('Leads', 'Create') && (
             <button 
               onClick={() => setIsAddModalOpen(true)} 
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '12px', background: '#4f46e5', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)', transition: 'transform 0.1s' }}
@@ -116,10 +124,11 @@ export default function LeadsPage() {
             >
               <Plus size={18} /> Add New Lead
             </button>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '12px' }}>
-            {activeTab !== 'Data Exports' && activeTab !== 'Email Leads' && (
+            {activeTab !== 'Data Exports' && activeTab !== 'Email Leads' && hasPermission('Leads', 'Import') && (
             <button
               onClick={() => setIsUploadModalOpen(true)}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: 'white', color: 'var(--primary-color)', fontWeight: 600, border: '1px solid var(--primary-color)', cursor: 'pointer' }}
@@ -128,7 +137,7 @@ export default function LeadsPage() {
             </button>
             )}
 
-            {(activeTab === 'All Leads' || activeTab === 'Work Leads') && (
+            {(activeTab === 'All Leads' || activeTab === 'Work Leads') && hasPermission('Leads', 'Create') && (
               <button 
                 onClick={() => setIsAddModalOpen(true)} 
                 className="primary-btn" 

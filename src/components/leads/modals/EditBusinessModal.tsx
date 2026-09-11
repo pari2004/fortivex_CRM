@@ -117,7 +117,7 @@ export function EditBusinessModal({ businessId, onClose, onSuccess }: EditBusine
       return;
     }
 
-    const updateData = { ...formData };
+    const updateData = { ...originalBusiness, ...formData } as BusinessLead;
     if (updateData.website === 'https://') {
       updateData.website = '';
     }

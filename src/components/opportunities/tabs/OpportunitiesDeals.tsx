@@ -9,6 +9,7 @@ import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 import { AddNewDealModal } from '../modals/AddNewDealModal';
 import { LeadProfileModal } from '@/components/dashboard/modals/LeadProfileModal';
 import { LeadPreviewModal } from '@/components/dashboard/modals/LeadPreviewModal';
+import { DealDetailsModal } from '../modals/DealDetailsModal';
 
 const CURRENT_USER = 'Abhay';
 
@@ -164,6 +165,15 @@ export function OpportunitiesDeals() {
     const dealToMove = deals.find(d => d.id === draggableId);
     if (dealToMove) {
       const newStage = destination.droppableId;
+      
+      // Validation for "Won" stage
+      if (newStage.toLowerCase().includes('won')) {
+        if (!dealToMove.amount || dealToMove.amount <= 0) {
+          alert('Cannot move to Won: Deal amount is required.');
+          return;
+        }
+      }
+
       let newStatus = 'Open';
       if (newStage.toLowerCase().includes('won')) newStatus = 'Won';
       if (newStage.toLowerCase().includes('lost')) newStatus = 'Lost';
@@ -500,7 +510,7 @@ export function OpportunitiesDeals() {
         <AddNewDealModal onClose={() => setIsAddDealModalOpen(false)} />
       )}
       {viewDeal && (
-        <LeadPreviewModal isOpen={true} onClose={() => setViewDeal(null)} lead={{ id: viewDeal.leadId || '', name: viewDeal.leadName || '' }} onViewLead={(l) => { setViewDeal(null); setViewLead(l); }} />
+        <DealDetailsModal isOpen={true} onClose={() => setViewDeal(null)} deal={viewDeal} onViewDeal={(d) => { setViewDeal(null); setViewLead({ id: d.leadId || '', name: d.leadName || '' }); }} />
       )}
       {viewLead && (
         <LeadProfileModal isOpen={true} onClose={() => setViewLead(null)} lead={viewLead} />

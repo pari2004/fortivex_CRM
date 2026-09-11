@@ -6,6 +6,7 @@ import { DataToolbar } from '@/components/common/DataToolbar';
 import { ActionMenu } from '@/components/common/ActionMenu';
 import { Edit, Trash2, Eye, Copy } from 'lucide-react';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
+import { DealDetailsModal } from '../modals/DealDetailsModal';
 
 export function OpportunitiesDealsTabular() {
   const { deals, updateDeal, addDeal } = useCRM();
@@ -13,6 +14,7 @@ export function OpportunitiesDealsTabular() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [viewDeal, setViewDeal] = useState<Deal | null>(null);
 
   const itemsPerPage = 20;
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -35,6 +37,8 @@ export function OpportunitiesDealsTabular() {
         stage: 'Discovery',
         status: 'Open'
       });
+    } else if (action === 'view') {
+      setViewDeal(deal);
     }
   };
 
@@ -55,8 +59,7 @@ export function OpportunitiesDealsTabular() {
         searchPlaceholder="Search deals..."
         exportFilename="Deals_Tabular_Export"
         filterOptions={[
-          { key: 'status', label: 'Status', type: 'select', options: ['Open', 'Won', 'Lost'] },
-          { key: 'stage', label: 'Stage', type: 'select', options: ['Discovery', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'] }
+          { key: 'status', label: 'Status', type: 'select', options: ['Open', 'Won', 'Lost'] }
         ]}
         selectedItems={currentData.filter(d => selectedRows.has(d.id))}
         exportMapping={[
@@ -116,6 +119,9 @@ export function OpportunitiesDealsTabular() {
         </table>
       </div>
 
+      {viewDeal && (
+        <DealDetailsModal isOpen={true} onClose={() => setViewDeal(null)} deal={viewDeal} />
+      )}
     </div>
   );
 }

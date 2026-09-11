@@ -35,6 +35,7 @@ interface AuthContextType {
   logout: () => void;
   setRole: (role: Role) => void;
   updateUser: (updates: Partial<User>) => void;
+  forceRefreshPermissions: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -192,6 +193,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const forceRefreshPermissions = () => {
+    updatePermissionsForRole(role);
+  };
+
   if (isInitializing) {
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a0c14', color: '#fff', gap: '0' }}>
@@ -206,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, role, rolePermissions, hasPermission, canViewUser, canManageUser, login, logout, setRole, updateUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, role, rolePermissions, hasPermission, canViewUser, canManageUser, login, logout, setRole, updateUser, forceRefreshPermissions }}>
       {children}
     </AuthContext.Provider>
   );

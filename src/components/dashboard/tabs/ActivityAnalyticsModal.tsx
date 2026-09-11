@@ -21,10 +21,10 @@ const mockChartData = [
 ];
 
 export function ActivityAnalyticsModal({ isOpen, onClose }: Props) {
+  useGlobalEscape(!!isOpen, () => { onClose() });
+
   if (!isOpen) return null;
 
-
-  useGlobalEscape(!!isOpen, () => { onClose() });
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onClick={onClose} />

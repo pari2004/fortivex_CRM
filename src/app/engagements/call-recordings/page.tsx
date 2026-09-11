@@ -23,7 +23,7 @@ const DEFAULT_COLUMNS = [
 ];
 
 export default function CallsPage() {
-  const { systemUsers, leads, updateLead } = useCRM();
+  const { leads, systemUsers, callOutcomes, updateLead } = useCRM();
   const { openSharedInbox } = useInbox();
   const CURRENT_USER = 'Abhay';
 
@@ -108,7 +108,11 @@ export default function CallsPage() {
       const assignedUser = systemUsers && systemUsers.length > 0 ? systemUsers[i % uCount].name : CURRENT_USER;
       
       const hasRecording = i % 3 !== 0;
-      const outcome = i % 4 === 0 ? 'Positive' : i % 5 === 0 ? 'Negative' : i % 6 === 0 ? '' : 'Interested';
+      let outcome = lead.lastCallOutcome;
+      if (!outcome) {
+        outcome = i % 4 === 0 ? 'Connected' : i % 5 === 0 ? 'Not Interested' : i % 6 === 0 ? '' : 'Interested';
+      }
+      const outcomeObj = callOutcomes?.find(o => o.name === outcome);
       const durationSeconds = hasRecording ? 15 + (i * 17) % 300 : 0;
       
       return {
@@ -123,7 +127,7 @@ export default function CallsPage() {
         'Call Through': 'Internal Dialer',
         Team: lead.team || 'Sales Team',
         'Call Outcome': outcome,
-        'Call Outcome Nature': outcome === 'Positive' ? 'Warm' : outcome === 'Negative' ? 'Cold' : 'Neutral',
+        'Call Outcome Nature': outcomeObj?.type === 'Positive' ? 'Warm' : outcomeObj?.type === 'Negative' ? 'Cold' : 'Neutral',
         Note: `Discussed general requirements. Follow up next week.`,
         'Call Direction': i % 2 === 0 ? 'Outbound' : 'Inbound',
         'Call Connected Status': hasRecording ? 'Connected' : 'Missed',
@@ -152,8 +156,14 @@ export default function CallsPage() {
       if (selectedTeam && c.Team !== selectedTeam) return false;
 
       // Chip Filters
-      if (chipPositive && c['Call Outcome'] !== 'Positive') return false;
-      if (chipNegative && c['Call Outcome'] !== 'Negative') return false;
+      if (chipPositive) {
+        const o = callOutcomes?.find(x => x.name === c['Call Outcome']);
+        if (!o || o.type !== 'Positive') return false;
+      }
+      if (chipNegative) {
+        const o = callOutcomes?.find(x => x.name === c['Call Outcome']);
+        if (!o || o.type !== 'Negative') return false;
+      }
       if (chip30s && c.Duration <= 30) return false;
       if (chipNoOutcome && c['Call Outcome'] !== '') return false;
       
@@ -229,7 +239,7 @@ export default function CallsPage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f8fafc' }}>
       
       {/* Header Area */}
-      <div style={{ padding: '24px 24px 16px 24px', background: 'white', borderBottom: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ margin: '24px 24px 16px 24px', padding: '24px', background: 'linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%)', border: '1px solid rgba(226, 232, 240, 0.8)', borderRadius: '20px', boxShadow: '0 4px 24px rgba(79, 70, 229, 0.05)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
         {/* Top Row: Title, Search, Customize Columns */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -238,11 +248,11 @@ export default function CallsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ position: 'relative' }}>
               <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-              <input type="text" placeholder="Search calls..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '260px', padding: '10px 12px 10px 36px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', outline: 'none', transition: 'border-color 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }} />
+              <input type="text" placeholder="Search calls..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '260px', padding: '10px 12px 10px 36px', border: '1px solid rgba(226,232,240,0.8)', background: 'rgba(255,255,255,0.8)', borderRadius: '10px', fontSize: '0.85rem', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)' }} />
             </div>
             
             <div style={{ position: 'relative' }}>
-              <button onClick={() => setIsCustomizeOpen(!isCustomizeOpen)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#334155', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <button onClick={() => setIsCustomizeOpen(!isCustomizeOpen)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(226,232,240,0.8)', borderRadius: '10px', color: '#334155', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
                 <Settings size={16} /> Customize Columns
               </button>
               
@@ -277,26 +287,26 @@ export default function CallsPage() {
         {/* Bottom Row: My/All, Filter, Chips, Recording */}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           
-          <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.6)', padding: '4px', borderRadius: '10px', border: '1px solid rgba(226,232,240,0.8)' }}>
             <button 
               onClick={() => setActiveFilter('My')}
-              style={{ padding: '8px 20px', border: 'none', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', background: activeFilter === 'My' ? 'white' : 'transparent', color: activeFilter === 'My' ? '#0f172a' : '#64748b', boxShadow: activeFilter === 'My' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}
+              style={{ padding: '8px 20px', border: 'none', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', background: activeFilter === 'My' ? '#4f46e5' : 'transparent', color: activeFilter === 'My' ? 'white' : '#64748b', boxShadow: activeFilter === 'My' ? '0 2px 8px rgba(79, 70, 229, 0.3)' : 'none', transition: 'all 0.2s' }}
             >
               My
             </button>
             <button 
               onClick={() => setActiveFilter('All')}
-              style={{ padding: '8px 20px', border: 'none', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', background: activeFilter === 'All' ? 'white' : 'transparent', color: activeFilter === 'All' ? '#0f172a' : '#64748b', boxShadow: activeFilter === 'All' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}
+              style={{ padding: '8px 20px', border: 'none', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', background: activeFilter === 'All' ? '#4f46e5' : 'transparent', color: activeFilter === 'All' ? 'white' : '#64748b', boxShadow: activeFilter === 'All' ? '0 2px 8px rgba(79, 70, 229, 0.3)' : 'none', transition: 'all 0.2s' }}
             >
               All
             </button>
           </div>
 
-          <div style={{ width: '1px', height: '24px', background: '#cbd5e1' }} />
+          <div style={{ width: '1px', height: '24px', background: 'rgba(226,232,240,0.8)' }} />
 
           <div style={{ position: 'relative' }}>
-            <button onClick={() => setIsFilterOpen(!isFilterOpen)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: isFilterOpen ? '#f8fafc' : 'white', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#334155', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>
-              <Filter size={16} /> Filter <ChevronDown size={14} color="#94a3b8" />
+            <button onClick={() => setIsFilterOpen(!isFilterOpen)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: isFilterOpen ? 'rgba(79, 70, 229, 0.05)' : 'rgba(255,255,255,0.8)', border: '1px solid rgba(226,232,240,0.8)', borderRadius: '10px', color: isFilterOpen ? '#4f46e5' : '#334155', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>
+              <Filter size={16} /> Filter <ChevronDown size={14} color={isFilterOpen ? "#4f46e5" : "#94a3b8"} />
             </button>
             {isFilterOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', padding: '20px', width: '280px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -319,18 +329,18 @@ export default function CallsPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <button onClick={() => setChipPositive(!chipPositive)} style={{ padding: '8px 16px', border: chipPositive ? '1px solid #22c55e' : '1px solid #e2e8f0', background: chipPositive ? '#dcfce7' : 'white', color: chipPositive ? '#166534' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>Positive</button>
-            <button onClick={() => setChipNegative(!chipNegative)} style={{ padding: '8px 16px', border: chipNegative ? '1px solid #ef4444' : '1px solid #e2e8f0', background: chipNegative ? '#fee2e2' : 'white', color: chipNegative ? '#991b1b' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>Negative</button>
-            <button onClick={() => setChip30s(!chip30s)} style={{ padding: '8px 16px', border: chip30s ? '1px solid #4f46e5' : '1px solid #e2e8f0', background: chip30s ? '#e0e7ff' : 'white', color: chip30s ? '#3730a3' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>&gt; 30s Talk</button>
-            <button onClick={() => setChipNoOutcome(!chipNoOutcome)} style={{ padding: '8px 16px', border: chipNoOutcome ? '1px solid #f59e0b' : '1px solid #e2e8f0', background: chipNoOutcome ? '#fef3c7' : 'white', color: chipNoOutcome ? '#b45309' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>No Outcome</button>
+            <button onClick={() => setChipPositive(!chipPositive)} style={{ padding: '8px 16px', border: chipPositive ? '1px solid #22c55e' : '1px solid rgba(226,232,240,0.8)', background: chipPositive ? '#dcfce7' : 'rgba(255,255,255,0.6)', color: chipPositive ? '#166534' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>Positive</button>
+            <button onClick={() => setChipNegative(!chipNegative)} style={{ padding: '8px 16px', border: chipNegative ? '1px solid #ef4444' : '1px solid rgba(226,232,240,0.8)', background: chipNegative ? '#fee2e2' : 'rgba(255,255,255,0.6)', color: chipNegative ? '#991b1b' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>Negative</button>
+            <button onClick={() => setChip30s(!chip30s)} style={{ padding: '8px 16px', border: chip30s ? '1px solid #4f46e5' : '1px solid rgba(226,232,240,0.8)', background: chip30s ? '#e0e7ff' : 'rgba(255,255,255,0.6)', color: chip30s ? '#3730a3' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>&gt; 30s Talk</button>
+            <button onClick={() => setChipNoOutcome(!chipNoOutcome)} style={{ padding: '8px 16px', border: chipNoOutcome ? '1px solid #f59e0b' : '1px solid rgba(226,232,240,0.8)', background: chipNoOutcome ? '#fef3c7' : 'rgba(255,255,255,0.6)', color: chipNoOutcome ? '#b45309' : '#475569', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>No Outcome</button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '6px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.8)', padding: '6px 8px', borderRadius: '10px', border: '1px solid rgba(226,232,240,0.8)', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', paddingLeft: '4px' }}>Recording</span>
-            <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '2px', borderRadius: '6px' }}>
-              <button onClick={() => setRecordingFilter('ALL')} style={{ padding: '4px 10px', border: 'none', background: recordingFilter === 'ALL' ? 'white' : 'transparent', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, color: recordingFilter === 'ALL' ? '#0f172a' : '#64748b', cursor: 'pointer', boxShadow: recordingFilter === 'ALL' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}>ALL</button>
-              <button onClick={() => setRecordingFilter('ON')} style={{ padding: '4px 10px', border: 'none', background: recordingFilter === 'ON' ? 'white' : 'transparent', color: recordingFilter === 'ON' ? '#166534' : '#64748b', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', boxShadow: recordingFilter === 'ON' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}>ON</button>
-              <button onClick={() => setRecordingFilter('OFF')} style={{ padding: '4px 10px', border: 'none', background: recordingFilter === 'OFF' ? 'white' : 'transparent', color: recordingFilter === 'OFF' ? '#991b1b' : '#64748b', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', boxShadow: recordingFilter === 'OFF' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}>OFF</button>
+            <div style={{ display: 'flex', gap: '4px', background: 'rgba(241,245,249,0.8)', padding: '2px', borderRadius: '8px' }}>
+              <button onClick={() => setRecordingFilter('ALL')} style={{ padding: '4px 10px', border: 'none', background: recordingFilter === 'ALL' ? '#4f46e5' : 'transparent', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: recordingFilter === 'ALL' ? 'white' : '#64748b', cursor: 'pointer', boxShadow: recordingFilter === 'ALL' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>ALL</button>
+              <button onClick={() => setRecordingFilter('ON')} style={{ padding: '4px 10px', border: 'none', background: recordingFilter === 'ON' ? '#166534' : 'transparent', color: recordingFilter === 'ON' ? 'white' : '#64748b', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', boxShadow: recordingFilter === 'ON' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>ON</button>
+              <button onClick={() => setRecordingFilter('OFF')} style={{ padding: '4px 10px', border: 'none', background: recordingFilter === 'OFF' ? '#991b1b' : 'transparent', color: recordingFilter === 'OFF' ? 'white' : '#64748b', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', boxShadow: recordingFilter === 'OFF' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>OFF</button>
             </div>
           </div>
           
@@ -469,9 +479,10 @@ export default function CallsPage() {
                             </div>
                           );
                         } else if (col === 'Call Outcome') {
+                          const o = callOutcomes?.find(x => x.name === content);
                           let bg = '#f1f5f9', tc = '#475569';
-                          if (content === 'Positive') { bg = '#dcfce7'; tc = '#166534'; }
-                          else if (content === 'Negative') { bg = '#fee2e2'; tc = '#991b1b'; }
+                          if (o?.type === 'Positive') { bg = '#dcfce7'; tc = '#166534'; }
+                          else if (o?.type === 'Negative') { bg = '#fee2e2'; tc = '#991b1b'; }
                           else if (content) { bg = '#dbeafe'; tc = '#1e40af'; }
                           
                           if (content) {

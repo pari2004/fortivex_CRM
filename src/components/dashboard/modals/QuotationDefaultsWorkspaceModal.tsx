@@ -335,7 +335,7 @@ export function QuotationDefaultsWorkspaceModal({ isOpen, onClose, onProceedAfte
             </motion.div>
           )}
           <button onClick={onClose} style={{ padding: '12px 24px', background: 'transparent', border: '1px solid transparent', borderRadius: '8px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}>
-            Cancel
+            Back
           </button>
           <button onClick={handleSave} disabled={isSuccess} style={{ padding: '12px 24px', background: isSuccess ? '#16a34a' : '#4f46e5', border: 'none', borderRadius: '8px', fontWeight: 600, color: 'white', cursor: 'pointer', transition: 'background 0.2s' }}>
             {isSuccess ? 'Saved!' : 'Save Defaults'}

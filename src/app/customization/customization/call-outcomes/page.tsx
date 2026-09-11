@@ -1,34 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { useCRM } from '@/contexts/CRMContext';
-import { GripVertical, Plus, Trash2, Edit2, Phone } from 'lucide-react';
-import { X } from 'lucide-react';
+import { useCRM, CallOutcome } from '@/contexts/CRMContext';
+import { GripVertical, Plus, Trash2, Edit2, X } from 'lucide-react';
 
-export default function CallOutcomesPage() {
+export default function CallOutcomesPage({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   const { callOutcomes, updateCallOutcomes } = useCRM();
   
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // ESC closes drawer
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && drawerOpen) {
-        setDrawerOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [drawerOpen]);
-
-  const [editingItem, setEditingItem] = useState<any>(null);
-  
-  const [formData, setFormData] = useState({
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [formData, setFormData] = useState<CallOutcome>({
+    id: '',
     name: '',
-    type: 'Neutral' as 'Positive' | 'Neutral' | 'Negative',
-    description: ''
+    type: 'Neutral',
+    description: '',
+    order: 0
   });
+
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -36,136 +26,158 @@ export default function CallOutcomesPage() {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
-    // Update order
-    const updated = items.map((item, index) => ({ ...item, order: index + 1 }));
-    updateCallOutcomes(updated);
+    // Update order property
+    const updatedItems = items.map((item, index) => ({ ...item, order: index + 1 }));
+    updateCallOutcomes(updatedItems);
   };
 
-  const handleOpenModal = (item?: any) => {
-    if (item) {
-      setEditingItem(item);
-      setFormData({ name: item.name, type: item.type, description: item.description });
+  const handleOpenDrawer = (index: number | null) => {
+    if (index !== null) {
+      setFormData(callOutcomes[index]);
+      setEditingIndex(index);
     } else {
-      setEditingItem(null);
-      setFormData({ name: '', type: 'Neutral', description: '' });
+      setFormData({ id: Math.random().toString(36).substring(7), name: '', type: 'Neutral', description: '', order: callOutcomes.length + 1 });
+      setEditingIndex(null);
     }
     setDrawerOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingItem) {
-      const updated = callOutcomes.map(outcome => 
-        outcome.id === editingItem.id ? { ...outcome, ...formData } : outcome
-      );
-      updateCallOutcomes(updated);
+    if (editingIndex !== null) {
+      const newItems = [...callOutcomes];
+      newItems[editingIndex] = formData;
+      updateCallOutcomes(newItems);
     } else {
-      const newOutcome = {
-        id: `CO-${Date.now()}`,
-        ...formData,
-        order: callOutcomes.length + 1
-      };
-      updateCallOutcomes([...callOutcomes, newOutcome]);
+      updateCallOutcomes([...callOutcomes, formData]);
     }
     setDrawerOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this outcome?')) {
-      const filtered = callOutcomes.filter(o => o.id !== id);
-      updateCallOutcomes(filtered);
-    }
-  };
-
-  const getTypeStyle = (type: string) => {
-    switch (type) {
-      case 'Positive': return { bg: '#dcfce7', color: '#166534', border: '#bbf7d0' };
-      case 'Negative': return { bg: '#fee2e2', color: '#991b1b', border: '#fecaca' };
-      default: return { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' };
+  const handleDelete = (index: number) => {
+    if (confirm(`Are you sure you want to delete the "${callOutcomes[index].name}" outcome?`)) {
+      const newItems = callOutcomes.filter((_, i) => i !== index);
+      updateCallOutcomes(newItems);
     }
   };
 
   return (
-    <div style={{ maxWidth: '800px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1e293b', margin: '0 0 8px 0' }}>Call Outcomes</h1>
-          <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem' }}>Define the possible results of a phone call with a lead.</p>
+    <div style={{ maxWidth: hideHeader ? '100%' : '1000px', background: hideHeader ? 'transparent' : '#fff' }}>
+      {!hideHeader && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fff' }}>
+          <h1 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>Call Outcomes</h1>
+          <button 
+            onClick={() => handleOpenDrawer(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 16px', background: '#e0e7ff', color: '#4f46e5',
+              border: 'none', borderRadius: '6px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '0.85rem'
+            }}
+          >
+            <Plus size={16} /> New Outcome
+          </button>
         </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 16px', background: '#2563eb', color: 'white',
-            border: 'none', borderRadius: '8px', cursor: 'pointer',
-            fontWeight: 500, fontSize: '0.9rem'
-          }}
-        >
-          <Plus size={16} /> Add Outcome
-        </button>
-      </div>
-
-      <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '40px 1.5fr 1fr 2fr 80px', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', fontWeight: 600, color: '#64748b', fontSize: '0.85rem' }}>
-          <div></div>
-          <div>Outcome Name</div>
-          <div>Type</div>
-          <div>Description</div>
-          <div style={{ textAlign: 'right' }}>Actions</div>
+      )}
+      
+      {hideHeader && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+          <button 
+            onClick={() => handleOpenDrawer(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 16px', background: '#3b82f6', color: 'white',
+              border: 'none', borderRadius: '6px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '0.85rem'
+            }}
+          >
+            <Plus size={16} /> Add Custom Outcome
+          </button>
         </div>
+      )}
 
+      <div style={{ overflowX: 'auto', paddingBottom: '16px' }}>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="call-outcomes-list">
+          <Droppable droppableId="call-outcomes-droppable" direction="vertical">
             {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+              <div 
+                ref={provided.innerRef} 
+                {...provided.droppableProps}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}
+              >
                 {callOutcomes.map((outcome, index) => {
-                  const style = getTypeStyle(outcome.type);
+                  let badgeBg = '#f1f5f9', badgeColor = '#475569';
+                  if (outcome.type === 'Positive') { badgeBg = '#dcfce7'; badgeColor = '#166534'; }
+                  else if (outcome.type === 'Negative') { badgeBg = '#fee2e2'; badgeColor = '#991b1b'; }
+                  else if (outcome.type === 'Neutral') { badgeBg = '#eff6ff'; badgeColor = '#1e40af'; }
+                  
                   return (
-                    <Draggable key={outcome.id} draggableId={outcome.id} index={index}>
+                    <Draggable key={outcome.id || `${outcome.name}-${index}`} draggableId={outcome.id || `${outcome.name}-${index}`} index={index}>
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
+                          onMouseEnter={() => setHoveredIndex(index)}
+                          onMouseLeave={() => setHoveredIndex(null)}
                           style={{
                             ...provided.draggableProps.style,
-                            display: 'grid',
-                            gridTemplateColumns: '40px 1.5fr 1fr 2fr 80px',
+                            position: 'relative',
+                            display: 'flex',
                             alignItems: 'center',
-                            padding: '16px',
-                            background: snapshot.isDragging ? '#ffffff' : '#ffffff',
+                            background: '#ffffff',
                             border: '1px solid #e2e8f0',
                             borderRadius: '8px',
-                            boxShadow: snapshot.isDragging ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
+                            padding: '16px',
+                            zIndex: callOutcomes.length - index,
+                            boxShadow: snapshot.isDragging ? '0 10px 15px -3px rgba(0,0,0,0.1)' : 'none',
+                            transition: 'box-shadow 0.2s',
                           }}
                         >
-                          <div {...provided.dragHandleProps} style={{ color: '#94a3b8', cursor: 'grab', display: 'flex', alignItems: 'center' }}>
-                            <GripVertical size={18} />
+                          <div {...provided.dragHandleProps} style={{ color: '#94a3b8', cursor: 'grab', display: 'flex', alignItems: 'center', marginRight: '16px' }}>
+                            <GripVertical size={20} />
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: '#0f172a', fontSize: '0.95rem' }}>
-                            <Phone size={16} color="#64748b" />
-                            {outcome.name}
+                          
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 600, color: '#1e293b', fontSize: '1rem' }}>{outcome.name}</span>
+                              <span style={{ 
+                                background: badgeBg, 
+                                color: badgeColor, 
+                                fontSize: '0.7rem', 
+                                padding: '2px 8px', 
+                                borderRadius: '12px', 
+                                fontWeight: 700,
+                                textTransform: 'uppercase'
+                              }}>
+                                {outcome.type}
+                              </span>
+                            </div>
+                            {outcome.description && (
+                              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{outcome.description}</div>
+                            )}
                           </div>
-                          <div>
-                            <span style={{ 
-                              background: style.bg, color: style.color, border: `1px solid ${style.border}`,
-                              padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 500 
-                            }}>
-                              {outcome.type}
-                            </span>
-                          </div>
-                          <div style={{ color: '#64748b', fontSize: '0.9rem', paddingRight: '16px' }}>{outcome.description}</div>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                            <button onClick={() => handleOpenModal(outcome)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+
+                          <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            opacity: hoveredIndex === index ? 1 : 0,
+                            transition: 'opacity 0.2s',
+                          }}>
+                            <button onClick={() => handleOpenDrawer(index)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#475569', padding: '8px' }}>
                               <Edit2 size={16} />
                             </button>
-                            <button onClick={() => handleDelete(outcome.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
+                            <button onClick={() => handleDelete(index)} style={{ background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#dc2626', padding: '8px' }}>
                               <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
                       )}
                     </Draggable>
-                  )
+                  );
                 })}
                 {provided.placeholder}
               </div>
@@ -174,57 +186,30 @@ export default function CallOutcomesPage() {
         </DragDropContext>
       </div>
 
-            {drawerOpen && (
+      {drawerOpen && (
         <>
           <div
             onClick={() => setDrawerOpen(false)}
             style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.25)',
-              zIndex: 998,
-              transition: 'opacity 0.3s',
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0, 0, 0, 0.25)', zIndex: 998, transition: 'opacity 0.3s',
             }}
           />
           <div style={{
-            position: 'fixed',
-            top: 0,
-            right: 0,
-            width: '420px',
-            height: '100vh',
-            background: '#ffffff',
-            boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)',
-            zIndex: 999,
-            display: 'flex',
-            flexDirection: 'column',
-            animation: 'slideInRight 0.25s ease-out',
+            position: 'fixed', top: 0, right: 0, width: '420px', height: '100vh',
+            background: '#ffffff', boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)', zIndex: 999,
+            display: 'flex', flexDirection: 'column', animation: 'slideInRight 0.25s ease-out',
           }}>
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '20px 24px',
-              borderBottom: '1px solid #e2e8f0',
-              background: '#f8fafc',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '20px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
             }}>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>
-                {editingItem ? 'Edit Call Outcome' : 'Adding New Call Outcome'}
+                {editingIndex !== null ? 'Edit Call Outcome' : 'Add New Call Outcome'}
               </h3>
               <button
                 onClick={() => setDrawerOpen(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#64748b',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '4px',
-                  borderRadius: '4px',
-                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '4px' }}
               >
                 <X size={20} />
               </button>
@@ -238,48 +223,43 @@ export default function CallOutcomesPage() {
                     autoFocus
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Session Scheduled"
+                    placeholder="e.g. Connected"
                     style={{ width: '100%', padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', outline: 'none', fontSize: '0.95rem', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}>Type</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}>Outcome Type</label>
                   <select 
                     value={formData.type}
-                    onChange={e => setFormData({ ...formData, type: e.target.value as any })}
+                    onChange={e => setFormData({ ...formData, type: e.target.value as 'Positive' | 'Neutral' | 'Negative' })}
                     style={{ width: '100%', padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', outline: 'none', background: 'white', fontSize: '0.95rem', boxSizing: 'border-box' }}
                   >
-                    <option value="Positive">Positive (Moves deal forward)</option>
-                    <option value="Neutral">Neutral (Needs follow-up)</option>
-                    <option value="Negative">Negative (Deal lost/stalled)</option>
+                    <option value="Positive">Positive (e.g. Interested, Connected)</option>
+                    <option value="Neutral">Neutral (e.g. Follow-up, Call Back)</option>
+                    <option value="Negative">Negative (e.g. No Answer, Lost)</option>
                   </select>
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}>Description</label>
-                  <textarea 
+                  <textarea
                     value={formData.description}
                     onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Optional description of this outcome..."
-                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', outline: 'none', minHeight: '100px', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                    placeholder="Brief description of when to use this outcome"
+                    rows={3}
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', outline: 'none', fontSize: '0.95rem', boxSizing: 'border-box', fontFamily: 'inherit' }}
                   />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', padding: '20px 24px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                <button type="button" onClick={() => { setFormData({ name: '', type: 'Neutral', description: '' }); }} style={{ flex: 1, padding: '12px 20px', border: '1px solid #cbd5e1', background: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem', color: '#475569' }}>
+                <button type="button" onClick={() => { setFormData({ id: '', name: '', type: 'Neutral', description: '', order: 0 }); }} style={{ flex: 1, padding: '12px 20px', border: '1px solid #cbd5e1', background: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem', color: '#475569' }}>
                   Reset
                 </button>
                 <button type="submit" style={{ flex: 1, padding: '12px 20px', border: 'none', background: '#2563eb', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem' }}>
-                  {editingItem ? 'Save Changes' : 'Submit'}
+                  Save / Submit
                 </button>
               </div>
             </form>
           </div>
-          <style>{`
-            @keyframes slideInRight {
-              from { transform: translateX(100%); }
-              to { transform: translateX(0); }
-            }
-          `}</style>
         </>
       )}
     </div>

@@ -53,6 +53,8 @@ export function ApplicationsDashboard({ activeStatus }: Props) {
   const [page, setPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
+  useGlobalEscape(!!activeMenuId, () => { setActiveMenuId(null) });
+
   // Modals state
   const [viewApp, setViewApp] = useState<Application | null>(null);
   const [editApp, setEditApp] = useState<Application | null>(null);
@@ -176,9 +178,7 @@ export function ApplicationsDashboard({ activeStatus }: Props) {
           { label: 'Admission Completed', value: admissionCompletedApps, icon: <Building size={20}/>, status: 'Admission Completed' },
         ].map((kpi, idx) => {
           const isActive = activeStatus === kpi.status;
-        
-  useGlobalEscape(!!activeMenuId, () => { setActiveMenuId(null) });
-  return (
+          return (
             <div 
               key={idx} 
               onClick={() => handleKpiClick(kpi.status)}

@@ -5,6 +5,7 @@ import { useCRM } from '@/contexts/CRMContext';
 import { Filter, Calendar, Phone, CheckCircle, Search, Edit2, Download, Check, X, FileText, ChevronLeft, ChevronRight, MessageCircle, LayoutGrid, List, Clock, AlertTriangle } from 'lucide-react';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { LeadFiltersPanel } from '@/components/leads/modals/LeadFiltersPanel';
 
 const KANBAN_COLUMNS: { key: string; label: string; icon: React.ReactNode; color: string }[] = [
   { key: 'Today', label: 'Follow-up Today', icon: <Clock size={14} />, color: '#d97706' },
@@ -43,6 +44,9 @@ export function LeadsFollowUpView() {
   const [ownerFilter, setOwnerFilter] = useState<'All' | 'My'>('My');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [filterState, setFilterState] = useState<any>({});
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -93,13 +97,20 @@ export function LeadsFollowUpView() {
       );
     }
     
+    // Apply Advanced Filters
+    if (filterState.user) result = result.filter(l => l.counselor === filterState.user || l.owner === filterState.user);
+    if (filterState.team) result = result.filter(l => l.team === filterState.team);
+    if (filterState.source) result = result.filter(l => l.source === filterState.source || l.leadSource === filterState.source);
+    if (filterState.stage) result = result.filter(l => l.stage === filterState.stage || l.leadStage === filterState.stage);
+    if (filterState.priority) result = result.filter(l => l.priority === filterState.priority || l.leadPriority === filterState.priority);
+    
     // Sort by date (overdue -> today -> upcoming -> completed)
     return result.sort((a, b) => {
       if (a.followUpStatus === 'Completed' && b.followUpStatus !== 'Completed') return 1;
       if (a.followUpStatus !== 'Completed' && b.followUpStatus === 'Completed') return -1;
       return (a.nextFollowUp || '').localeCompare(b.nextFollowUp || '');
     });
-  }, [leads, ownerFilter, statusFilter, searchQuery]);
+  }, [leads, ownerFilter, statusFilter, searchQuery, filterState]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
@@ -223,15 +234,16 @@ export function LeadsFollowUpView() {
         </div>
         
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', padding: '8px 12px', borderRadius: '8px', width: '250px' }}>
-            <Search size={16} color="var(--text-tertiary)" />
+          <div style={{ flex: 1, position: 'relative', minWidth: '250px', maxWidth: '350px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             <input 
               type="text" 
               placeholder="Search leads..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ border: 'none', background: 'transparent', outline: 'none', marginLeft: '8px', width: '100%', fontSize: '0.9rem' }}
+              style={{ width: '100%', padding: '10px 16px 10px 42px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc', fontSize: '0.95rem' }}
             />
+            <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>⌘ K</div>
           </div>
           
           <select 
@@ -246,8 +258,11 @@ export function LeadsFollowUpView() {
             <option value="Completed">Completed</option>
           </select>
           
-          <button style={{ padding: '9px 16px', borderRadius: '8px', background: 'white', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 500 }}>
-            <Filter size={16} /> Filters
+          <button 
+            onClick={() => setShowFilterPanel(true)}
+            style={{ padding: '9px 16px', borderRadius: '8px', background: Object.keys(filterState).length > 0 ? '#eff6ff' : 'white', color: Object.keys(filterState).length > 0 ? '#4f46e5' : '#0f172a', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 500 }}
+          >
+            <Filter size={16} /> Filters {Object.keys(filterState).length > 0 && `(${Object.keys(filterState).length})`}
           </button>
 
           <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
@@ -514,6 +529,14 @@ export function LeadsFollowUpView() {
         </ActionModal>
       )}
 
+      {showFilterPanel && (
+        <LeadFiltersPanel 
+          isOpen={showFilterPanel} 
+          onClose={() => setShowFilterPanel(false)} 
+          currentFilters={filterState} 
+          onApply={(f) => { setFilterState(f); setShowFilterPanel(false); setPage(1); }} 
+        />
+      )}
     </div>
   );
 }

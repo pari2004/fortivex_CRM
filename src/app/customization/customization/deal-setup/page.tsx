@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { useCRM } from '@/contexts/CRMContext';
 import { GripVertical, Plus, Trash2, Edit2, X } from 'lucide-react';
 
-export default function DealSetupPage() {
+export default function DealSetupPage({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   const { dealStages, updateDealStages } = useCRM();
   
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -81,21 +81,39 @@ export default function DealSetupPage() {
   };
 
   return (
-    <div style={{ maxWidth: '1000px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fff' }}>
-        <h1 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>Deal Stages</h1>
-        <button 
-          onClick={() => handleOpenDrawer(null)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 16px', background: '#e0e7ff', color: '#4f46e5',
-            border: 'none', borderRadius: '6px', cursor: 'pointer',
-            fontWeight: 600, fontSize: '0.85rem'
-          }}
-        >
-          <Plus size={16} /> New Stage
-        </button>
-      </div>
+    <div style={{ maxWidth: hideHeader ? '100%' : '1000px', background: hideHeader ? 'transparent' : '#fff' }}>
+      {!hideHeader && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fff' }}>
+          <h1 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>Deal Stages</h1>
+          <button 
+            onClick={() => handleOpenDrawer(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 16px', background: '#e0e7ff', color: '#4f46e5',
+              border: 'none', borderRadius: '6px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '0.85rem'
+            }}
+          >
+            <Plus size={16} /> New Stage
+          </button>
+        </div>
+      )}
+      
+      {hideHeader && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+          <button 
+            onClick={() => handleOpenDrawer(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 16px', background: '#3b82f6', color: 'white',
+              border: 'none', borderRadius: '6px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '0.85rem'
+            }}
+          >
+            <Plus size={16} /> Add Custom Stage
+          </button>
+        </div>
+      )}
 
       <div style={{ overflowX: 'auto', paddingBottom: '16px' }}>
         <DragDropContext onDragEnd={handleDragEnd}>

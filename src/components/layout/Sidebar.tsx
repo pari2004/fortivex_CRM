@@ -313,7 +313,7 @@ export function Sidebar() {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab');
   const router = useRouter();
-  const { role, user, logout, hasPermission } = useAuth();
+  const { role, user, rolePermissions, hasPermission, logout } = useAuth();
   
   // Use admin menu as the master template of all available features
   const masterMenu = navMenus['admin'] || navMenus[role] || [];
@@ -462,6 +462,16 @@ export function Sidebar() {
                   style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px' }}
                 >
                   {group.items.map((item, index) => {
+                    // Check view permission
+                    // Special cases where item.name doesn't match module name directly
+                    let moduleName = item.name;
+                    if (item.name === 'Reports') moduleName = 'Reports & Analytics';
+                    // External links or special static links can bypass permission check if needed,
+                    // but we apply it broadly for CRM modules.
+                    if (item.href && item.href !== '#' && !item.external) {
+                       if (!hasPermission(moduleName, 'View')) return null;
+                    }
+
                     const isExactMatch = pathname === item.href && !item.subItems;
                     const isParentMatch = pathname === item.href && item.subItems;
                     const isActive = isExactMatch || (isParentMatch && !currentTab);
@@ -574,6 +584,19 @@ export function Sidebar() {
                                 // e.g. subItem.name is "Source Report", currentTab is "Source Report"
                                 // or if currentTab is empty and subItem.name is "Default"
                                 const isSubActive = currentTab === subItem.name || (!currentTab && subItem.name === 'Default') || pathname === subItem.href;
+
+                                // Submodule permission check (optional, but robust)
+                                // format module: "Leads-Active Leads"
+                                const subModuleName = `${moduleName}-${subItem.name}`;
+                                // If the backend has granular sub-module permissions, check here
+                                // But let's keep it simple: if you have view to the main module, you can see its subs unless specifically disabled.
+                                if (!hasPermission(subModuleName, 'View') && rolePermissions[subModuleName] !== undefined) {
+                                  // return null; // We could hide it, but the UI is simpler if we just let them click and get "Access Denied" or handle it natively
+                                  // Wait, let's actually hide it if we have specific permissions tracking it
+                                  // To be safe and meet the requirement, we check it.
+                                  // If the submodule doesn't exist in permissions object, fallback to true.
+                                  if (rolePermissions[subModuleName] && !hasPermission(subModuleName, 'View')) return null;
+                                }
 
                                 return (
                                   <Link key={sIdx} href={subItem.href} style={{ textDecoration: 'none' }}>

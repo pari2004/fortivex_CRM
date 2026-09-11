@@ -164,7 +164,7 @@ export function PremiumTextArea({ label, icon, ...props }: React.TextareaHTMLAtt
   );
 }
 
-export function PremiumCard({ title, icon, children, badge }: { title: string; icon?: React.ReactNode; children: React.ReactNode; badge?: React.ReactNode }) {
+export function PremiumCard({ title, icon, children, badge, headerAction }: { title: string; icon?: React.ReactNode; children: React.ReactNode; badge?: React.ReactNode; headerAction?: React.ReactNode }) {
   return (
     <div style={{ 
       background: 'rgba(255, 255, 255, 0.8)', 
@@ -180,7 +180,10 @@ export function PremiumCard({ title, icon, children, badge }: { title: string; i
           {icon && <span style={{ color: '#2563eb', background: 'rgba(37, 99, 235, 0.1)', padding: '6px', borderRadius: '10px', display: 'flex' }}>{icon}</span>}
           {title}
         </h4>
-        {badge && <div>{badge}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {headerAction && <div>{headerAction}</div>}
+          {badge && <div>{badge}</div>}
+        </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         {children}

@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function LeadPreviewModal({ isOpen, onClose, lead, onViewLead }: Props) {
-  const { leads, updateLead, dealStages, addTask, deals, updateDeal } = useCRM();
+  const { leads, updateLead, leadLifecycleStages, addTask, deals, updateDeal } = useCRM();
   const currentLead = leads.find(l => l.id === lead.id) || lead as Lead;
 
   const addActivity = (type: string, description: string, category: string = 'Activity') => {
@@ -36,8 +36,8 @@ export function LeadPreviewModal({ isOpen, onClose, lead, onViewLead }: Props) {
   const daysInStage = Math.max(0, Math.floor((Date.now() - lastActivityDate.getTime()) / (1000 * 60 * 60 * 24)));
   
   // Progress bar calculation
-  const leadStages = dealStages;
-  const currentStageIndex = leadStages.indexOf(currentLead.stage || leadStages[0]);
+  const leadStages = leadLifecycleStages.map(s => s.name);
+  const currentStageIndex = leadStages.indexOf(currentLead.status || currentLead.stage || leadStages[0]);
   const progressPercent = leadStages.length > 0 ? Math.round(((currentStageIndex + 1) / leadStages.length) * 100) : 0;
 
   // Next step (upcoming task)
@@ -46,7 +46,7 @@ export function LeadPreviewModal({ isOpen, onClose, lead, onViewLead }: Props) {
   const recentActivitiesCount = currentLead.activities?.length || 0;
 
   const handleMoveStage = (newStage: string) => {
-    updateLead({ ...currentLead, stage: newStage, lastActivityTime: new Date().toISOString() });
+    updateLead({ ...currentLead, status: newStage, lastActivityTime: new Date().toISOString() });
     addActivity('Status Change', `Moved to ${newStage}`);
     
     // Also update deal if it exists
@@ -79,15 +79,15 @@ export function LeadPreviewModal({ isOpen, onClose, lead, onViewLead }: Props) {
   return (
     <AnimatePresence>
       <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ width: '480px', background: 'white', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden' }}>
+        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ width: '45vw', minWidth: '400px', maxWidth: '800px', height: '85vh', background: 'white', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflowY: 'auto', position: 'relative' }}>
           
-          <div style={{ padding: '24px', position: 'relative' }}>
-            <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={20} /></button>
+          <div style={{ padding: '32px' }}>
+            <button onClick={onClose} style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={24} /></button>
             
             <h2 style={{ margin: '0 0 8px 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{currentLead.name}</h2>
             
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-              <span style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>{currentLead.stage || 'New Lead'}</span>
+              <span style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>{currentLead.status || currentLead.stage || 'New Lead'}</span>
               <span>&bull;</span>
               <span>{daysOld} days old</span>
               <span>&bull;</span>
@@ -121,9 +121,9 @@ export function LeadPreviewModal({ isOpen, onClose, lead, onViewLead }: Props) {
                       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', padding: '8px 12px', textTransform: 'uppercase' }}>Select Stage</div>
                       <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         {leadStages.map(st => (
-                          <div key={st} onClick={() => handleMoveStage(st)} style={{ padding: '10px 12px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '6px', background: currentLead.stage === st ? '#f1f5f9' : 'transparent', fontWeight: currentLead.stage === st ? 600 : 400 }}>
+                          <div key={st} onClick={() => handleMoveStage(st)} style={{ padding: '10px 12px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '6px', background: currentLead.status === st ? '#f1f5f9' : 'transparent', fontWeight: currentLead.status === st ? 600 : 400 }}>
                             {st}
-                            {currentLead.stage === st && <CheckCircle size={14} color="var(--primary-color)" />}
+                            {currentLead.status === st && <CheckCircle size={14} color="var(--primary-color)" />}
                           </div>
                         ))}
                       </div>

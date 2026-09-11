@@ -11,11 +11,13 @@ interface Props {
   onViewDeal?: (deal: Deal) => void;
 }
 
+const CURRENT_USER = 'Abhay';
+
 export function DealDetailsModal({ isOpen, onClose, deal, onViewDeal }: Props) {
-  const { deals, updateDeal, dealStages, addActivity } = useCRM();
+  const { deals, updateDeal, dealStages } = useCRM();
   const currentDeal = deals.find(d => d.id === deal.id) || deal;
   const router = useRouter();
-  
+
   const [showMoveStage, setShowMoveStage] = useState(false);
 
   if (!isOpen || !currentDeal) return null;
@@ -34,16 +36,16 @@ export function DealDetailsModal({ isOpen, onClose, deal, onViewDeal }: Props) {
   const handleMoveStage = (newStage: string) => {
     // Stage validation can happen here
     const previousStage = currentDeal.stage;
-    updateDeal({ ...currentDeal, stage: newStage, updatedAt: new Date().toISOString() });
-    
-    addActivity({
-      type: 'Stage Change',
-      title: 'Deal Stage Updated',
-      description: `Moved from ${previousStage} to ${newStage}`,
-      category: 'Update',
-      relatedTo: currentDeal.id
+    updateDeal({
+      ...currentDeal,
+      stage: newStage,
+      updatedAt: new Date().toISOString(),
+      recentActions: [
+        { id: Math.random().toString(36).substring(7), action: `Moved from ${previousStage} to ${newStage}`, date: new Date().toISOString(), by: CURRENT_USER },
+        ...(currentDeal.recentActions || [])
+      ]
     });
-    
+
     setShowMoveStage(false);
   };
 

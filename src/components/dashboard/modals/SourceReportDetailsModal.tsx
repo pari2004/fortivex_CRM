@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X, Search, Filter, Download, Printer, Activity, Target, IndianRupee, Globe, BookOpen } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
@@ -47,14 +48,13 @@ export function SourceReportDetailsModal({ sourceData, onClose }: Props) {
     { id: 3, action: 'A/B Testing Started for creatives', date: '1 week ago', status: 'Completed' },
   ];
 
-  return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+  return createPortal(
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="glass-panel" 
-        style={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', background: 'var(--bg-primary)' }}
+        style={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', background: 'var(--bg-primary)', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '16px' }}>
           <div>
@@ -366,6 +366,7 @@ export function SourceReportDetailsModal({ sourceData, onClose }: Props) {
           </div>
         )}
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 }

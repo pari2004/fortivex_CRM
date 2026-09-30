@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { SourceData } from './SourceReportDetailsModal';
@@ -24,6 +25,9 @@ export function AddSourceModal({ onClose, onSave }: AddSourceModalProps) {
     assignedManager: 'Alice',
     notes: ''
   });
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const [errors, setErrors] = useState<any>({});
 
@@ -61,16 +65,25 @@ export function AddSourceModal({ onClose, onSave }: AddSourceModalProps) {
     });
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
+      {/* Explicit backdrop element */}
+      <div 
+        style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          background: 'rgba(0, 0, 0, 0.7)'
+        }} 
+        onClick={onClose} 
+      />
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass-panel"
-        style={{ position: 'relative', width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', borderRadius: '16px', overflow: 'hidden' }}
+        style={{ position: 'relative', width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-xl)', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
       >
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Add Source</h2>
@@ -164,6 +177,7 @@ export function AddSourceModal({ onClose, onSave }: AddSourceModalProps) {
           <button onClick={handleSave} className="primary-btn" style={{ padding: '10px 24px' }}>Save Source</button>
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 }

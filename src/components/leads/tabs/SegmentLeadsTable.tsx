@@ -347,8 +347,8 @@ export function SegmentLeadsTable({ listName, onClose, onLeadClick }: SegmentLea
   const activeColumns = ALL_COLUMNS.filter(c => visibleColumns[c.id]);
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column' }}>
-      
+    <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '95%', height: '95%', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
       {/* Header */}
       <div style={{ 
         padding: '24px 32px', 
@@ -859,6 +859,7 @@ export function SegmentLeadsTable({ listName, onClose, onLeadClick }: SegmentLea
           leads={leads.filter(l => selectedIds.includes(l.id))}
         />
       )}
+      </div>
     </div>,
     document.body
   );

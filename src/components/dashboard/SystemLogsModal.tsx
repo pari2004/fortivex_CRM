@@ -183,8 +183,9 @@ export default function SystemLogsModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)' }}>
-      {/* Header */}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)' }}>
+      <div style={{ width: '95%', height: '95%', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
+        {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', backdropFilter: 'blur(10px)' }}>
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
           <Server size={24} color="var(--primary-color)" /> System Logs Dashboard
@@ -378,6 +379,7 @@ export default function SystemLogsModal({ onClose }: { onClose: () => void }) {
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
       `}} />
+      </div>
     </div>
   );
 }

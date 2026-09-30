@@ -1,4 +1,5 @@
 import { User } from '@/contexts/AuthContext';
+import { PermissionsManager } from '@/lib/PermissionsManager';
 
 export const INITIAL_DEMO_ACCOUNTS: User[] = [
   { id: '0', name: 'IT Super Admin', mobile: '0000000000', role: 'it' },
@@ -20,6 +21,15 @@ export const DEMO_PASSWORDS: Record<string, string> = {
   pavan:      'Pavan@123',
 };
 
+// New accounts always begin with the Member baseline. A role may subsequently
+// add permissions, but never replaces this individual baseline.
+const MEMBER_BASELINE_PERMISSIONS = {
+  Dashboard: { View: true },
+  Tasks: { View: true, Create: true, Edit: true },
+  Calendar: { View: true, Create: true, Edit: true },
+  'Help Center': { View: true }
+};
+
 // Dynamic getter/setter for local storage
 export const getDynamicAccounts = (): User[] => {
   if (typeof window === 'undefined') return INITIAL_DEMO_ACCOUNTS;
@@ -34,6 +44,12 @@ export const addDynamicAccount = (user: User, password: string = 'Password@123')
   const accounts = getDynamicAccounts();
   const newAccounts = [...accounts, user];
   localStorage.setItem('crm_dynamic_accounts', JSON.stringify(newAccounts));
+  const existingPermissions = PermissionsManager.getUserPermissions();
+  const allPerms = existingPermissions ? { ...existingPermissions } : {};
+  if (!allPerms[user.id]) {
+    allPerms[user.id] = MEMBER_BASELINE_PERMISSIONS;
+    PermissionsManager.saveUserPermissions(allPerms).catch(console.error);
+  }
   
   // Save dynamic password
   const storedPasswords = localStorage.getItem('crm_dynamic_passwords') || JSON.stringify(DEMO_PASSWORDS);

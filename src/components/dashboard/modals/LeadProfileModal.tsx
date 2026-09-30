@@ -694,7 +694,7 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
       {/* Move Stage Modal */}
       <AnimatePresence>
         {showMoveStage && (
-          <div style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ width: '400px', background: 'white', borderRadius: '16px', overflow: 'hidden' }}>
                 <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Move Stage</h3>
@@ -721,7 +721,7 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
       {/* Right side Drawers (Business, Contact, List) */}
       <AnimatePresence>
         {showLinkBusiness && (
-          <div key="link-business-drawer" style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
+          <div key="link-business-drawer" style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'flex-end' }}>
              <motion.div initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'tween'}} style={{ width: '400px', background: 'white', height: '100%', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e2e8f0' }}>
                 <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Link Business</h3>
@@ -743,7 +743,7 @@ export function LeadProfileModal({ isOpen, onClose, lead }: Props) {
         )}
 
         {showLinkContact && (
-          <div key="link-contact-drawer" style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
+          <div key="link-contact-drawer" style={{ position: 'absolute', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'flex-end' }}>
              <motion.div initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'tween'}} style={{ width: '400px', background: 'white', height: '100%', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e2e8f0' }}>
                 <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Link Contact</h3>

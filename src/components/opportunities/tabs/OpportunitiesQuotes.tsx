@@ -443,7 +443,7 @@ export function OpportunitiesQuotes() {
       {/* Advanced Permission Modal */}
       {isPermissionModalOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setIsPermissionModalOpen(false)} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)' }} onClick={() => setIsPermissionModalOpen(false)} />
           <div style={{ background: 'white', borderRadius: '12px', width: '400px', maxWidth: '90vw', position: 'relative', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}>Advanced Permission</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '16px', textAlign: 'center', lineHeight: 1.5 }}>

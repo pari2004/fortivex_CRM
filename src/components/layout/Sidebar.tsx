@@ -468,7 +468,7 @@ export function Sidebar() {
                     if (item.name === 'Reports') moduleName = 'Reports & Analytics';
                     // External links or special static links can bypass permission check if needed,
                     // but we apply it broadly for CRM modules.
-                    if (item.href && item.href !== '#' && !item.external) {
+                    if (!item.external) {
                        if (!hasPermission(moduleName, 'View')) return null;
                     }
 

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { getDynamicAccounts } from '@/lib/data/mockUsers';
 import { Logo } from '@/components/common/Logo';
+import { PermissionsManager } from '@/lib/PermissionsManager';
 export type Role = 'it' | 'admin' | 'counselor' | 'manager' | 'marketing' | 'member';
 
 export interface User {
@@ -22,6 +23,17 @@ export interface User {
   teamId?: string;
   avatar?: string;
 }
+
+type PermissionMatrix = Record<string, Record<string, boolean>>;
+const mergePermissions = (...matrices: PermissionMatrix[]): PermissionMatrix => matrices.reduce<PermissionMatrix>((merged, matrix) => {
+  Object.entries(matrix || {}).forEach(([module, actions]) => {
+    merged[module] = { ...merged[module] };
+    Object.entries(actions).forEach(([action, allowed]) => { merged[module][action] = Boolean(merged[module][action] || allowed); });
+  });
+  return merged;
+}, {});
+
+
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -46,34 +58,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRoleState] = useState<Role>('admin');
   const [rolePermissions, setRolePermissions] = useState<Record<string, Record<string, boolean>>>({});
   const [isInitializing, setIsInitializing] = useState(true);
+  const pathname = usePathname();
 
-  const updatePermissionsForRole = (currentRole: string) => {
+  const updatePermissionsForRole = (currentRole: string, userId?: string) => {
     try {
-      const storedRoles = localStorage.getItem('crm_custom_roles');
-      if (storedRoles) {
-        const parsedRoles = JSON.parse(storedRoles);
-        // Map AuthContext role to RolesPage role names
+      if (currentRole === 'it') {
+        const ALL_MODULES = [
+          'Dashboard', 'Leads', 'Pipeline', 'Applications', 'Students', 'Tasks', 
+          'Calendar', 'Calls', 'WhatsApp', 'Email', 'Documents', 'Payments', 
+          'Reports', 'Analytics', 'Users', 'Roles', 'Automation', 'Settings',
+          'Customization', 'Integration'
+        ];
+        const allPerms: any = {};
+        ALL_MODULES.forEach(m => allPerms[m] = { View: true, Create: true, Edit: true, Delete: true });
+        setRolePermissions(allPerms);
+        return;
+      }
+
+      const storedUserPermissions = PermissionsManager.getUserPermissions();
+      const personalPermissions = storedUserPermissions && userId ? storedUserPermissions[userId] || {} : {};
+      
+      const storedRoles = PermissionsManager.getCustomRoles();
+      let customRolePerms: PermissionMatrix = {};
+      if (storedRoles && Array.isArray(storedRoles)) {
+        const parsedRoles = storedRoles;
         const roleMap: Record<string, string> = {
           'it': 'IT',
           'admin': 'Admin',
-          'manager': 'Manager',
+          'manager': 'Manager', // Might not exist in initialData, but keep for robustness
           'counselor': 'Admission Counselor',
-          'marketing': 'Marketing Manager',
+          'marketing': 'Marketing', // Fixed from 'Marketing Manager'
           'member': 'Member'
         };
         const mappedName = roleMap[currentRole] || 'Admin';
-        
         const matchedRole = parsedRoles.find((r: any) => r.name === mappedName);
-        if (matchedRole && matchedRole.permissions) {
-          setRolePermissions(matchedRole.permissions);
-          return;
+        if (matchedRole && matchedRole.permissions && Object.keys(matchedRole.permissions).length > 0) {
+          customRolePerms = matchedRole.permissions;
         }
       }
+
+      const merged = mergePermissions(personalPermissions, customRolePerms);
+      if (Object.keys(merged).length > 0) {
+        setRolePermissions(merged);
+        return;
+      }
+
+      // Default fallback if not found
+      setRolePermissions({});
+      return;
     } catch(e) {
       console.error('Error loading custom roles', e);
     }
     
-    // Default fallback if not found in custom storage
+    // Default fallback if not found
     setRolePermissions({});
   };
 
@@ -81,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (role === 'it') return true; // IT is the ultimate super admin
     if (Object.keys(rolePermissions).length === 0) {
        // fallback for uninitialized
-       return true; 
+       return module === 'Dashboard';
     }
     return !!rolePermissions[module]?.[action];
   };
@@ -117,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
 
+<<<<<<< Updated upstream
   // Validate the real session against the server on mount (httpOnly cookie is the source of truth).
   useEffect(() => {
     (async () => {
@@ -158,6 +196,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Login failed', e);
       return { success: false, error: 'Unable to reach the server.' };
     }
+=======
+  // Re-sync permissions on route navigation
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      updatePermissionsForRole(user.role, user.id);
+    }
+  }, [pathname, isAuthenticated, user?.id, user?.role]);
+
+  // Sync permissions across components & storage events
+  useEffect(() => {
+    const handlePermissionsUpdated = () => {
+      if (user) {
+        updatePermissionsForRole(user.role, user.id);
+      }
+    };
+
+    window.addEventListener('storage', handlePermissionsUpdated);
+    window.addEventListener('crm_permissions_updated', handlePermissionsUpdated);
+
+    return () => {
+      window.removeEventListener('storage', handlePermissionsUpdated);
+      window.removeEventListener('crm_permissions_updated', handlePermissionsUpdated);
+    };
+  }, [user]);
+
+  // Persist session in localStorage if running in browser
+  useEffect(() => {
+    const init = async () => {
+      await PermissionsManager.load();
+      const savedSession = localStorage.getItem('empowers_session');
+      if (savedSession) {
+        try {
+          const parsed = JSON.parse(savedSession) as User;
+          if (parsed && parsed.role) {
+            setUser(parsed);
+            setRoleState(parsed.role);
+            updatePermissionsForRole(parsed.role, parsed.id);
+            setIsAuthenticated(true);
+          }
+        } catch (e) {
+          console.error('Failed to parse session', e);
+        }
+      }
+      setIsInitializing(false);
+    };
+    init();
+  }, []);
+
+  const login = (userData: User) => {
+    setUser(userData);
+    setRoleState(userData.role);
+    updatePermissionsForRole(userData.role, userData.id);
+    setIsAuthenticated(true);
+    localStorage.setItem('empowers_session', JSON.stringify(userData));
+    router.push('/dashboard');
+>>>>>>> Stashed changes
   };
 
   const logout = () => {
@@ -169,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setRole = (newRole: Role) => {
     setRoleState(newRole);
-    updatePermissionsForRole(newRole);
+    updatePermissionsForRole(newRole, user?.id);
     if (user) {
       const updatedUser = { ...user, role: newRole };
       setUser(updatedUser);
@@ -194,7 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const forceRefreshPermissions = () => {
-    updatePermissionsForRole(role);
+    updatePermissionsForRole(role, user?.id);
   };
 
   if (isInitializing) {

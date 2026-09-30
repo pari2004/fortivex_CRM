@@ -201,7 +201,7 @@ export function ViewPaymentsDrawer({ isOpen, onClose, lead }: Props) {
     <AnimatePresence>
       {isOpen && (
         <>
-          <div key="view-payments-backdrop" style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
+          <div key="view-payments-backdrop" style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
           <motion.div 
             key="view-payments-drawer"
             initial={{ x: '100%' }} 

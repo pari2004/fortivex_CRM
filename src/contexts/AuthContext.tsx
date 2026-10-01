@@ -154,17 +154,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
 
-<<<<<<< Updated upstream
   // Validate the real session against the server on mount (httpOnly cookie is the source of truth).
   useEffect(() => {
     (async () => {
       try {
+        await PermissionsManager.load();
         const res = await fetch('/api/auth/me');
         const data = await res.json();
         if (data.user && data.user.role) {
           setUser(data.user);
           setRoleState(data.user.role);
-          updatePermissionsForRole(data.user.role);
+          updatePermissionsForRole(data.user.role, data.user.id);
           setIsAuthenticated(true);
         }
       } catch (e) {
@@ -175,28 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const login = async (mobile: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Login failed.' };
-      }
-      setUser(data.user);
-      setRoleState(data.user.role);
-      updatePermissionsForRole(data.user.role);
-      setIsAuthenticated(true);
-      router.push('/dashboard');
-      return { success: true };
-    } catch (e) {
-      console.error('Login failed', e);
-      return { success: false, error: 'Unable to reach the server.' };
-    }
-=======
   // Re-sync permissions on route navigation
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -221,37 +199,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
-  // Persist session in localStorage if running in browser
-  useEffect(() => {
-    const init = async () => {
-      await PermissionsManager.load();
-      const savedSession = localStorage.getItem('empowers_session');
-      if (savedSession) {
-        try {
-          const parsed = JSON.parse(savedSession) as User;
-          if (parsed && parsed.role) {
-            setUser(parsed);
-            setRoleState(parsed.role);
-            updatePermissionsForRole(parsed.role, parsed.id);
-            setIsAuthenticated(true);
-          }
-        } catch (e) {
-          console.error('Failed to parse session', e);
-        }
+  const login = async (mobile: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Login failed.' };
       }
-      setIsInitializing(false);
-    };
-    init();
-  }, []);
-
-  const login = (userData: User) => {
-    setUser(userData);
-    setRoleState(userData.role);
-    updatePermissionsForRole(userData.role, userData.id);
-    setIsAuthenticated(true);
-    localStorage.setItem('empowers_session', JSON.stringify(userData));
-    router.push('/dashboard');
->>>>>>> Stashed changes
+      setUser(data.user);
+      setRoleState(data.user.role);
+      updatePermissionsForRole(data.user.role, data.user.id);
+      setIsAuthenticated(true);
+      router.push('/dashboard');
+      return { success: true };
+    } catch (e) {
+      console.error('Login failed', e);
+      return { success: false, error: 'Unable to reach the server.' };
+    }
   };
 
   const logout = () => {

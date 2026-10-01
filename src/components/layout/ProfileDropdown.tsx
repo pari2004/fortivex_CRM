@@ -55,7 +55,7 @@ export function ProfileDropdown() {
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {user?.avatar ? <img src={user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : getInitials(user?.name)}
+        {(user as any)?.photo || user?.avatar ? <img src={(user as any)?.photo || user?.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : getInitials(user?.name)}
       </motion.div>
 
       <AnimatePresence>

@@ -126,7 +126,7 @@ const ResizableHeader = ({ colId, width, onResize }: { colId: string, width: num
   );
 };
 
-export function LeadsDefaultView({ activeTab, newLeadEvent }: any) {
+export function LeadsDefaultView({ activeTab, newLeadEvent, newUploadEvent, isUploadModalOpen }: any) {
   const { leads, users, updateLead, deleteLead, leadLifecycleStages } = useCRM();
   const { user: authUser } = useAuth();
   const { openSharedInbox } = useInbox();
@@ -408,7 +408,7 @@ export function LeadsDefaultView({ activeTab, newLeadEvent }: any) {
         </button>
 
         {/* Search Bar */}
-        <div style={{ flex: 1, position: 'relative', minWidth: '250px' }}>
+        <div style={{ flex: 1, position: 'relative', minWidth: '250px', visibility: isUploadModalOpen ? 'hidden' : 'visible' }}>
           <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
           <input 
             type="text" 
@@ -734,7 +734,7 @@ export function LeadsDefaultView({ activeTab, newLeadEvent }: any) {
                                 <a href={`tel:${row.mobile || row.phone}`} onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', textDecoration: 'none', transition: 'all 0.2s' }} title="Call Lead">
                                   <Phone size={14} />
                                 </a>
-                                <a href={`https://wa.me/${(row.mobile || row.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', textDecoration: 'none', transition: 'all 0.2s' }} title="Message Lead">
+                                <a href={`https://wa.me/${String(row.mobile || row.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', textDecoration: 'none', transition: 'all 0.2s' }} title="Message Lead">
                                   <MessageCircle size={14} />
                                 </a>
                               </div>

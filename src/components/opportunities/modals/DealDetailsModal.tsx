@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function DealDetailsModal({ isOpen, onClose, deal, onViewDeal }: Props) {
-  const { deals, updateDeal, dealStages, addActivity } = useCRM();
+  const { deals, updateDeal, dealStages } = useCRM();
   const currentDeal = deals.find(d => d.id === deal.id) || deal;
   const router = useRouter();
   
@@ -33,16 +33,7 @@ export function DealDetailsModal({ isOpen, onClose, deal, onViewDeal }: Props) {
 
   const handleMoveStage = (newStage: string) => {
     // Stage validation can happen here
-    const previousStage = currentDeal.stage;
     updateDeal({ ...currentDeal, stage: newStage, updatedAt: new Date().toISOString() });
-    
-    addActivity({
-      type: 'Stage Change',
-      title: 'Deal Stage Updated',
-      description: `Moved from ${previousStage} to ${newStage}`,
-      category: 'Update',
-      relatedTo: currentDeal.id
-    });
     
     setShowMoveStage(false);
   };

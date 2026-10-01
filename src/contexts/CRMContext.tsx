@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { mockUsers, mockLeads, mockDeals, mockTasks, mockCalls, mockVideoCalls, mockLists } from './mockData';
 import { leadsData, studentsData, generatedBusinessLeads, BusinessLead, generatedDeals, generatedQuotes, generatedPayments, Quote, QuoteLineItem, generatedApplications, Application, Student, StudentActivity } from '@/lib/data/mockData';
 import { Reminder } from '@/lib/types/reminder';
-import { usersData, CRMProperty, defaultPropertiesData } from '@/lib/data/systemData';
+import { CRMNotification } from '@/lib/types/notification';
+import { usersData, CRMProperty, defaultPropertiesData, User } from '@/lib/data/systemData';
 export type { Application, Quote, QuoteLineItem, BusinessLead, Student, StudentActivity };
 
 
@@ -37,20 +38,6 @@ export interface Task {
   status: string;
   description: string;
   [key: string]: any;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  employeeId?: string;
-  role: string;
-  department: string;
-  phone: string;
-  email: string;
-  status: 'Active' | 'Inactive';
-  lastLogin: string;
-  createdDate: string;
-  photo: string;
 }
 
 export interface Report {
@@ -823,6 +810,7 @@ interface CRMContextType {
   deleteTask: (taskId: string) => void;
   addUser: (user: Omit<User, 'id'>) => void;
   updateSystemUser: (user: User) => void;
+  addSystemUser: (user: User) => void;
 
 // CRM Properties
   properties: CRMProperty[];
@@ -849,6 +837,11 @@ interface CRMContextType {
   linkLeadsToBusiness: (businessId: string, leadIds: string[]) => void;
   addDeal: (deal: Omit<Deal, 'id'>) => void;
   updateDeal: (deal: Deal) => void;
+  notifications: CRMNotification[];
+  addNotification: (notification: Omit<CRMNotification, 'id' | 'createdAt' | 'isRead'>) => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  clearNotifications: () => void;
   addQuote: (quote: Omit<Quote, 'id'>) => void;
   updateQuote: (quote: Quote) => void;
   deleteQuote: (id: string) => void;
@@ -1006,8 +999,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateSystemUser = (updatedUser: User) => {
     setSystemUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
   };
+
+  const addSystemUser = (newUser: User) => {
+    setSystemUsers(prev => [...prev, newUser]);
+  };
   const [reports, setReports] = useState<Report[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [notifications, setNotifications] = useState<CRMNotification[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from local storage
@@ -1186,10 +1184,42 @@ const initialDistributions: Distribution[] = [
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const addTask = (task: Omit<Task, 'id'>) => setTasks(prev => [{ ...task, id: generateId() } as Task, ...prev]);
+  const addTask = (task: Omit<Task, 'id'>) => {
+    const newTask = { ...task, id: `T${Date.now()}` };
+    setTasks(prev => [newTask, ...prev]);
+    addNotification({
+      type: 'Tasks',
+      title: 'Task Assigned',
+      message: `New task: ${newTask.title}`,
+      severity: 'info',
+      destinationRoute: '/tasks/my-tasks'
+    });
+  };
   const updateTask = (taskId: string, task: Task) => setTasks(prev => prev.map(t => t.id === taskId ? task : t));
   const deleteTask = (taskId: string) => setTasks(prev => prev.filter(t => t.id !== taskId));
   const addUser = (user: Omit<User, 'id'>) => setUsers(prev => [{ ...user, id: generateId() } as User, ...prev]);
+  const addNotification = (notification: Omit<CRMNotification, 'id' | 'createdAt' | 'isRead'>) => {
+    const newNotif: CRMNotification = {
+      ...notification,
+      id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: new Date().toISOString(),
+      isRead: false
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
   const addReport = (report: Omit<Report, 'id'>) => setReports(prev => [{ ...report, id: generateId() } as Report, ...prev]);
 
   
@@ -1225,7 +1255,17 @@ const initialDistributions: Distribution[] = [
     setLeads(prev => [...newCRMLeads, ...prev]);
   };
 
-  const addLead = (lead: Omit<Lead, 'id'>) => setLeads(prev => [{ ...lead, id: generateId() } as Lead, ...prev]);
+  const addLead = (lead: Omit<Lead, 'id'>) => {
+    const newLead = { ...lead, id: `L${leads.length + 1}` };
+    setLeads(prev => [newLead, ...prev]);
+    addNotification({
+      type: 'Leads',
+      title: 'New Lead Created',
+      message: `Lead ${newLead.name} was successfully created.`,
+      severity: 'success',
+      destinationRoute: `/leads?id=${newLead.id}`
+    });
+  };
   const updateLead = (lead: Lead) => setLeads(prev => prev.map(l => l.id === lead.id ? lead : l));
   const deleteLead = (ids: string[]) => setLeads(prev => prev.filter(l => !ids.includes(l.id)));
   const addApplication = (app: Omit<Application, 'id'>) => setApplications(prev => [{ ...app, id: `APP-${generateId().toUpperCase()}` } as Application, ...prev]);
@@ -1324,7 +1364,17 @@ const initialDistributions: Distribution[] = [
   const deleteQuote = (id: string) => setQuotes(prev => prev.filter(q => q.id !== id));
   const updateQuotationDefaults = (defaults: QuotationDefaults) => setQuotationDefaults(defaults);
 
-  const addPayment = (payment: Omit<Payment, 'id'>) => setPayments(prev => [{ ...payment, id: `PAY-${generateId().toUpperCase()}` } as Payment, ...prev]);
+  const addPayment = (payment: Omit<Payment, 'id'>) => {
+    const newPayment = { ...payment, id: `PAY-${Date.now()}` };
+    setPayments(prev => [newPayment, ...prev] as Payment[]);
+    addNotification({
+      type: 'Payments',
+      title: 'Payment Added',
+      message: `Payment of ${newPayment.amount} received from ${newPayment.clientName}.`,
+      severity: 'success',
+      destinationRoute: `/payments`
+    });
+  };
   const updatePayment = (payment: Payment) => setPayments(prev => prev.map(p => p.id === payment.id ? payment : p));
   const deletePayment = (id: string) => setPayments(prev => prev.filter(p => p.id !== id));
 
@@ -1429,12 +1479,17 @@ const initialDistributions: Distribution[] = [
       deals: scopedDeals,
       dealStages,
       updateDealStages,
-      properties, quotes, quotationDefaults, payments, tasks: scopedTasks, users, systemUsers, reports, reminders, doNotTrackRecords,
-      addList, updateList, deleteList, addDistribution, updateDistribution, deleteDistribution,
+      properties, quotes, quotationDefaults, payments, tasks: scopedTasks, users, systemUsers, reports, reminders,
+      notifications,
+      addNotification,
+      markAsRead,
+      markAllAsRead,
+      clearNotifications,
+      addDistribution, updateDistribution, deleteDistribution,
       addUpload, updateUpload, deleteUpload, processUpload,
       addVideoCall, updateVideoCall, deleteVideoCall, addLead, updateLead, deleteLead, addApplication, updateApplication, addStudent, updateStudent, logCall, scheduleDemo, uploadDocument, addBusinessLead, updateBusinessLead, deleteBusinessLeads, linkLeadsToBusiness,
       addDeal, updateDeal, addQuote, updateQuote, deleteQuote, updateQuotationDefaults, addPayment, updatePayment, deletePayment, addTask, updateTask, deleteTask, addUser, addReport,
-      addReminder, updateReminder, deleteReminder, toggleCompleteReminder, snoozeReminder, updateUser, updateSystemUser,
+      addReminder, updateReminder, deleteReminder, toggleCompleteReminder, snoozeReminder, updateUser, updateSystemUser, addSystemUser,
       addProperty, updateProperty, deleteProperty, reorderProperties, removeDoNotTrackRecords
     }}>
       {children}

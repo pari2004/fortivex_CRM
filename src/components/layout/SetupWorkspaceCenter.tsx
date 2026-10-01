@@ -9,6 +9,10 @@ import CallOutcomesPage from '@/app/customization/customization/call-outcomes/pa
 import CustomFormsPage from '@/app/customization/customization/custom-forms/page';
 import IntegrationsPage from '@/app/customization/customization/integrations/page';
 import LeadImportPage from '@/app/customization/customization/lead-import/page';
+import FollowUpsPage from '@/app/customization/customization/follow-ups/page';
+import WorkspaceCustomizationPage from '@/app/customization/customization/workspace-setup/page';
+import ReportsSetupPage from '@/app/customization/customization/reports-setup/page';
+import FinalReviewPage from '@/app/customization/customization/final-review/page';
 import { useCRM } from '@/contexts/CRMContext';
 
 interface SetupWorkspaceCenterProps {
@@ -16,7 +20,7 @@ interface SetupWorkspaceCenterProps {
   onExit: () => void;
 }
 
-const SETUP_STEPS = [
+export const SETUP_STEPS = [
   { id: 1, title: 'Invite Colleagues', description: 'Invite your team members and assign the right access.' },
   { id: 2, title: 'Review Permissions', description: 'Control what each role can view, create, edit, and manage.' },
   { id: 3, title: 'Configure Lead Lifecycle', description: 'Define the lead stages your team uses to track prospects.' },
@@ -226,6 +230,28 @@ export default function SetupWorkspaceCenter({ onClose, onExit }: SetupWorkspace
           ) : activeStepData.id === 8 ? (
             <div style={{ marginTop: '-24px', marginLeft: '-24px', marginRight: '-24px' }}>
               <LeadImportPage hideHeader={true} onComplete={handleNext} />
+            </div>
+          ) : activeStepData.id === 9 ? (
+            <div style={{ marginTop: '-24px', marginLeft: '-24px', marginRight: '-24px' }}>
+              <FollowUpsPage hideHeader={true} />
+            </div>
+          ) : activeStepData.id === 10 ? (
+            <div style={{ marginTop: '-24px', marginLeft: '-24px', marginRight: '-24px' }}>
+              <WorkspaceCustomizationPage hideHeader={true} />
+            </div>
+          ) : activeStepData.id === 11 ? (
+            <div style={{ marginTop: '-24px', marginLeft: '-24px', marginRight: '-24px' }}>
+              <ReportsSetupPage hideHeader={true} />
+            </div>
+          ) : activeStepData.id === 12 ? (
+            <div style={{ marginTop: '-24px', marginLeft: '-24px', marginRight: '-24px' }}>
+              <FinalReviewPage 
+                hideHeader={true} 
+                completedSteps={completedSteps} 
+                allSteps={SETUP_STEPS} 
+                onNavigateStep={(id) => setCurrentStep(id)} 
+                onExit={onExit} 
+              />
             </div>
           ) : (
             <div style={{ 

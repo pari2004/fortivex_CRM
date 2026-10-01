@@ -1,14 +1,51 @@
 export interface User {
   id: string;
+  // Basic Info
   name: string;
-  phone: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
   email: string;
-  role: string;
+  phone: string;
+  alternateMobile?: string;
+  dob?: string;
+  gender?: string;
+  employeeId?: string;
+  // Work Info
+  designation?: string;
   department: string;
-  status: 'Active' | 'Inactive';
+  team?: string;
+  manager?: string;
+  employeeType?: string;
+  joiningDate?: string;
+  workLocation?: string;
+  branch?: string;
+  // Access
+  role: string;
+  // Contact
+  workEmail?: string;
+  workPhone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  // Preferences
+  timeZone?: string;
+  language?: string;
+  dateFormat?: string;
+  timeFormat?: string;
+  emailNotification?: boolean;
+  whatsappNotification?: boolean;
+  // System
+  status: 'Active' | 'Inactive' | 'Suspended';
   lastLogin: string;
+  lastActive?: string;
   createdDate: string;
   photo: string;
+  accountStatus?: string;
+  emailVerified?: boolean;
+  twoFactorEnabled?: boolean;
 }
 
 export interface Role {
@@ -33,11 +70,11 @@ export interface Automation {
 }
 
 export const usersData: User[] = [
-  { id: 'USR-001', name: 'Rahul Sharma', phone: '9876543210', email: 'rahul.s@empowers.edu', role: 'Counselor', department: 'Admissions', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-001' },
-  { id: 'USR-002', name: 'Priya Patel', phone: '9876543211', email: 'priya.p@empowers.edu', role: 'Manager', department: 'Admissions', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-002' },
-  { id: 'USR-003', name: 'Amit Kumar', phone: '9876543212', email: 'amit.k@empowers.edu', role: 'Counselor', department: 'Admissions', status: 'Inactive', lastLogin: '2023-10-20T10:00:00Z', createdDate: '2023-02-15T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-003' },
-  { id: 'USR-004', name: 'Sneha Reddy', phone: '9876543213', email: 'sneha.r@empowers.edu', role: 'Admin', department: 'Operations', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-03-20T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-004' },
-  { id: 'USR-005', name: 'Vikram Singh', phone: '9876543214', email: 'vikram.s@empowers.edu', role: 'Counselor', department: 'Admissions', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-04-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-005' },
+  { id: 'USR-001', name: 'Rahul Sharma', firstName: 'Rahul', lastName: 'Sharma', username: 'rahul.s', phone: '9876543210', email: 'rahul.s@empowers.edu', role: 'Counselor', designation: 'Senior Counselor', department: 'Admissions', team: 'Admissions Team Alpha', manager: 'Priya Patel', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', lastActive: '2023-10-25T14:30:00Z', createdDate: '2023-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-001', workLocation: 'Head Office', employeeId: 'EMP001' },
+  { id: 'USR-002', name: 'Priya Patel', firstName: 'Priya', lastName: 'Patel', username: 'priya.p', phone: '9876543211', email: 'priya.p@empowers.edu', role: 'Manager', designation: 'Admissions Manager', department: 'Admissions', team: 'Admissions Team Alpha', manager: 'Amit Kumar', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', lastActive: '2023-10-25T15:00:00Z', createdDate: '2023-01-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-002', workLocation: 'Head Office', employeeId: 'EMP002' },
+  { id: 'USR-003', name: 'Amit Kumar', firstName: 'Amit', lastName: 'Kumar', username: 'amit.k', phone: '9876543212', email: 'amit.k@empowers.edu', role: 'Counselor', designation: 'Counselor', department: 'Admissions', team: 'Admissions Team Beta', manager: 'Priya Patel', status: 'Inactive', lastLogin: '2023-10-20T10:00:00Z', createdDate: '2023-02-15T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-003', workLocation: 'Branch 1', employeeId: 'EMP003' },
+  { id: 'USR-004', name: 'Sneha Reddy', firstName: 'Sneha', lastName: 'Reddy', username: 'sneha.r', phone: '9876543213', email: 'sneha.r@empowers.edu', role: 'Admin', designation: 'Operations Head', department: 'Operations', team: 'Core Operations', manager: 'Director', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-03-20T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-004', workLocation: 'Head Office', employeeId: 'EMP004' },
+  { id: 'USR-005', name: 'Vikram Singh', firstName: 'Vikram', lastName: 'Singh', username: 'vikram.s', phone: '9876543214', email: 'vikram.s@empowers.edu', role: 'Counselor', designation: 'Counselor', department: 'Admissions', team: 'Admissions Team Alpha', manager: 'Priya Patel', status: 'Active', lastLogin: '2023-10-25T10:00:00Z', createdDate: '2023-04-10T10:00:00Z', photo: 'https://i.pravatar.cc/150?u=USR-005', workLocation: 'Branch 2', employeeId: 'EMP005' },
 ];
 
 export const rolesData: Role[] = [

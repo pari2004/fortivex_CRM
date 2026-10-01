@@ -39,6 +39,14 @@ export default function UpdateTaxModal({ isOpen, onClose }: UpdateTaxModalProps)
   }, [isOpen]);
 
   const validate = () => {
+    if (!orgName.trim()) {
+      setError('Business/Organization name is required.');
+      return false;
+    }
+    if (!country.trim()) {
+      setError('Country/Region is required.');
+      return false;
+    }
     if (!taxId.trim()) {
       setError('Tax ID is required.');
       return false;
@@ -70,9 +78,10 @@ export default function UpdateTaxModal({ isOpen, onClose }: UpdateTaxModalProps)
         let orgData = savedData ? JSON.parse(savedData) : {};
         orgData = {
           ...orgData,
+          businessName: orgName.trim(),
           taxIdType,
           taxId: taxId.trim(),
-          country,
+          country: country.trim(),
         };
         localStorage.setItem('crm_organization_data', JSON.stringify(orgData));
         setToast({ message: 'Tax ID updated successfully.', type: 'success' });
@@ -176,21 +185,54 @@ export default function UpdateTaxModal({ isOpen, onClose }: UpdateTaxModalProps)
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#475569', marginBottom: '4px' }}>
-              Business/Organization
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#475569', marginBottom: '8px' }}>
+              Business/Organization <span style={{ color: '#ef4444' }}>*</span>
             </label>
-            <div style={{ fontSize: '0.95rem', color: '#1e293b', padding: '10px 12px', background: '#f1f5f9', borderRadius: '8px' }}>
-              {orgName || 'Not Set'}
-            </div>
+            <select
+              value={orgName}
+              onChange={(e) => {
+                setOrgName(e.target.value);
+                setError('');
+              }}
+              style={{
+                width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', 
+                fontSize: '0.95rem', color: '#1e293b', outline: 'none', backgroundColor: '#f8fafc'
+              }}
+            >
+              <option value="My Organization">My Organization</option>
+              <option value="Fortivex">Fortivex</option>
+              <option value="Acme Corp">Acme Corp</option>
+              <option value="Globex Inc">Globex Inc</option>
+              {!['My Organization', 'Fortivex', 'Acme Corp', 'Globex Inc'].includes(orgName) && orgName && (
+                <option value={orgName}>{orgName}</option>
+              )}
+            </select>
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#475569', marginBottom: '4px' }}>
-              Country/Region
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#475569', marginBottom: '8px' }}>
+              Country/Region <span style={{ color: '#ef4444' }}>*</span>
             </label>
-            <div style={{ fontSize: '0.95rem', color: '#1e293b', padding: '10px 12px', background: '#f1f5f9', borderRadius: '8px' }}>
-              {country}
-            </div>
+            <select
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                setError('');
+              }}
+              style={{
+                width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', 
+                fontSize: '0.95rem', color: '#1e293b', outline: 'none', backgroundColor: '#f8fafc'
+              }}
+            >
+              <option value="India">India</option>
+              <option value="United States">United States</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Australia">Australia</option>
+              <option value="Canada">Canada</option>
+              {!['India', 'United States', 'United Kingdom', 'Australia', 'Canada'].includes(country) && country && (
+                <option value={country}>{country}</option>
+              )}
+            </select>
           </div>
 
         </div>

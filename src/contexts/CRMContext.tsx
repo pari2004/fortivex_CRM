@@ -4,7 +4,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { useAuth } from '@/contexts/AuthContext';
 import type { BusinessLead, Quote, QuoteLineItem, Application, Student, StudentActivity } from '@/lib/data/mockData';
 import { Reminder } from '@/lib/types/reminder';
-import type { CRMProperty } from '@/lib/data/systemData';
+import type { CRMProperty, User } from '@/lib/data/systemData';
+import { CRMNotification } from '@/lib/types/notification';
 export type { Application, Quote, QuoteLineItem, BusinessLead, Student, StudentActivity };
 
 
@@ -36,20 +37,6 @@ export interface Task {
   status: string;
   description: string;
   [key: string]: any;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  employeeId?: string;
-  role: string;
-  department: string;
-  phone: string;
-  email: string;
-  status: 'Active' | 'Inactive';
-  lastLogin: string;
-  createdDate: string;
-  photo: string;
 }
 
 export interface Report {
@@ -646,6 +633,7 @@ interface CRMContextType {
   deleteTask: (taskId: string) => void;
   addUser: (user: Omit<User, 'id'>) => void;
   updateSystemUser: (user: User) => void;
+  addSystemUser: (user: User) => void;
 
 // CRM Properties
   properties: CRMProperty[];
@@ -672,6 +660,11 @@ interface CRMContextType {
   linkLeadsToBusiness: (businessId: string, leadIds: string[]) => void;
   addDeal: (deal: Omit<Deal, 'id'>) => void;
   updateDeal: (deal: Deal) => void;
+  notifications: CRMNotification[];
+  addNotification: (notification: Omit<CRMNotification, 'id' | 'createdAt' | 'isRead'>) => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  clearNotifications: () => void;
   addQuote: (quote: Omit<Quote, 'id'>) => void;
   updateQuote: (quote: Quote) => void;
   deleteQuote: (id: string) => void;
@@ -814,6 +807,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [properties, setProperties] = useState<CRMProperty[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [notifications, setNotifications] = useState<CRMNotification[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load everything from the API on mount (replaces the old localStorage-backed seed).
@@ -897,6 +891,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newTask = { ...task, id: generateId() } as Task;
     setTasks(prev => [newTask, ...prev]);
     apiPost('/api/tasks', newTask).catch(console.error);
+    addNotification({
+      type: 'Tasks',
+      title: 'Task Assigned',
+      message: `New task: ${newTask.title}`,
+      severity: 'info',
+      destinationRoute: '/tasks/my-tasks'
+    });
   };
   const updateTask = (taskId: string, task: Task) => {
     setTasks(prev => prev.map(t => t.id === taskId ? task : t));
@@ -945,6 +946,27 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDistributions(prev => prev.filter(d => d.id !== id));
     apiDelete(`/api/distributions/${id}`).catch(console.error);
   };
+  const addNotification = (notification: Omit<CRMNotification, 'id' | 'createdAt' | 'isRead'>) => {
+    const newNotif: CRMNotification = {
+      ...notification,
+      id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: new Date().toISOString(),
+      isRead: false
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
 
   const addUpload = (upload: Omit<UploadRecord, 'id'>) => {
     const newUpload = { ...upload, id: `UP-${generateId().toUpperCase()}` } as UploadRecord;
@@ -985,6 +1007,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newLead = { ...lead, id: generateId() } as Lead;
     setLeads(prev => [newLead, ...prev]);
     apiPost('/api/leads', newLead).catch(console.error);
+    addNotification({
+      type: 'Leads',
+      title: 'New Lead Created',
+      message: `Lead ${newLead.name} was successfully created.`,
+      severity: 'success',
+      destinationRoute: `/leads?id=${newLead.id}`
+    });
   };
   const updateLead = (lead: Lead) => {
     setLeads(prev => prev.map(l => l.id === lead.id ? lead : l));
@@ -1182,6 +1211,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newPayment = { ...payment, id: `PAY-${generateId().toUpperCase()}` } as Payment;
     setPayments(prev => [newPayment, ...prev]);
     apiPost('/api/payments', newPayment).catch(console.error);
+    addNotification({
+      type: 'Payments',
+      title: 'Payment Added',
+      message: `Payment of ${newPayment.amount} received from ${newPayment.clientName}.`,
+      severity: 'success',
+      destinationRoute: `/payments`
+    });
   };
   const updatePayment = (payment: Payment) => {
     setPayments(prev => prev.map(p => p.id === payment.id ? payment : p));
@@ -1299,6 +1335,10 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     apiPatch(`/api/users/${updatedUser.id}`, updatedUser).catch(console.error);
   };
 
+  const addSystemUser = (newUser: User) => {
+    setSystemUsers(prev => [newUser, ...prev]);
+  };
+
   const scopedLeads = useMemo(() => leads.filter(l => canViewUser(l.counselor) || canViewUser(l.owner)), [leads, canViewUser]);
   const scopedTasks = useMemo(() => tasks.filter(t => canViewUser(t.assignedTo) || canViewUser(t.owner)), [tasks, canViewUser]);
   const scopedCalls = useMemo(() => calls.filter(c => canViewUser(c.caller) || canViewUser(c.handledBy) || canViewUser(c.counselor)), [calls, canViewUser]);
@@ -1328,11 +1368,16 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       dealStages,
       updateDealStages,
       properties, quotes, quotationDefaults, payments, tasks: scopedTasks, users, systemUsers, reports, reminders, doNotTrackRecords,
+      notifications,
+      addNotification,
+      markAsRead,
+      markAllAsRead,
+      clearNotifications,
       addList, updateList, deleteList, addDistribution, updateDistribution, deleteDistribution,
       addUpload, updateUpload, deleteUpload, processUpload,
       addVideoCall, updateVideoCall, deleteVideoCall, addLead, updateLead, deleteLead, addApplication, updateApplication, addStudent, updateStudent, logCall, scheduleDemo, uploadDocument, addBusinessLead, updateBusinessLead, deleteBusinessLeads, linkLeadsToBusiness,
       addDeal, updateDeal, addQuote, updateQuote, deleteQuote, updateQuotationDefaults, addPayment, updatePayment, deletePayment, addTask, updateTask, deleteTask, addUser, addReport,
-      addReminder, updateReminder, deleteReminder, toggleCompleteReminder, snoozeReminder, updateUser, updateSystemUser,
+      addReminder, updateReminder, deleteReminder, toggleCompleteReminder, snoozeReminder, updateUser, updateSystemUser, addSystemUser,
       addProperty, updateProperty, deleteProperty, reorderProperties, removeDoNotTrackRecords
     }}>
       {children}

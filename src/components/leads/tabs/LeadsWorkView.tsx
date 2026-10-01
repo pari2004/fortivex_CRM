@@ -600,7 +600,7 @@ return result;
                                 <a href={`tel:${row.mobile || row.phone}`} onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', textDecoration: 'none', transition: 'all 0.2s' }} title="Call Lead">
                                   <Phone size={14} />
                                 </a>
-                                <a href={`https://wa.me/${(row.mobile || row.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', textDecoration: 'none', transition: 'all 0.2s' }} title="Message Lead">
+                                <a href={`https://wa.me/${String(row.mobile || row.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', textDecoration: 'none', transition: 'all 0.2s' }} title="Message Lead">
                                   <MessageCircle size={14} />
                                 </a>
                               </div>

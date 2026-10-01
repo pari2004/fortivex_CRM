@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Search, Pin, Users, Settings, Briefcase, 
@@ -6,6 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import SetupWorkspaceCenter from './SetupWorkspaceCenter';
+import UpdateTaxModal from '../dashboard/modals/UpdateTaxModal';
 
 interface HelpGuidanceModalProps {
   isOpen: boolean;
@@ -18,11 +20,16 @@ const CARDS_DATA = [
     title: 'Frequently Used',
     icon: <Pin size={18} style={{ color: 'var(--primary-color)' }} />,
     items: [
-      { text: 'Bulk Upload Leads from Excel/CSV', link: '/leads' },
+      { text: 'Bulk Upload Leads', link: '/leads?tab=Uploads' },
       { text: 'Add Single Lead', link: '/leads' },
       { text: 'View Exported Files', link: '/documents' },
-      { text: 'Set up Lead Distribution', link: '/customization/customization/lead-lifecycle' },
-      { text: 'Invite New User to Workspace', link: '/users' }
+      { text: 'Set Up Lead Distribution', link: '/leads?tab=Distribution' },
+      { text: 'Invite New User', link: '/users' },
+      { text: 'Create Custom Form', link: '/customization/customization/custom-forms' },
+      { text: 'Manage Lead Lifecycle', link: '/customization/customization/lead-lifecycle' },
+      { text: 'Set Up Deal Stages', link: '/customization/customization/deal-setup' },
+      { text: 'Customize Call Outcomes', link: '/customization/customization/call-outcomes' },
+      { text: 'Connect Integrations', link: '/customization/customization/integrations' }
     ]
   },
   {
@@ -31,7 +38,10 @@ const CARDS_DATA = [
     icon: <Users size={18} style={{ color: 'var(--primary-color)' }} />,
     items: [
       { text: 'Invite New User', link: '/users' },
-      { text: 'Create New Team', link: '/team' }
+      { text: 'Create New Team', link: '/team' },
+      { text: 'Manage Roles & Permissions', link: '/roles' },
+      { text: 'Manage Users', link: '/users' },
+      { text: 'Review User Access', link: '/roles' }
     ],
     buttonText: 'Go to Users & Teams',
     buttonLink: '/users'
@@ -105,6 +115,12 @@ const CARDS_DATA = [
 export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOnboardingMode, setIsOnboardingMode] = useState(false);
+  const [isTaxModalOpen, setIsTaxModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const resetOnboarding = () => setIsOnboardingMode(false);
 
@@ -141,9 +157,13 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
     return null;
   }).filter(Boolean);
 
-  return (
-    <AnimatePresence>
-      <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      <AnimatePresence>
+        {isOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {/* Backdrop */}
         <motion.div 
           initial={{ opacity: 0 }}
@@ -311,10 +331,11 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
                         <span style={{ fontSize: '1.15rem', fontWeight: 500 }}>Click here to get started in simple steps</span>
                         <ArrowRight size={20} />
                       </div>
-                      <Link href="/customization/organization" onClick={onClose} style={{ marginTop: '16px' }}>
-                        <button style={{ 
+                      <div 
+                        onClick={() => setIsTaxModalOpen(true)}
+                        style={{ 
+                          marginTop: '16px',
                           background: 'white', 
-                          border: 'none', 
                           color: '#4f46e5', 
                           padding: '10px 28px', 
                           borderRadius: '100px',
@@ -322,14 +343,15 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
                           fontSize: '0.95rem',
                           cursor: 'pointer',
                           boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                          transition: 'transform 0.2s'
+                          transition: 'transform 0.2s',
+                          display: 'inline-block',
+                          textAlign: 'center'
                         }}
                         onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                         onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                        >
-                          Update Tax ID
-                        </button>
-                      </Link>
+                      >
+                        Update Tax ID
+                      </div>
                     </div>
 
                     {/* Warning Bar */}
@@ -391,7 +413,7 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
                     </p>
                   )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, marginBottom: card.buttonText ? '24px' : '0' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, marginBottom: card.buttonText ? '24px' : '0', overflowY: 'auto', maxHeight: '240px', paddingRight: '8px' }}>
                     {card.items.map((item: any, idx: number) => (
                       <Link href={item.link} key={idx} onClick={onClose} style={{ textDecoration: 'none', color: '#334155', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ 
@@ -458,6 +480,10 @@ export function HelpGuidanceModal({ isOpen, onClose }: HelpGuidanceModalProps) {
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+      )}
+      </AnimatePresence>
+      <UpdateTaxModal isOpen={isTaxModalOpen} onClose={() => setIsTaxModalOpen(false)} />
+    </>,
+    document.body
   );
 }

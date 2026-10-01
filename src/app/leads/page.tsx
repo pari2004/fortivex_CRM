@@ -61,7 +61,7 @@ export default function LeadsPage() {
     switch (activeTab) {
       case 'Active Leads':
       case 'All Leads':
-        return <LeadsDefaultView activeTab={activeTab} newLeadEvent={newLeadEvent} newUploadEvent={newUploadEvent} />;
+        return <LeadsDefaultView activeTab={activeTab} newLeadEvent={newLeadEvent} newUploadEvent={newUploadEvent} isUploadModalOpen={isUploadModalOpen} />;
       case 'Work Leads':
         return <LeadsWorkView newLeadEvent={newLeadEvent} newUploadEvent={newUploadEvent} />;
       case 'Business':

@@ -2,8 +2,8 @@
   display: flex;
   height: 100vh;
   width: 100vw;
-  overflow: hidden;
   background-color: var(--bg-secondary);
+  isolation: isolate;
 }
 
 .sidebar {
@@ -84,7 +84,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
+  transform: translateZ(0);
 }
 
 .header {

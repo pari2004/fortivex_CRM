@@ -289,7 +289,7 @@ ${item.id},${item.source},${item.campaign || ''},${item.leads},${item.applicatio
       <AnimatePresence>
         {showFilterDrawer && (
           <>
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99998 }} onClick={() => setShowFilterDrawer(false)} />
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 99998 }} onClick={() => setShowFilterDrawer(false)} />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -486,7 +486,7 @@ ${item.id},${item.source},${item.campaign || ''},${item.leads},${item.applicatio
 
       
       {showCustomDateModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }}>
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-panel" style={{ padding: '24px', width: '400px', background: 'var(--bg-primary)' }}>
             <h3 style={{ marginBottom: '16px', fontSize: '1.2rem', fontWeight: 600 }}>Custom Date Range</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -508,18 +508,16 @@ ${item.id},${item.source},${item.campaign || ''},${item.leads},${item.applicatio
       )}
 
             {/* ADD SOURCE MODAL */}
-      <AnimatePresence>
-        {showAddSourceModal && (
-          <AddSourceModal 
-            onClose={() => setShowAddSourceModal(false)}
-            onSave={(newSource: any) => {
-              setData([newSource, ...data]);
-              setShowAddSourceModal(false);
-              showToast('Source added successfully.');
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {showAddSourceModal && (
+        <AddSourceModal 
+          onClose={() => setShowAddSourceModal(false)}
+          onSave={(newSource: any) => {
+            setData([newSource, ...data]);
+            setShowAddSourceModal(false);
+            showToast('Source added successfully.');
+          }}
+        />
+      )}
 
       {/* MODAL */}
       <AnimatePresence>

@@ -33,7 +33,7 @@ export function QuickCreateMenu({ isOpen, onClose, onAction }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)' }} 
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)' }} 
             onClick={onClose} 
           />
           
@@ -41,7 +41,6 @@ export function QuickCreateMenu({ isOpen, onClose, onAction }: Props) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="glass-panel"
             style={{
           position: 'relative',
           width: '100%',
@@ -52,7 +51,9 @@ export function QuickCreateMenu({ isOpen, onClose, onAction }: Props) {
           boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none'
         }}
       >
         <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

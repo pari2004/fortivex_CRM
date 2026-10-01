@@ -36,6 +36,7 @@ export function DealDetailsModal({ isOpen, onClose, deal, onViewDeal }: Props) {
   const handleMoveStage = (newStage: string) => {
     // Stage validation can happen here
     const previousStage = currentDeal.stage;
+<<<<<<< Updated upstream
     updateDeal({
       ...currentDeal,
       stage: newStage,
@@ -46,6 +47,18 @@ export function DealDetailsModal({ isOpen, onClose, deal, onViewDeal }: Props) {
       ]
     });
 
+=======
+    updateDeal({ ...currentDeal, stage: newStage, updatedAt: new Date().toISOString() });
+    
+    // addActivity({
+    //   type: 'Stage Change',
+    //   title: 'Deal Stage Updated',
+    //   description: `Moved from ${previousStage} to ${newStage}`,
+    //   category: 'Update',
+    //   relatedTo: currentDeal.id
+    // });
+    
+>>>>>>> Stashed changes
     setShowMoveStage(false);
   };
 

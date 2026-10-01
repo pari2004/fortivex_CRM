@@ -224,7 +224,7 @@ export function LeadWorkspaceModal({ isOpen, onClose, lead }: Props) {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="modal-backdrop" 
             onClick={onClose}
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999 }}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', zIndex: 99999 }}
           />
       )}
       {isOpen && (
@@ -797,7 +797,7 @@ export function LeadWorkspaceModal({ isOpen, onClose, lead }: Props) {
       {/* Drawers */}
       <AnimatePresence>
         {showLinkBusiness && (
-          <div key="link-business-drawer" style={{ position: 'fixed', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
+          <div key="link-business-drawer" style={{ position: 'fixed', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'flex-end' }}>
              <motion.div initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'tween'}} style={{ width: '400px', background: 'white', height: '100%', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e2e8f0' }}>
                 <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Link Business</h3>
@@ -819,7 +819,7 @@ export function LeadWorkspaceModal({ isOpen, onClose, lead }: Props) {
         )}
 
         {showLinkContact && (
-          <div key="link-contact-drawer" style={{ position: 'fixed', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
+          <div key="link-contact-drawer" style={{ position: 'fixed', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'flex-end' }}>
              <motion.div initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'tween'}} style={{ width: '400px', background: 'white', height: '100%', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e2e8f0' }}>
                 <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Link Contact</h3>
@@ -879,7 +879,7 @@ export function LeadWorkspaceModal({ isOpen, onClose, lead }: Props) {
         <AddNoteModal key="add-note-modal" isOpen={showAddNote} onClose={() => setShowAddNote(false)} lead={currentLead} />
 
         {showNextFollowupDrawer && (
-          <div key="next-followup-drawer" style={{ position: 'fixed', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
+          <div key="next-followup-drawer" style={{ position: 'fixed', inset: 0, zIndex: 100005, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'flex-end' }}>
              <motion.div initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'tween'}} style={{ width: '500px', background: 'white', height: '100%', display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e2e8f0' }}>
                 <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Changing next followup date time for {currentLead.phone || currentLead.mobile || currentLead.name}</h3>

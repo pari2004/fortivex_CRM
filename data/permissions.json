@@ -1,0 +1,263 @@
+{
+  "userPermissions": {
+    "1": {
+      "Dashboard": {
+        "View": true
+      },
+      "Tasks": {
+        "View": true,
+        "Create": true,
+        "Edit": true
+      },
+      "Calendar": {
+        "View": true,
+        "Create": true,
+        "Edit": true
+      },
+      "Help Center": {
+        "View": true
+      },
+      "Leads": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Active Leads": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-All Leads": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Work Leads": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Business": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Documents": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Segments / Lists": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Uploads": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Distribution": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Follow-ups": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Data Exports": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Leads-Email Leads": {
+        "View": true,
+        "Create": true,
+        "Edit": true,
+        "Delete": true,
+        "Approve": true,
+        "Export": true,
+        "Import": true,
+        "Assign": true,
+        "Manage": true,
+        "Configure": true
+      },
+      "Applications": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      },
+      "Applications-Draft": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      },
+      "Applications-Submitted": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      },
+      "Applications-Under Review": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      },
+      "Applications-Documents Pending": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      },
+      "Applications-Approved": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      },
+      "Applications-Rejected": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      },
+      "Applications-Admission Completed": {
+        "View": false,
+        "Create": false,
+        "Edit": false,
+        "Delete": false,
+        "Approve": false,
+        "Export": false,
+        "Import": false,
+        "Assign": false,
+        "Manage": false,
+        "Configure": false
+      }
+    }
+  },
+  "customRoles": []
+}

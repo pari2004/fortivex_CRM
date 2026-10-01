@@ -191,11 +191,8 @@ export function ChartLibraryModal({ onClose, onSaveChart }: ChartLibraryModalPro
   );
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'var(--bg-primary)', zIndex: 9999,
-      display: 'flex', flexDirection: 'column'
-    }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '95%', height: '95%', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
       {/* Header */}
       <div style={{
         padding: '16px 24px', borderBottom: '1px solid var(--glass-border)',
@@ -376,6 +373,7 @@ export function ChartLibraryModal({ onClose, onSaveChart }: ChartLibraryModalPro
           )}
         </div>
 
+      </div>
       </div>
     </div>
   );

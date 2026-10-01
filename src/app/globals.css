@@ -45,7 +45,6 @@
 
 html, body {
   max-width: 100vw;
-  overflow-x: hidden;
   height: 100%;
 }
 
@@ -314,9 +313,9 @@ td [style*="position: absolute"] {
 /* ---------------------------------------------------
    COMPLETE TRANSPARENCY REMOVAL ON SCROLLING ELEMENTS
 ------------------------------------------------------ */
-/* Force Navbars, Top Headers, and Sidebars to be completely solid */
-header, nav, aside, .navbar, .sidebar, 
-[style*="position: sticky"], [style*="position: fixed"] {
+/* Force Navbars, Top Headers, and Sidebars to be completely solid.
+   Do not target positioning styles here: modal shells are fixed, full-viewport elements. */
+header, nav, aside, .navbar, .sidebar {
   background-color: var(--bg-primary) !important;
   opacity: 1 !important;
   backdrop-filter: none !important;

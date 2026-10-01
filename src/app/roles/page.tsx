@@ -9,7 +9,8 @@ import { PremiumInput, PremiumSelect, PremiumCard, PremiumTextArea } from '@/com
 import { Shield, ShieldCheck, Users, Edit, Copy, CheckSquare, Trash2, Plus, Clock, User, CheckCircle, Save, X, Search, Link as LinkIcon, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/common/StatusBadge';
-
+import { useAuth } from '@/contexts/AuthContext';
+import { PermissionsManager } from '@/lib/PermissionsManager';
 // Helper function
 function showToast(message: string, type: 'success' | 'error' = 'success') {
   const toast = document.createElement('div');
@@ -79,6 +80,7 @@ const SYSTEM_USERS = [
 
 export default function RolesPage() {
   const router = useRouter();
+  const { forceRefreshPermissions } = useAuth();
   
   // Initialize data with extended fields if missing
   const initialData: ExtendedRole[] = rolesData.map(r => ({
@@ -95,6 +97,25 @@ export default function RolesPage() {
   }));
 
   const [localData, setLocalData] = useState<ExtendedRole[]>(initialData);
+  
+  useEffect(() => {
+    const saved = PermissionsManager.getCustomRoles();
+    if (saved && Array.isArray(saved) && saved.length > 0) {
+      try {
+        setLocalData(saved);
+      } catch (e) {
+        console.error('Error loading roles', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only save if it's not exactly the initial data (to avoid overwriting real data on first render before load)
+    if (localData !== initialData) {
+      PermissionsManager.saveCustomRoles(localData).catch(console.error);
+    }
+  }, [localData]);
+
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<ExtendedRole | null>(null);
@@ -197,6 +218,7 @@ export default function RolesPage() {
     // Update local selected role reference so when closed and opened again it shows saved data
     setSelectedRole({...selectedRole, permissions: JSON.parse(JSON.stringify(tempPermissions))});
     showToast('Permissions updated successfully');
+    setTimeout(() => forceRefreshPermissions(), 100);
   };
 
   const handleTogglePermission = (moduleName: string, permName: string) => {

@@ -12,6 +12,14 @@ import { useChat } from '@ai-sdk/react';
 import styles from './layout.module.css';
 import { useGlobalEscape } from '@/hooks/useGlobalEscape';
 
+function getMessageText(m: any): string {
+  if (typeof m?.content === 'string' && m.content) return m.content;
+  if (Array.isArray(m?.parts)) {
+    return m.parts.filter((p: any) => p?.type === 'text').map((p: any) => p.text).join('');
+  }
+  return '';
+}
+
 function NeuralLines() {
   const points = [];
   for (let i = 0; i < 5; i++) {
@@ -226,17 +234,17 @@ export function AiAssistantOrb() {
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                     <div style={{ background: m.role !== 'user' ? 'var(--bg-primary)' : 'var(--primary-color)', color: m.role !== 'user' ? 'var(--text-primary)' : 'white', padding: '12px 16px', borderRadius: m.role !== 'user' ? '0 16px 16px 16px' : '16px 0 16px 16px', boxShadow: 'var(--shadow-sm)', fontSize: '0.95rem', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                       {m.role === 'user' ? (
-                        <div style={{ whiteSpace: 'pre-wrap' }}>{m.content}</div>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{getMessageText(m)}</div>
                       ) : (
                         <div className="prose prose-sm prose-blue" style={{ margin: 0 }}>
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {m.content}
+                            {getMessageText(m)}
                           </ReactMarkdown>
                         </div>
                       )}
                     </div>
                     {m.role !== 'user' && (
-                      <button onClick={() => handleVoiceOutput(m.content)} style={{ marginTop: '4px', background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', padding: '4px' }}>
+                      <button onClick={() => handleVoiceOutput(getMessageText(m))} style={{ marginTop: '4px', background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', padding: '4px' }}>
                         <Volume2 size={12} /> Listen
                       </button>
                     )}

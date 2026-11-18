@@ -1,4 +1,4 @@
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
 export async function POST(req: Request) {
@@ -28,17 +28,14 @@ Always be concise, professional, and use markdown formatting to make your respon
 Never mention you are a mock or demo assistant; you are a fully functional AI.`;
 
     console.log("Calling Gemini...");
-    const result = await generateText({
-      model: google('gemini-1.5-flash'),
+    const result = streamText({
+      model: google('gemini-flash-latest'),
       system: systemPrompt,
       messages,
     });
 
     console.log("Gemini responded");
-    return new Response(result.text, { 
-      status: 200, 
-      headers: { 'Content-Type': 'text/plain' } 
-    });
+    return result.toUIMessageStreamResponse();
   } catch (error: any) {
     console.error('Error if any:', error);
     return new Response(
